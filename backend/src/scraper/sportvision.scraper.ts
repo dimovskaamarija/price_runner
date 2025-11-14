@@ -3,8 +3,9 @@ import * as cheerio from 'cheerio';
 import pLimit from 'p-limit';
 import dayjs from 'dayjs';
 import { Injectable, Logger } from '@nestjs/common';
-import { FirestoreService } from '../firestore/firestore.service';
+import { PostgresService } from '../postgres/postgres.service';
 import { createId } from '../common/hashing';
+import { normalizeGender, normalizeAge, normalizeColor, normalizeSubcategory } from '../utils/normalize_data';
 
 const STORE = 'Sport Vision MK';
 const PDP_RE = /\/mk\/(obuvki|tekstil|oprema)\/\d+-[a-z0-9-]+$/;
@@ -14,10 +15,10 @@ export class SportVisionScraper {
     private readonly log = new Logger(SportVisionScraper.name);
     private readonly limit = pLimit(4);
 
-    constructor(private readonly db: FirestoreService) { }
+    constructor(private readonly db: PostgresService) { }
 
     async scrapeCategory(baseUrl: string, topCategory: string) {
-        for (let page = 1; page <= 3; page++) {
+        for (let page = 1; page <= 30; page++) {
             const url = page === 1 ? baseUrl : `${baseUrl}/page-${page}`;
             const html = await this.fetch(url);
             if (!html) break;
@@ -26,6 +27,7 @@ export class SportVisionScraper {
             const pdps = new Set<string>();
             $('a[href]').each((_, a) => {
                 const href = $(a).attr('href')!;
+                console.log(href);
                 if (PDP_RE.test(href)) pdps.add(new URL(href, baseUrl).toString());
             });
 
@@ -49,8 +51,6 @@ export class SportVisionScraper {
 
         const $ = cheerio.load(html);
         const name = ($('h1').first().text() || '').trim();
-
-        // ✅ Fix image extraction (absolute URL)
         let image: string | null = null;
         $('img').each((_, img) => {
             const src =
@@ -58,16 +58,21 @@ export class SportVisionScraper {
                 $(img).attr('data-src') ||
                 $(img).attr('src');
 
-            if (src && !image && !src.includes('logo')) {
-                // ensure absolute URL
-                image = src.startsWith('http')
-                    ? src
-                    : new URL(src, productUrl).toString();
+            if (
+                src &&
+                !image &&
+                src.includes('/files/thumbs/') &&
+                !src.endsWith('.svg')
+            ) {
+                if (src.startsWith('http')) {
+                    image = src;
+                } else if (src.startsWith('/files/')) {
+                    image = `https://www.sportvision.mk${src}`;
+                } else {
+                    image = new URL(src, productUrl).toString();
+                }
             }
         });
-
-
-        // ✅ Extract product characteristics from the table
         const specs: Record<string, string> = {};
         $('table tr').each((_, row) => {
             const key = $(row).find('td').eq(0).text().trim();
@@ -75,16 +80,13 @@ export class SportVisionScraper {
             if (key && val) specs[key] = val;
         });
 
-        const subcategory = specs['Категорија'] || topCategory;
-        const gender = specs['Пол'] || 'Unknown';
-        const age = specs['Возраст'] || 'Unknown';
+        const subcategory = normalizeSubcategory(specs['Категорија'] || topCategory);
+        const gender = normalizeGender(specs['Пол'] || 'Unknown');
+        const age = normalizeAge(specs['Возраст'] || 'Unknown');
         const brand = specs['Бренд'] || guessBrandFromPage($);
-        const color = specs['Боја'] || 'Unknown';
-
-        const priceMKD = extractFirstPriceMKD($('body').text());
-
-        // ✅ Build unique key for merging
-        const uniqueKey = `${name}::${brand}::${color}::${gender}::${age}`;
+        const color = normalizeColor(specs['Боја'] || 'Unknown');
+        const priceMKD = extractPrice($);
+        const uniqueKey = `${name.toLowerCase()}::${brand.toLowerCase()}::${subcategory.toLowerCase()}::${gender.toLowerCase()}::${age.toLowerCase()}::${color.toLowerCase()}`;
         const id = createId(uniqueKey);
 
         const now = dayjs();
@@ -106,8 +108,7 @@ export class SportVisionScraper {
             createdAt: now.toDate(),
             updatedAt: now.toDate(),
         };
-
-        await this.db.upsertProduct(doc);
+        await this.db.upsertProduct(doc, STORE, priceMKD, now.toDate());
     }
 
     private async fetch(url: string): Promise<string | null> {
@@ -127,9 +128,23 @@ export class SportVisionScraper {
     }
 }
 
-function extractFirstPriceMKD(text: string): number | null {
-    const m = text.match(/(\d{1,3}(?:[.\s]\d{3})*|\d+)\s*MKD/);
+function extractPrice($: cheerio.CheerioAPI): number | null {
+    let priceText =
+        $('.current').first().text() ||
+        $('.product-price .price').first().text() ||
+        $('.price-current').first().text();
+
+    if (!priceText) {
+        priceText =
+            $('.product-price').first().text() ||
+            $('span.price').first().text();
+    }
+
+    if (!priceText) return null;
+
+    const m = priceText.match(/(\d{1,3}(?:[.\s]\d{3})*|\d+)/);
     if (!m) return null;
+
     const normalized = m[1].replace(/[.\s]/g, '');
     return parseInt(normalized, 10);
 }

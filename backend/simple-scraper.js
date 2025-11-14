@@ -23,7 +23,6 @@ async function simpleScraper() {
         const page = await browser.newPage();
         console.log('New page created');
         
-        // Set a reasonable timeout
         page.setDefaultTimeout(30000);
         
         console.log('Navigating to SportVision...');
@@ -36,7 +35,6 @@ async function simpleScraper() {
         const title = await page.title();
         console.log('Page title:', title);
         
-        // Try to find some products
         const productLinks = await page.evaluate(() => {
             const links = Array.from(document.querySelectorAll('a[href*="/product/"]'));
             return links.slice(0, 5).map(link => link.href);
@@ -58,10 +56,9 @@ async function simpleScraper() {
     }
 }
 
-// Set a timeout for the entire process
 setTimeout(() => {
     console.log('Process timeout reached, exiting...');
     process.exit(1);
-}, 2 * 60 * 1000); // 2 minutes timeout
+}, 2 * 60 * 1000);
 
 simpleScraper();

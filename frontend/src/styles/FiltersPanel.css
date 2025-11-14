@@ -1,0 +1,154 @@
+* {
+    color: black;
+}
+
+.filters-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: 0.25s;
+    z-index: 999;
+}
+
+.filters-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.filters-panel {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 80%;
+    max-width: 380px;
+    background: white;
+    padding: 20px;
+    transition: 0.3s;
+    overflow-y: auto;
+}
+
+.filters-panel.left::-webkit-scrollbar {
+    width: 6px;
+}
+
+.filters-panel.left::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+
+
+.filters-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 22px;
+}
+
+.filters-section h4 {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    font-size: 17px;
+}
+
+.arrow {
+    font-size: 16px;
+}
+
+.filter-items {
+    padding-left: 12px;
+}
+
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    margin: 6px 0;
+}
+.styled-checkbox {
+    accent-color: black;
+    background-color: #eee; 
+    border: 1px solid #999;
+}
+
+.styled-checkbox:not(:checked) {
+    background-color: #eee; 
+}
+
+.price-slider {
+    position: relative;
+    padding-top: 20px;
+    padding-bottom: 40px;
+}
+
+.price-slider input[type="range"] {
+    width: 100%;
+    position: absolute;
+    pointer-events: none;
+    -webkit-appearance: none;
+    background: none;
+}
+
+.price-slider input[type="range"]::-webkit-slider-thumb {
+    pointer-events: all;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: black;
+    -webkit-appearance: none;
+}
+
+.slider-track-active {
+    position: absolute;
+    height: 4px;
+    background: black;
+    top: 25px;
+    border-radius: 2px;
+}
+
+.range-values {
+    margin-top: 30px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.filters-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.same-size {
+    width: 48%;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin: 30px 0;
+  gap: 6px;
+}
+
+.page-btn {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: white;
+}
+
+.page-btn.active {
+  background: black;
+  color: white;
+}
+
+.nav-btn {
+  font-weight: bold;
+}

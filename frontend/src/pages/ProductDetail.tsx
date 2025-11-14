@@ -1,6 +1,4 @@
 ﻿import { useEffect, useState } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase';
 import { useParams, Link } from 'react-router-dom';
 
 interface Product {
@@ -22,9 +20,17 @@ export default function ProductDetail() {
   useEffect(() => {
     const fetchProduct = async () => {
       if (!id) return;
-      const ref = doc(db, 'products', id);
-      const snap = await getDoc(ref);
-      if (snap.exists()) setProduct(snap.data() as Product);
+      try {
+        const response = await fetch(`http://localhost:3000/products/${id}`);
+        const data = await response.json();
+        if (data.error) {
+          console.error(data.error);
+        } else {
+          setProduct(data as Product);
+        }
+      } catch (error) {
+        console.error('Error fetching product:', error);
+      }
     };
     fetchProduct();
   }, [id]);

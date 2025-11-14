@@ -3,110 +3,213 @@ import * as cheerio from 'cheerio';
 import pLimit from 'p-limit';
 import dayjs from 'dayjs';
 import { Injectable, Logger } from '@nestjs/common';
-import { FirestoreService } from '../firestore/firestore.service';
+import { PostgresService } from '../postgres/postgres.service';
 import { createId } from '../common/hashing';
+import { normalizeGender, normalizeAge, normalizeColor, normalizeSubcategory } from '../utils/normalize_data';
 
-const STORE = 'Dsport MK';
-const PDP_RE = /\/(obuca|odeca|oprema)\/\d+-[a-z0-9-]+$/; // 👈 dsport URLs are without /mk/
+type Gender = 'Машки' | 'Женски' | 'Унисекс' | 'Kids';
+
+const STORE = 'D Sport';
 
 @Injectable()
-export class DsportScraper {
-    private readonly log = new Logger(DsportScraper.name);
+export class DSportScraper {
+    private readonly log = new Logger(DSportScraper.name);
     private readonly limit = pLimit(4);
 
-    constructor(private readonly db: FirestoreService) { }
+    constructor(private readonly db: PostgresService) { }
 
-    async scrapeCategory(baseUrl: string, topCategory: string) {
-        for (let page = 1; page <= 3; page++) {
-            const url = page === 1 ? baseUrl : `${baseUrl}/page-${page}`;
-            const html = await this.fetch(url);
+    private readonly CATEGORIES: Array<{ url: string; category: string; gender: Gender }> = [
+        { url: 'https://www.dsport.mk/muskarci/obuca', category: 'Обувки', gender: 'Машки' },
+        { url: 'https://www.dsport.mk/zene/obuca', category: 'Обувки', gender: 'Женски' },
+        { url: 'https://www.dsport.mk/deca/obuca', category: 'Обувки', gender: 'Kids' },
+        { url: 'https://www.dsport.mk/muskarci/odeca', category: 'Текстил', gender: 'Машки' },
+        { url: 'https://www.dsport.mk/zene/odeca', category: 'Текстил', gender: 'Женски' },
+        { url: 'https://www.dsport.mk/deca/odeca', category: 'Текстил', gender: 'Kids' },
+        { url: 'https://www.dsport.mk/oprema', category: 'Опрема', gender: 'Унисекс' },
+        { url: 'https://www.dsport.mk/muskarci/oprema', category: 'Опрема', gender: 'Машки' },
+        { url: 'https://www.dsport.mk/zene/oprema', category: 'Опрема', gender: 'Женски' },
+        { url: 'https://www.dsport.mk/deca/oprema', category: 'Опрема', gender: 'Kids' },
+    ];
+
+    async scrapeAll() {
+        for (const { url, category, gender } of this.CATEGORIES) {
+            await this.scrapeCategory(url, category, gender);
+        }
+    }
+
+    async scrapeCategory(baseUrl: string, category: string, gender: Gender) {
+        for (let page = 1; page <= 10; page++) {
+            const pageUrl = page === 1 ? baseUrl : `${baseUrl}?p=${page}`;
+            this.log.log(`[DSport] ${category}/${gender} – fetching page ${page}`);
+            const html = await this.fetch(pageUrl);
             if (!html) break;
 
             const $ = cheerio.load(html);
-            const pdps = new Set<string>();
-            $('a[href]').each((_, a) => {
-                const href = $(a).attr('href')!;
-                if (PDP_RE.test(href)) pdps.add(new URL(href, baseUrl).toString());
-            });
+            const productLinks = this.extractProductLinksFromCategory($);
 
-            if (pdps.size === 0) {
-                this.log.log(`No products on page ${page}, stopping.`);
+            if (productLinks.length === 0) {
+                this.log.warn(`[DSport] No products on page ${page}; stopping pagination.`);
                 break;
             }
 
-            this.log.log(`Page ${page}: ${pdps.size} products`);
             await Promise.all(
-                [...pdps].map((href) =>
-                    this.limit(() => this.scrapePdp(href, topCategory)),
-                ),
+                productLinks.map(link =>
+                    this.limit(() => this.scrapePdp(link, category, gender)),
+                )
             );
         }
     }
 
-    private async scrapePdp(productUrl: string, topCategory: string) {
-        const html = await this.fetch(productUrl);
-        if (!html) return;
+    private async scrapePdp(productUrl: string, categoryIn: string, genderIn: Gender) {
+        try {
+            const html = await this.fetch(productUrl);
+            if (!html) return;
+            const $ = cheerio.load(html);
+            const rawName =
+                $('h1.page-title span.base').first().text().trim() ||
+                $('h1.page-title').first().text().trim() ||
+                $('h1').first().text().trim();
+          let name = rawName
+  .normalize('NFKC')
+  .replace(/[^\x00-\x7F]+/g, ' ')        
+  .replace(/[^A-Za-z0-9&/+.\- ]+/g, ' ') 
+  .replace(/\s+/g, ' ')                 
+  .trim();
 
-        const $ = cheerio.load(html);
-        const name = ($('h1').first().text() || '').trim();
+if (!name) {
+  const last = productUrl.split('/').pop() || '';
+  const slugSource = decodeURIComponent(last)       
+    .replace(/\.(html?|php|aspx)$/i, '')            
+    .replace(/[-_]+/g, ' ');                   
 
-        let image: string | null = null;
-        $('img').each((_, img) => {
-            const src =
-                $(img).attr('data-lazy') || // 👈 lazy load
-                $(img).attr('data-src') ||
-                $(img).attr('src');
+  name = slugSource
+    .normalize('NFKC')
+    .replace(/[^\x00-\x7F]+/g, ' ')
+    .replace(/[^A-Za-z0-9&/+.\- ]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim() || 'Unknown';
+}
+            const specs = this.parseSpecs($);
+            const brand =
+                (specs['Бренд'] || '').trim() ||
+                $('div.product-info-main a[href*="/brands"], a[href*="/brand"]').first().text().trim() ||
+                this.guessBrandFromName(name);
 
-            if (src && !image && !src.includes('logo') && !src.includes('placeholder')) {
-                image = src.startsWith('http')
-                    ? src
-                    : new URL(src, productUrl).toString();
+            const category = categoryIn;
+            const subcategory = normalizeSubcategory(specs['Производ']);
+            const gender = normalizeGender((specs['Пол'] || '').trim());
+            const age = normalizeAge(genderIn === 'Kids' ? 'За деца' : 'За возрасни');
+            const rawColor = (specs['Боја'] || '').trim() || this.extractColorFromName(name) || 'Unknown';
+            const color = normalizeColor(rawColor.toLowerCase());
+            const image = this.extractDsportImage($);
+            const price = this.extractPriceFromPdp($);
+            if (price == null) {
+                this.log.warn(`[DSport] Skipping (no price): ${productUrl}`);
+                return;
             }
-        });
+            const uniqueKey = `${name.toLowerCase()}::${brand.toLowerCase()}::${subcategory.toLowerCase()}::${gender.toLowerCase()}::${age.toLowerCase()}::${color.toLowerCase()}`;
+            const id = createId(uniqueKey);
+            const now = dayjs();
 
+            const doc = {
+                id,
+                name,
+                brand,
+                category,
+                subcategory,
+                gender,
+                age,
+                color,
+                image,
+                priceMap: { [STORE]: price ?? null },
+                storeLinks: { [STORE]: productUrl },
+                productUrl,
+                currency: 'MKD',
+                createdAt: now.toDate(),
+                updatedAt: now.toDate(),
+            };
 
-        // ✅ Extract table specs
+            await this.db.upsertProduct(doc, STORE, price, now.toDate());
+        } catch (error) {
+            this.log.error(`Error scraping PDP ${productUrl}:`, error.message);
+        }
+    }
+    private keepLatinWords(input: string): string {
+        if (!input) return '';
+        const tokens = input.split(/\s+/);
+        const latinWord = /^[\p{Script=Latin}0-9'.,()\-]+$/u;
+        const kept = tokens.filter(t => latinWord.test(t));
+        return kept.join(' ').replace(/\s{2,}/g, ' ').trim();
+    }
+    private parseSpecs($: cheerio.CheerioAPI): Record<string, string> {
         const specs: Record<string, string> = {};
-        $('table tr').each((_, row) => {
-            const key = $(row).find('td').eq(0).text().trim();
-            const val = $(row).find('td').eq(1).text().trim();
+        $('table.technical-specifications-options tr').each((_, tr) => {
+            const key = $(tr).find('td strong').first().text().replace(':', '').trim();
+            const val = $(tr).find('td').eq(1).find('p').last().text().trim();
             if (key && val) specs[key] = val;
         });
-
-        const subcategory = specs['Категорија'] || topCategory;
-        const gender = specs['Пол'] || 'Unknown';
-        const age = specs['Возраст'] || 'Unknown';
-        const brand = specs['Бренд'] || guessBrandFromPage($);
-        const color = specs['Боја'] || 'Unknown';
-
-        const priceMKD = extractFirstPriceMKD($('body').text());
-
-        const uniqueKey = `${name}::${brand}::${color}::${gender}::${age}`;
-        const id = createId(uniqueKey);
-
-        const now = dayjs();
-
-        const doc = {
-            id,
-            name,
-            brand,
-            category: topCategory,
-            subcategory,
-            gender,
-            age,
-            color,
-            image: image || null,
-            priceMap: { [STORE]: priceMKD ?? null },
-            storeLinks: { [STORE]: productUrl },
-            productUrl,
-            currency: 'MKD',
-            createdAt: now.toDate(),
-            updatedAt: now.toDate(),
-        };
-
-        await this.db.upsertProduct(doc);
+        return specs;
     }
 
+    private ensureAbsolute(url?: string | null): string | null {
+    if (!url) return null;
+    if (/^https?:\/\//i.test(url)) return url;
+    if (url.startsWith('//')) return `https:${url}`;
+    return `https://www.dsport.mk${url.startsWith('/') ? '' : '/'}${url}`;
+}
+
+private extractDsportImage($: cheerio.CheerioAPI): string | null {
+    const src = $('img.fotorama__img').first().attr('src')
+        || $('img.fotorama__img').first().attr('data-src');
+    const og = $('meta[property="og:image"]').attr('content');
+
+    return this.ensureAbsolute(src || og || null);
+}
+    private extractPriceFromPdp($: cheerio.CheerioAPI): number | null {
+        let text: string | null =
+            $('.product-info-price .special-price .price').first().text().trim() ||
+            $('.price-wrapper .price').first().text().trim() ||
+            $('.product-info-price .price-final_price .price').first().text().trim() ||
+            $('.product-info-price .price').first().text().trim() ||
+            $('body').text().match(/([\d\.\s,]+)\s*ден/i)?.[0] ||
+            null;
+
+        if (!text) return null;
+
+        text = text.replace(/ден\.?|МКД|%/gi, '').replace(/[^\d.,\s]/g, '').trim();
+        const match = text.match(/(\d{1,3}(?:[.\s]\d{3})*|\d+)/);
+        if (!match) return null;
+
+        const normalized = match[1].replace(/[.\s]/g, '');
+        const val = parseInt(normalized, 10);
+        if (isNaN(val) || val < 300) return null;
+        return val;
+    }
+    private guessBrandFromName(name: string): string {
+        const first = (name || '').trim().split(/\s+/)[0] || '';
+        return first.length > 1 ? first : 'Unknown';
+    }
+    private extractColorFromName(name: string): string | null {
+        const m = name.match(/\b(Black|White|Red|Blue|Green|Grey|Gray|Pink|Beige|Brown|Navy|Olive|Yellow)\b/i);
+        return m ? m[0] : null;
+    }
+    private extractProductLinksFromCategory($: cheerio.CheerioAPI): string[] {
+        const links: string[] = [];
+        $('a.product-item-link').each((_, el) => {
+            const href = ($(el).attr('href') || '').split('?')[0];
+            if (href && href.startsWith('https://www.dsport.mk/')) links.push(href);
+        });
+        if (links.length === 0) {
+            $('a[href*="/muskarci/"], a[href*="/zene/"], a[href*="/deca/"], a[href*="/oprema/"]').each((_, el) => {
+                const href = ($(el).attr('href') || '').split('?')[0];
+                if (href && /\/(muskarci|zene|deca|oprema)\//.test(href) && href.split('/').length > 4) {
+                    links.push(href);
+                }
+            });
+        }
+
+        return Array.from(new Set(links));
+    }
     private async fetch(url: string): Promise<string | null> {
         try {
             const res = await axios.get(url, {
@@ -114,28 +217,12 @@ export class DsportScraper {
                     'User-Agent': 'Mozilla/5.0 (compatible; PriceRunnerBot/1.0)',
                     'Accept-Language': 'mk,en;q=0.8',
                 },
-                timeout: 25000,
+                timeout: 30000,
             });
             return res.data as string;
         } catch (e) {
-            this.log.warn(`Fetch failed: ${url} -> ${(e as Error).message}`);
+            this.log.warn(`[DSport] Fetch failed: ${url} -> ${(e as Error).message}`);
             return null;
         }
     }
-}
-
-function extractFirstPriceMKD(text: string): number | null {
-    const m = text.match(/(\d{1,3}(?:[.\s]\d{3})*|\d+)\s*MKD/);
-    if (!m) return null;
-    const normalized = m[1].replace(/[.\s]/g, '');
-    return parseInt(normalized, 10);
-}
-
-function guessBrandFromPage($: cheerio.CheerioAPI): string {
-    const t = $('body').text();
-    const m = t.match(/Бренд\s+([\p{L}A-Za-z0-9&\-\s]+)/u);
-    if (m) return m[1].trim();
-    const h1 = ($('h1').first().text() || '').trim();
-    const first = h1.split(/\s+/)[0];
-    return first.length > 1 ? first : 'Unknown';
 }

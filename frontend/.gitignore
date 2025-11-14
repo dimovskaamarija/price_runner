@@ -1,28 +1,41 @@
-# ---- Node / build
+# Node / monorepo
 node_modules/
-dist/
-build/
-.cache/
-.tmp/
-
-# ---- Envs & secrets
-.env
-*.env
-serviceAccountKey.json
-
-# ---- Editors / OS
-.vs/
-.vscode/
-.DS_Store
-Thumbs.db
-
-# ---- Logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-logs/
-*.log
+dist/
+coverage/
+.env
+.env.*
 
-# ---- Frontend (Vite)
-frontend/.vite/
+# Backend/Frontend builds (adjust paths if different)
+backend/dist/
+frontend/dist/
+
+# Editors/IDEs
+.vscode/
+.idea/
+*.iml
+
+# Visual Studio / MSBuild junk
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.cache
+*.db
+*.db-shm
+*.db-wal
+*.opendb
+*.VC.db
+*.VC.opendb
+*.ncb
+slnx.sqlite
+TestResults/
+
+# OS
+.DS_Store
+Thumbs.db

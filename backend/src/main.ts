@@ -5,6 +5,12 @@ async function bootstrap() {
   try {
     console.log('Starting NestJS application...');
     const app = await NestFactory.create(AppModule);
+    
+    app.enableCors({
+      origin: ['http://localhost:5173', 'http://localhost:3000'],
+      credentials: true,
+    });
+    
     console.log('NestJS application created successfully');
     
     await app.listen(3000);

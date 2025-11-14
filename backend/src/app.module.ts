@@ -1,13 +1,19 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ScraperModule } from './scraper/scraper.module';
-import { FirestoreModule } from './firestore/firestore.module';
-
+import { PostgresModule } from './postgres/postgres.module';
+import { ProductModule } from './modules/ProductModule'
 @Module({
     imports: [
+        ConfigModule.forRoot({
+            isGlobal: true,
+            envFilePath: '.env',
+        }),
         ScheduleModule.forRoot(), 
+        PostgresModule,
         ScraperModule,
-        FirestoreModule
+        ProductModule,
     ],
 })
 export class AppModule { }
