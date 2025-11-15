@@ -43,6 +43,24 @@ export class ProductsService {
             f = f.filter((p) => filters.color.includes(p.color || ""));
         }
 
+        if (filters.search) {
+            const q = filters.search.toLowerCase();
+
+            f = f.filter((p) =>
+                [
+                    p.name,
+                    p.brand,
+                    p.color,
+                    p.gender,
+                    p.age,
+                    p.category,
+                    p.subcategory,
+                ]
+                    .filter(Boolean)
+                    .some((v) => v.toLowerCase().includes(q))
+            );
+        }
+
         f = f.filter((p) => {
             const price = getMin(p.priceMap);
             if (price === null) return false;

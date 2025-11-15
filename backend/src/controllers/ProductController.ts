@@ -21,9 +21,11 @@ export class ProductController {
         @Query("gender") gender?: string,
         @Query("color") color?: string,
         @Query("minPrice") minPrice = "0",
-        @Query("maxPrice") maxPrice = "999999"
+        @Query("maxPrice") maxPrice = "20000",
+        @Query('search') search?: string
     ) {
         const filters = {
+            search: search || "",
             category: category ? category.split(",") : [],
             subcategory: subcategory ? subcategory.split(",") : [],
             brand: brand ? brand.split(",") : [],
