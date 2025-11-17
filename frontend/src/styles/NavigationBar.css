@@ -1,0 +1,173 @@
+.nav-wrapper {
+    max-width: 1200px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 30px;
+    background: white;
+    border-bottom: 1px solid #e5e5e5;
+    height: 60px;
+}
+
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.nav-logo {
+    height: 180px;
+    width: auto;
+}
+
+.nav-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #2b2b2b;
+}
+
+.nav-search-form {
+    position: relative;
+    width: 500px;
+}
+
+.nav-search-form input {
+    width: 100%;
+    padding: 10px 15px 10px 40px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    background: #f9f9f9;
+    font-size: 14px;
+}
+
+.nav-search-icon {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    transform: translateY(-50%);
+    color: #777;
+    font-size: 14px;
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.nav-fav {
+    color: #222;
+    font-size: 17px;
+    cursor: pointer;
+}
+
+.nav-login,
+.nav-register {
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.nav-login {
+    background: #eee;
+}
+
+.nav-register {
+    background: #0c0f1d;
+    color: white;
+}
+
+.nav-container {
+    width: 100%;
+}
+
+.nav-wrapper-2 {
+    max-width: 1200px;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    margin-left: 130px;
+    width:100%;
+}
+
+.nav-elements {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    gap: 100px;
+    padding: 12px 30px;
+    font-size: 17px;
+    font-weight: 500;
+}
+
+.nav-elements a,
+.nav-elements span {
+    cursor: pointer;
+    text-decoration: none;
+    color: #000;
+}
+
+.nav-elements a:hover,
+.nav-elements span:hover {
+    color: #0077ff;
+}
+
+.nav-submenu-brands {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    background: white;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    padding: 25px 40px;
+    z-index: 50;
+}
+
+.submenu-columns-brands {
+    display: flex;
+    justify-content: center; 
+    gap: 120px;
+    width: 100%;
+}
+
+.nav-submenu {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    background: white;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    padding: 25px 0; 
+    z-index: 50;
+    display: flex;
+    justify-content: center; 
+}
+
+.submenu-columns {
+    display: flex;
+    justify-content: center; 
+    gap: 120px; 
+    width: 100%;
+}
+
+.submenu-col {
+    display: flex;
+    flex-direction: column;
+    min-width: 170px;
+}
+
+.submenu-title {
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.submenu-item {
+    padding: 4px 0;
+    color: #222;
+    text-decoration: none;
+}
+
+.submenu-item:hover {
+    color: #0077ff;
+}

@@ -44,6 +44,12 @@ export default function ProductList() {
 
     const pageFromUrl = Math.max(parseInt(params.get("page") || "1", 10), 1);
     const sortFromUrl = (params.get("sort") as SortOption) || "price-asc";
+    const searchFromUrl = params.get("search") || "";
+    const categoryFromUrl = params.get("category") || "";
+    const subcategoryFromUrl = params.get("subcategory") || "";
+    const ageFromUrl = params.get("age") || "";
+    const genderFromUrl = params.get("gender") || "";
+    const brandFromUrl = params.get("brand") || "";
 
     const [products, setProducts] = useState<Product[]>([]);
     const [total, setTotal] = useState(0);
@@ -53,13 +59,16 @@ export default function ProductList() {
     const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
     const [filters, setFilters] = useState<Filters>({
-        category: [],
-        subcategory: [],
-        brand: [],
-        age: [],
-        gender: [],
+        category: categoryFromUrl ? [categoryFromUrl] : [],
+        subcategory: subcategoryFromUrl ? [subcategoryFromUrl] : [],
+        age: ageFromUrl ? [ageFromUrl] : [],
+        gender: genderFromUrl ? [genderFromUrl] : [],
+        brand: brandFromUrl ? [brandFromUrl] : [],
         color: [],
-        price: [0, 20000],
+        price: [
+            Number(params.get("minPrice") || 0),
+            Number(params.get("maxPrice") || 20000),
+        ],
     });
 
     const [filterOptions, setFilterOptions] = useState<FilterOptions>({
@@ -80,17 +89,39 @@ export default function ProductList() {
         load();
     }, []);
 
-    useEffect(() => setCurrentPage(1), [filters]);
+    useEffect(() => {
+        setFilters(prev => ({
+            ...prev,
+            category: categoryFromUrl ? [categoryFromUrl] : [],
+            subcategory: subcategoryFromUrl ? [subcategoryFromUrl] : [],
+            age: ageFromUrl ? [ageFromUrl] : [],
+            gender: genderFromUrl ? [genderFromUrl] : [],
+            brand: brandFromUrl ? [brandFromUrl] : []
+        }));
+    }, [
+        categoryFromUrl,
+        subcategoryFromUrl,
+        ageFromUrl,
+        genderFromUrl,
+        brandFromUrl
+    ]);
 
     useEffect(() => {
-        const q = new URLSearchParams(location.search);
+        setCurrentPage(1);
+    }, [filters, searchFromUrl]);
+
+    useEffect(() => {
+        const q = new URLSearchParams();
         q.set("page", String(currentPage));
         q.set("sort", sort);
 
+        if (searchFromUrl) q.set("search", searchFromUrl);
+
         Object.entries(filters).forEach(([k, v]) => {
-            if (k !== "price") {
-                if (Array.isArray(v) && v.length) q.set(k, v.join(","));
-                else q.delete(k);
+            if (k !== "price" && Array.isArray(v) && v.length) {
+                q.set(k, v.join(","));
+            } else if (k !== "price") {
+                q.delete(k);
             }
         });
 
@@ -98,7 +129,7 @@ export default function ProductList() {
         q.set("maxPrice", String(filters.price[1]));
 
         navigate({ search: q.toString() }, { replace: true });
-    }, [currentPage, sort, filters]);
+    }, [currentPage, sort, filters, searchFromUrl]);
 
     useEffect(() => {
         let cancel = false;
@@ -107,6 +138,8 @@ export default function ProductList() {
             const p = new URLSearchParams();
             p.set("page", String(currentPage));
             p.set("sort", sort);
+
+            if (searchFromUrl) p.set("search", searchFromUrl);
 
             Object.entries(filters).forEach(([k, v]) => {
                 if (k !== "price" && Array.isArray(v) && v.length) {
@@ -120,7 +153,6 @@ export default function ProductList() {
             const r = await fetch(`http://localhost:3000/products?${p.toString()}`);
             const d = await r.json();
             if (cancel) return;
-
             setProducts(d.items || []);
             setTotal(d.total || 0);
             window.scrollTo({ top: 0, behavior: "smooth" });
@@ -130,15 +162,14 @@ export default function ProductList() {
         return () => {
             cancel = true;
         };
-    }, [currentPage, sort, filters]);
+    }, [currentPage, sort, filters, searchFromUrl]);
 
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
     const visiblePages = useMemo(() => {
         const max = 5;
         let s = Math.max(currentPage - 1, 1);
-        if (s + max - 1 > totalPages)
-            s = Math.max(totalPages - max + 1, 1);
+        if (s + max - 1 > totalPages) s = Math.max(totalPages - max + 1, 1);
         return Array.from({ length: Math.min(max, totalPages) }, (_, i) => s + i);
     }, [currentPage, totalPages]);
 
@@ -235,7 +266,10 @@ export default function ProductList() {
 
             <div className="pagination">
                 {currentPage > 1 && (
-                    <button className="page-btn nav-btn" onClick={() => setCurrentPage(currentPage - 1)}>
+                    <button
+                        className="page-btn nav-btn"
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                    >
                         Претходна
                     </button>
                 )}
@@ -251,7 +285,10 @@ export default function ProductList() {
                 ))}
 
                 {currentPage < totalPages && (
-                    <button className="page-btn nav-btn" onClick={() => setCurrentPage(currentPage + 1)}>
+                    <button
+                        className="page-btn nav-btn"
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                    >
                         Следна
                     </button>
                 )}

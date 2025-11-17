@@ -9,6 +9,10 @@ export class ProductsService {
         return this.postgres.getFilterOptions();
     }
 
+    async getAllProducts() {
+        return this.postgres.findAllProducts();
+    }
+
     async getFilteredProducts(page: number, pageSize: number, sort: string, filters: any) {
         const all = await this.postgres.findAllProducts();
 
@@ -41,6 +45,24 @@ export class ProductsService {
 
         if (filters.color.length) {
             f = f.filter((p) => filters.color.includes(p.color || ""));
+        }
+
+        if (filters.search) {
+            const q = filters.search.toLowerCase();
+
+            f = f.filter((p) =>
+                [
+                    p.name,
+                    p.brand,
+                    p.color,
+                    p.gender,
+                    p.age,
+                    p.category,
+                    p.subcategory,
+                ]
+                    .filter(Boolean)
+                    .some((v) => v.toLowerCase().includes(q))
+            );
         }
 
         f = f.filter((p) => {
