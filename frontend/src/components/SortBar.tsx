@@ -1,4 +1,3 @@
-import React from "react";
 import "../styles/ProductList.css";
 
 export type SortOption =

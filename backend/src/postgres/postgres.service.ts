@@ -12,7 +12,7 @@ export class PostgresService {
 
     constructor(
         @InjectRepository(Product)
-        private productRepository: Repository<Product>,
+        public productRepository: Repository<Product>,
         @InjectRepository(PriceHistory)
         private priceHistoryRepository: Repository<PriceHistory>,
     ) { }
@@ -102,7 +102,7 @@ export class PostgresService {
             });
         } catch (error: any) {
             if (this.isPgUniqueViolation(error)) {
-                this.log.warn(`Product insert race for id=${doc.id} � skipping duplicate.`);
+                this.log.warn(`Product insert race for id=${doc.id} — skipping duplicate.`);
                 return;
             }
             throw error;
@@ -246,6 +246,36 @@ export class PostgresService {
         return rows.map((r) => r[column]);
     }
 
+    async getDistinctNavBarValues(
+        column: string,
+        ages: string[],
+        genders: string[],
+        categories: string[]
+    ): Promise<string[]> {
+
+        const qb = this.productRepository
+            .createQueryBuilder("p")
+            .select(`DISTINCT p.${column}`, column)
+            .where(`p.${column} IS NOT NULL AND p.${column} != ''`);
+
+        if (ages.length > 0) {
+            qb.andWhere("p.age IN (:...ages)", { ages });
+        }
+
+        if (genders.length > 0) {
+            qb.andWhere("p.gender IN (:...genders)", { genders });
+        }
+
+        if (categories.length > 0) {
+            qb.andWhere("p.category IN (:...categories)", { categories });
+        }
+
+        qb.orderBy(`p.${column}`, "ASC");
+
+        const rows = await qb.getRawMany();
+        return rows.map((r) => r[column]);
+    }
+
     async getFilterOptions() {
         return {
             categories: await this.getDistinctValues("category"),
@@ -254,6 +284,20 @@ export class PostgresService {
             genders: await this.getDistinctValues("gender"),
             ages: await this.getDistinctValues("age"),
             colors: await this.getDistinctValues("color"),
+        };
+    }
+
+    async getFilterNavBarOptions() {
+        return {
+            maleShoes: await this.getDistinctNavBarValues("subcategory", ['За возрасни'], ['Машки', 'Унисекс'], ['Обувки']),
+            maleClothes: await this.getDistinctNavBarValues("subcategory", ['За возрасни'], ['Машки', 'Унисекс'], ['Текстил']),
+            maleEquipment: await this.getDistinctNavBarValues("subcategory", ['За возрасни'], ['Машки', 'Унисекс'], ['Опрема']),
+            femaleShoes: await this.getDistinctNavBarValues("subcategory", ['За возрасни'], ['Женски', 'Унисекс'], ['Обувки']),
+            femaleClothes: await this.getDistinctNavBarValues("subcategory", ['За возрасни'], ['Женски', 'Унисекс'], ['Текстил']),
+            femaleEquipment: await this.getDistinctNavBarValues("subcategory", ['За возрасни'], ['Женски', 'Унисекс'], ['Опрема']),
+            kidsShoes: await this.getDistinctNavBarValues("subcategory", ['За деца'], ['Машки', 'Женски','Унисекс'], ['Обувки']),
+            kidsClothes: await this.getDistinctNavBarValues("subcategory", ['За деца'], ['Машки', 'Унисекс'], ['Текстил']),
+            kidsEquipment: await this.getDistinctNavBarValues("subcategory", ['За деца'], ['Машки', 'Унисекс'], ['Опрема']),
         };
     }
 

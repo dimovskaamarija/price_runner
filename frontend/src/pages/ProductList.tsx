@@ -45,6 +45,11 @@ export default function ProductList() {
     const pageFromUrl = Math.max(parseInt(params.get("page") || "1", 10), 1);
     const sortFromUrl = (params.get("sort") as SortOption) || "price-asc";
     const searchFromUrl = params.get("search") || "";
+    const categoryFromUrl = params.get("category") || "";
+    const subcategoryFromUrl = params.get("subcategory") || "";
+    const ageFromUrl = params.get("age") || "";
+    const genderFromUrl = params.get("gender") || "";
+    const brandFromUrl = params.get("brand") || "";
 
     const [products, setProducts] = useState<Product[]>([]);
     const [total, setTotal] = useState(0);
@@ -54,13 +59,16 @@ export default function ProductList() {
     const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
     const [filters, setFilters] = useState<Filters>({
-        category: [],
-        subcategory: [],
-        brand: [],
-        age: [],
-        gender: [],
+        category: categoryFromUrl ? [categoryFromUrl] : [],
+        subcategory: subcategoryFromUrl ? [subcategoryFromUrl] : [],
+        age: ageFromUrl ? [ageFromUrl] : [],
+        gender: genderFromUrl ? [genderFromUrl] : [],
+        brand: brandFromUrl ? [brandFromUrl] : [],
         color: [],
-        price: [0, 20000],
+        price: [
+            Number(params.get("minPrice") || 0),
+            Number(params.get("maxPrice") || 20000),
+        ],
     });
 
     const [filterOptions, setFilterOptions] = useState<FilterOptions>({
@@ -80,6 +88,23 @@ export default function ProductList() {
         };
         load();
     }, []);
+
+    useEffect(() => {
+        setFilters(prev => ({
+            ...prev,
+            category: categoryFromUrl ? [categoryFromUrl] : [],
+            subcategory: subcategoryFromUrl ? [subcategoryFromUrl] : [],
+            age: ageFromUrl ? [ageFromUrl] : [],
+            gender: genderFromUrl ? [genderFromUrl] : [],
+            brand: brandFromUrl ? [brandFromUrl] : []
+        }));
+    }, [
+        categoryFromUrl,
+        subcategoryFromUrl,
+        ageFromUrl,
+        genderFromUrl,
+        brandFromUrl
+    ]);
 
     useEffect(() => {
         setCurrentPage(1);

@@ -1,13 +1,14 @@
 import { Controller, Get, Query, Param, HttpException, HttpStatus } from "@nestjs/common";
 import { ProductsService } from "../services/ProductService";
+import { PostgresService } from "../postgres/postgres.service";
 
 @Controller("products")
 export class ProductController {
-    constructor(private readonly productsService: ProductsService) { }
+    constructor(private readonly postgresService: PostgresService, private readonly productsService: ProductsService) { }
 
     @Get("filter-options")
     async getFilterOptions() {
-        return this.productsService.getFilterOptions();
+        return this.postgresService.getFilterOptions();
     }
 
     @Get()
@@ -46,10 +47,101 @@ export class ProductController {
         }
     }
 
+   @Get("nav-data")
+async getNavData() {
+    const navbar = await this.postgresService.getFilterNavBarOptions();
+
+    const filterOptions = await this.postgresService.getFilterOptions();
+
+    const all = await this.productsService.getAllProducts();
+
+    const DODATOCI = [
+        "Ранец", "Торби и торбички", "Шалови", "Врвки",
+        "Ракавици", "Качкети и капи", "Чорапи", "Бандани"
+    ];
+
+    const OPREMA = [
+        "Топки", "Опрема за пливање", "Опрема за тренинг",
+        "Ролери", "Тротинет", "Шишишта", "Останато"
+    ];
+
+    const equipment = {
+        dodatoci: [],
+        sports: []
+    };
+
+    const topBrandCounter: Record<string, number> = {};
+    const allBrands: Record<string, string[]> = {};
+
+    const push = (arr: string[], v: string) => {
+        if (v && !arr.includes(v)) arr.push(v);
+    };
+
+    for (const p of all) {
+        const sub = (p.subcategory || "").trim();
+        const category = (p.category || "").trim();
+        const brand = (p.brand || "").trim();
+
+        if (brand) {
+            topBrandCounter[brand] = (topBrandCounter[brand] || 0) + 1;
+
+            const letter = brand[0].toUpperCase();
+            if (!allBrands[letter]) allBrands[letter] = [];
+            if (!allBrands[letter].includes(brand)) {
+                allBrands[letter].push(brand);
+            }
+        }
+
+        if (category === "Опрема") {
+            if (DODATOCI.includes(sub)) push(equipment.dodatoci, sub);
+            if (OPREMA.includes(sub)) push(equipment.sports, sub);
+        }
+    }
+
+    for (const key of Object.keys(allBrands)) {
+        allBrands[key].sort((a, b) => a.localeCompare(b));
+    }
+
+    const topBrands = Object.entries(topBrandCounter)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
+        .map(([name, count]) => ({ name, count }));
+
+    return {
+        menu: {
+            men: {
+                Обувки: navbar.maleShoes,
+                Текстил: navbar.maleClothes,
+                Опрема: navbar.maleEquipment,
+            },
+            women: {
+                Обувки: navbar.femaleShoes,
+                Текстил: navbar.femaleClothes,
+                Опрема: navbar.femaleEquipment,
+            },
+            kids: {
+                Обувки: navbar.kidsShoes,
+                Текстил: navbar.kidsClothes,
+                Опрема: navbar.kidsEquipment,
+            }
+        },
+
+        equipment,
+
+        brands: {
+            top: topBrands,
+            all: allBrands
+        },
+
+        filters: filterOptions
+    };
+}
+
     @Get(":id")
     async getProductById(@Param("id") id: string) {
         const p = await this.productsService.getProductById(id);
         if (!p) throw new HttpException("Product not found", HttpStatus.NOT_FOUND);
         return p;
     }
+
 }

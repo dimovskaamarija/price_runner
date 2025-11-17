@@ -9,6 +9,10 @@ export class ProductsService {
         return this.postgres.getFilterOptions();
     }
 
+    async getAllProducts() {
+        return this.postgres.findAllProducts();
+    }
+
     async getFilteredProducts(page: number, pageSize: number, sort: string, filters: any) {
         const all = await this.postgres.findAllProducts();
 
