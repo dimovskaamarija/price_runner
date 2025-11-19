@@ -76,6 +76,7 @@ export default function NavigationBar() {
                     <FaHeart className="nav-fav" />
                     <button className="nav-login">Најава</button>
                     <button className="nav-register">Регистрација</button>
+                                    await fetch("http://localhost:3000/auth/logout", {
                 </div>
             </div>
 
