@@ -3,6 +3,7 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { PostgresService } from "./postgres.service";
 import { Product } from "./entities/product.entity";
 import { PriceHistory } from "./entities/price-history.entity";
+import { User } from "./entities/users.entity";
 
 @Module({
     imports: [
@@ -13,7 +14,7 @@ import { PriceHistory } from "./entities/price-history.entity";
             username: process.env.DB_USERNAME || "postgres",
             password: process.env.DB_PASSWORD || "postgres",
             database: process.env.DB_DATABASE || "price_runner",
-            entities: [Product, PriceHistory],
+            entities: [Product, PriceHistory, User],
             synchronize: true,
         }),
         TypeOrmModule.forFeature([Product, PriceHistory]),

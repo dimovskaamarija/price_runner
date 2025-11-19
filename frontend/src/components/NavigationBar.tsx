@@ -4,13 +4,17 @@ import "../styles/NavigationBar.css";
 import logo from "../assets/logo.svg";
 import { FaSearch, FaHeart } from "react-icons/fa";
 import type { NavData } from "../types/navData";
+import type { User } from "../types/user";
 
-export default function NavigationBar() {
+interface Props {
+    user: User | null;
+}
+
+export default function NavigationBar({ user }: Props) {
     const [query, setQuery] = useState("");
     const [hover, setHover] = useState<string | null>(null);
     const [navData, setNavData] = useState<NavData | null>(null);
     const timeoutRef = useRef<number | null>(null);
-
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -39,15 +43,15 @@ export default function NavigationBar() {
     };
 
     const closeMenu = () => {
-        timeoutRef.current = window.setTimeout(() => {
-            setHover(null);
-        }, 200);
+        timeoutRef.current = window.setTimeout(() => setHover(null), 200);
     };
 
     const clickClose = () => {
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
         setHover(null);
     };
+
+    const LOGIN_URL = "http://localhost:4000/auth/login";
 
     return (
         <div className="nav-container">
@@ -74,8 +78,36 @@ export default function NavigationBar() {
 
                 <div className="nav-right">
                     <FaHeart className="nav-fav" />
-                    <button className="nav-login">Најава</button>
-                    <button className="nav-register">Регистрација</button>
+
+                    {!user && (
+                        <>
+                            <button
+                                className="nav-login"
+                                onClick={() => (window.location.href = LOGIN_URL)}
+                            >
+                                Најава
+                            </button>
+
+                            <button
+                                className="nav-register"
+                                onClick={() => (window.location.href = LOGIN_URL)}
+                            >
+                                Регистрација
+                            </button>
+                        </>
+                    )}
+
+                    {user && (
+                        <>
+                            <span className="nav-username">👋 {user.name}</span>
+
+                           <button className="nav-logout"
+                            onClick={() => {
+                            window.location.href = "http://localhost:4000/auth/logout";
+                            }}>Одјава</button>
+
+                        </>
+                    )}
                 </div>
             </div>
 
@@ -102,7 +134,9 @@ export default function NavigationBar() {
                     </span>
 
                     <span onMouseEnter={() => openMenu("brands")} onMouseLeave={closeMenu}>
-                        <Link to="/brands" onClick={clickClose}>БРЕНДОВИ</Link>
+                        <Link to="/brands" onClick={clickClose}>
+                            БРЕНДОВИ
+                        </Link>
                     </span>
                 </div>
             </div>
@@ -191,10 +225,7 @@ export default function NavigationBar() {
                                 <div className="submenu-col" key={cat}>
                                     <Link
                                         className="submenu-title"
-                                        to={go({
-                                            age: "За деца",
-                                            category: cat,
-                                        })}
+                                        to={go({ age: "За деца", category: cat })}
                                         onClick={clickClose}
                                     >
                                         {cat === "equipment" ? "Додатоци" : cat}
@@ -254,7 +285,6 @@ export default function NavigationBar() {
                     {hover === "brands" && (
                         <div className="submenu-columns-brands">
                             <div className="brands-grid">
-
                                 {navData.brands.top?.slice(0, 30).map((b) => (
                                     <button
                                         key={b.name}
