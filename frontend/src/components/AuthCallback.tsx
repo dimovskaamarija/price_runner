@@ -1,25 +1,22 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 export default function AuthCallback() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
 
     useEffect(() => {
-        const url = new URL(window.location.href);
-        const code = url.searchParams.get("code");
-
-        if (!code) {
-            navigate("/");
-            return;
+        const authStatus = searchParams.get("auth");
+        
+        if (authStatus === "success") {
+            navigate("/products", { replace: true });
+            window.location.reload();
+        } else if (authStatus === "error") {
+            navigate("/", { replace: true });
+        } else {
+            navigate("/", { replace: true });
         }
-
-        // Call backend
-        fetch(`http://localhost:4000/auth/callback?code=${code}`, {
-            credentials: "include",
-        })
-            .then(() => navigate("/products"))
-            .catch(() => navigate("/"));
-    }, []);
+    }, [navigate, searchParams]);
 
     return <div>Signing you in...</div>;
 }

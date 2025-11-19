@@ -51,10 +51,7 @@ export default function NavigationBar({ user }: Props) {
         setHover(null);
     };
 
-    const LOGIN_URL =
-        "https://present-countryside-12-staging.authkit.app/" +
-        "?client_id=client_01KA2DVX23D1M2CEBVA6XJV7BC" +
-        "&redirect_uri=http://localhost:5173/auth/callback";
+    const LOGIN_URL = "http://localhost:4000/auth/login";
 
     return (
         <div className="nav-container">
@@ -105,12 +102,8 @@ export default function NavigationBar({ user }: Props) {
                             <span className="nav-username">👋 {user.name}</span>
 
                            <button className="nav-logout"
-                            onClick={async () => {
-                            await fetch("http://localhost:4000/auth/logout", {
-                                method: "POST",
-                                credentials: "include",
-                            });
-                            window.location.href = "/products";
+                            onClick={() => {
+                            window.location.href = "http://localhost:4000/auth/logout";
                             }}>Одјава</button>
 
                         </>

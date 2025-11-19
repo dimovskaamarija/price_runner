@@ -1,13 +1,28 @@
 import { Router } from "express";
-import jwt from "jsonwebtoken";
 import { pool } from "../services/db";
 import { workos } from "../workos";
 
 const router = Router();
 
-// =========================
-// AUTH → CALLBACK HANDLER
-// =========================
+router.get("/login", (req, res) => {
+    try {
+        if (!process.env.WORKOS_CLIENT_ID) {
+            return res.status(500).json({ error: "WORKOS_CLIENT_ID is not configured" });
+        }
+
+        const authorizationUrl = workos.userManagement.getAuthorizationUrl({
+            provider: "authkit",
+            redirectUri: process.env.WORKOS_REDIRECT_URI || "http://localhost:4000/auth/callback",
+            clientId: process.env.WORKOS_CLIENT_ID,
+        });
+
+        res.redirect(authorizationUrl);
+    } catch (error) {
+        console.error("Login endpoint error:", error);
+        res.status(500).json({ error: "Failed to generate authorization URL" });
+    }
+});
+
 router.get("/callback", async (req, res) => {
     try {
         const code = req.query.code as string;
@@ -16,18 +31,22 @@ router.get("/callback", async (req, res) => {
             return res.status(400).json({ error: "Missing code" });
         }
 
-        const { user } = await workos.userManagement.authenticateWithCode({
+        const authenticateResponse = await workos.userManagement.authenticateWithCode({
             clientId: process.env.WORKOS_CLIENT_ID!,
             code,
+            session: {
+                sealSession: true,
+                cookiePassword: process.env.WORKOS_COOKIE_PASSWORD!,
+            },
         });
 
-        // Check if exists
+        const { user, sealedSession } = authenticateResponse;
+
         let result = await pool.query(
             "SELECT * FROM users WHERE authkit_id = $1",
             [user.id]
         );
 
-        // Create if new
         if (result.rows.length === 0) {
             await pool.query(
                 "INSERT INTO users (authkit_id, email, name) VALUES ($1, $2, $3)",
@@ -40,62 +59,94 @@ router.get("/callback", async (req, res) => {
             );
         }
 
-        const dbUser = result.rows[0];
+        res.cookie("wos-session", sealedSession, {
+            path: "/",
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+        });
 
-        // Sign session token
-        const token = jwt.sign(
-            { id: dbUser.id, email: dbUser.email },
-            process.env.SESSION_SECRET!,
-            { expiresIn: "7d" }
-        );
-
-res.cookie("session", token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: false,
-    path: "/",       // <-- MUST MATCH LOGOUT
-});
-
-
-        return res.json({ success: true });
+        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+        return res.redirect(`${frontendUrl}/?auth=success`);
     } catch (err) {
-        return res.status(500).json({ error: "Auth failed", details: err });
+        console.error("Auth callback error:", err);
+        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+        return res.redirect(`${frontendUrl}/?auth=error`);
     }
 });
 
-// =========================
-// CURRENT USER
-// =========================
 router.get("/me", async (req, res) => {
     try {
-        const token = req.cookies.session;
-        if (!token) return res.json(null);
+        const session = workos.userManagement.loadSealedSession({
+            sessionData: req.cookies["wos-session"],
+            cookiePassword: process.env.WORKOS_COOKIE_PASSWORD!,
+        });
 
-        const { id } = jwt.verify(
-            token,
-            process.env.SESSION_SECRET!
-        ) as { id: number };
+        const authResult = await session.authenticate();
 
-        const user = await pool.query("SELECT * FROM users WHERE id=$1", [id]);
-        res.json(user.rows[0] || null);
-    } catch {
+        if (!authResult.authenticated) {
+            return res.json(null);
+        }
+
+        const user = "user" in authResult ? authResult.user : null;
+        
+        if (!user) {
+            return res.json(null);
+        }
+
+        let result = await pool.query(
+            "SELECT * FROM users WHERE authkit_id = $1",
+            [user.id]
+        );
+
+        if (result.rows.length === 0) {
+            await pool.query(
+                "INSERT INTO users (authkit_id, email, name) VALUES ($1, $2, $3)",
+                [user.id, user.email, user.firstName]
+            );
+
+            result = await pool.query(
+                "SELECT * FROM users WHERE authkit_id = $1",
+                [user.id]
+            );
+        }
+
+        res.json(result.rows[0] || null);
+    } catch (err) {
+        console.error("Get me error:", err);
         res.json(null);
     }
 });
 
-// =========================
-// LOGOUT
-// =========================
-router.post("/logout", (req, res) => {
-    res.clearCookie("session", {
-        httpOnly: true,
-        sameSite: "lax",
-        secure: false,
-        path: "/",           // <-- REQUIRED
-    });
+router.get("/logout", async (req, res) => {
+    try {
+        const session = workos.userManagement.loadSealedSession({
+            sessionData: req.cookies["wos-session"],
+            cookiePassword: process.env.WORKOS_COOKIE_PASSWORD!,
+        });
 
-    res.json({ loggedOut: true });
+        const url = await session.getLogoutUrl();
+
+        res.clearCookie("wos-session", {
+            path: "/",
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+        });
+
+        res.redirect(url);
+    } catch (err) {
+        console.error("Logout error:", err);
+        res.clearCookie("wos-session", {
+            path: "/",
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+        });
+
+        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+        res.redirect(frontendUrl);
+    }
 });
-
 
 export default router;

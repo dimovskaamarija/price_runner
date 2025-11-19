@@ -16,6 +16,15 @@ app.use(
 
 app.use("/auth", authRouter);
 
+app.get("/", (req, res) => {
+    res.json({ message: "Auth server is running", routes: ["/auth/login", "/auth/callback", "/auth/me", "/auth/logout"] });
+});
+
 app.listen(4000, "0.0.0.0", () => {
     console.log("Auth server running on http://localhost:4000");
+    console.log("Available routes:");
+    console.log("  GET  /auth/login");
+    console.log("  GET  /auth/callback");
+    console.log("  GET  /auth/me");
+    console.log("  GET  /auth/logout");
 });

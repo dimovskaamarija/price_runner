@@ -1,11 +1,8 @@
-import axios from "axios";
-
 export default function LogoutButton() {
     return (
         <button
-            onClick={async () => {
-                await axios.post("http://localhost:4000/auth/logout", {}, { withCredentials: true });
-                window.location.reload();
+            onClick={() => {
+                window.location.href = "http://localhost:4000/auth/logout";
             }}>
             Sign Out
         </button>
