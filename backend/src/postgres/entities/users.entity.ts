@@ -1,10 +1,4 @@
-import {
-    Entity,
-    Column,
-    PrimaryGeneratedColumn,
-    CreateDateColumn,
-    UpdateDateColumn
-} from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
 
 @Entity("users")
 export class User {
@@ -14,15 +8,9 @@ export class User {
     @Column({ unique: true })
     authkit_id: string;
 
-    @Column({ unique: true })
+    @Column()
     email: string;
 
     @Column({ nullable: true })
     name: string;
-
-    @CreateDateColumn()
-    createdAt: Date;
-
-    @UpdateDateColumn()
-    updatedAt: Date;
 }

@@ -3,11 +3,13 @@ import ProductList from "./pages/ProductList";
 import ProductDetail from "./pages/ProductDetail";
 import NavigationBar from "./components/NavigationBar";
 import Brands from "./pages/Brands";
+import { useUser } from "./hooks/useUser";
 
 function App() {
+    const { user } = useUser();
     return (
         <>
-            <NavigationBar />
+            <NavigationBar user= {user} />
 
             <Routes>
                 <Route path="/products" element={<ProductList />} />
