@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Product } from './entities/product.entity';
 import { PriceHistory } from './entities/price-history.entity';
+import { Store } from './entities/store.entity';
 import { Product as ProductType } from '../common/types/product';
 
 @Injectable()
@@ -15,6 +16,8 @@ export class PostgresService {
         public productRepository: Repository<Product>,
         @InjectRepository(PriceHistory)
         private priceHistoryRepository: Repository<PriceHistory>,
+        @InjectRepository(Store)
+        private storeRepository: Repository<Store>,
     ) { }
 
     private isPgUniqueViolation(error: any) {
@@ -299,6 +302,12 @@ export class PostgresService {
             kidsClothes: await this.getDistinctNavBarValues("subcategory", ['За деца'], ['Машки', 'Унисекс'], ['Текстил']),
             kidsEquipment: await this.getDistinctNavBarValues("subcategory", ['За деца'], ['Машки', 'Унисекс'], ['Опрема']),
         };
+    }
+
+    async getAllStores() {
+        return this.storeRepository.find({
+            order: { name: 'ASC' },
+        });
     }
 
 }

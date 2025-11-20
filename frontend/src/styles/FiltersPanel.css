@@ -58,6 +58,7 @@
     justify-content: space-between;
     padding: 12px 0;
     font-size: 17px;
+    border-bottom: 1px solid #eee;
 }
 
 .arrow {
@@ -151,4 +152,9 @@
 
 .nav-btn {
   font-weight: bold;
+}
+
+.apply-btn{
+    background-color: black;
+    color: white;
 }

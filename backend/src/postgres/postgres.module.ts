@@ -4,6 +4,7 @@ import { PostgresService } from "./postgres.service";
 import { Product } from "./entities/product.entity";
 import { PriceHistory } from "./entities/price-history.entity";
 import { User } from "./entities/users.entity";
+import { Store } from "./entities/store.entity";
 
 @Module({
     imports: [
@@ -14,10 +15,10 @@ import { User } from "./entities/users.entity";
             username: process.env.DB_USERNAME || "postgres",
             password: process.env.DB_PASSWORD || "postgres",
             database: process.env.DB_DATABASE || "price_runner",
-            entities: [Product, PriceHistory, User],
+            entities: [Product, PriceHistory, User, Store],
             synchronize: true,
         }),
-        TypeOrmModule.forFeature([Product, PriceHistory]),
+        TypeOrmModule.forFeature([Product, PriceHistory, Store]),
     ],
     providers: [PostgresService],
     exports: [PostgresService],
