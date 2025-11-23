@@ -1,5 +1,5 @@
 import { Controller, Get, Query, Param, HttpException, HttpStatus } from "@nestjs/common";
-import { ProductsService } from "../services/ProductService";
+import { ProductsService } from "../services/product.service.ts";
 import { PostgresService } from "../postgres/postgres.service";
 
 @Controller("products")
@@ -136,6 +136,11 @@ async getNavData() {
         filters: filterOptions
     };
 }
+
+    @Get("stores")
+    async getStores() {
+        return this.postgresService.getAllStores();
+    }
 
     @Get(":id")
     async getProductById(@Param("id") id: string) {

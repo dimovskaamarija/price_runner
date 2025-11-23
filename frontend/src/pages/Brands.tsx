@@ -8,7 +8,16 @@ export default function BrandsPage() {
 
     if (loading || !navData) return null;
 
-    const letters = Object.keys(navData.brands.all).sort();
+    const allKeys = Object.keys(navData.brands.all);
+    const letterKeys = allKeys.filter(key => /^[A-Za-zА-Яа-я]$/.test(key));
+    const numberKeys = allKeys.filter(key => /^[0-9]$/.test(key));
+    
+    const letters = letterKeys.sort();
+    
+    const numbersSection = numberKeys.length > 0 ? {
+        key: '#',
+        brands: numberKeys.flatMap(key => navData.brands.all[key])
+    } : null;
 
     const goToBrand = (b: string) => {
         const q = new URLSearchParams();
@@ -26,13 +35,17 @@ export default function BrandsPage() {
                         {l}
                     </a>
                 ))}
+                {numbersSection && (
+                    <a href="#sec-#" className="brands-az-letter">
+                        #
+                    </a>
+                )}
             </div>
 
             <div className="brands-sections">
                 {letters.map((l) => (
                     <div key={l} id={`sec-${l}`} className="brands-section">
                         <div className="brands-letter-title">{l}</div>
-
                         <div className="brands-grid">
                             {navData.brands.all[l].map((b: string) => (
                                 <div
@@ -46,6 +59,23 @@ export default function BrandsPage() {
                         </div>
                     </div>
                 ))}
+                
+                {numbersSection && (
+                    <div id="sec-#" className="brands-section">
+                        <div className="brands-letter-title">#</div>
+                        <div className="brands-grid">
+                            {numbersSection.brands.map((b: string) => (
+                                <div
+                                    key={b}
+                                    className="brand-item"
+                                    onClick={() => goToBrand(b)}
+                                >
+                                    {b}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
 
         </div>

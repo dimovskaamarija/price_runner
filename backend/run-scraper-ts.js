@@ -1,12 +1,10 @@
 console.log('=== Starting TypeScript Scraper ===');
 
-// Register TypeScript
 require('ts-node/register');
 
 try {
     console.log('Loading TypeScript modules...');
     
-    // Import the services directly
     const { SportVisionScraperService } = require('./src/services/sportvision-scraper.service');
     const { FirebaseService } = require('./src/firebase.service');
     const { ProductService } = require('./src/services/product.service');

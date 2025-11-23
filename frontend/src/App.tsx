@@ -23,17 +23,17 @@ function App() {
     }, [searchParams, navigate, refreshUser]);
 
     return (
-        <>
+        <div style={{ backgroundColor: '#ffffff', minHeight: '100vh' }}>
             <NavigationBar user={user} />
 
             <Routes>
                 <Route path="/" element={<ProductList />} />
                 <Route path="/products" element={<ProductList />} />
-                <Route path="/product/:id" element={<ProductDetail />} />
                 <Route path="/brands" element={<Brands />} />
                 <Route path="/callback" element={<AuthCallback />} />
+                <Route path="/product/:id" element={<ProductDetail />} />
             </Routes>
-        </>
+        </div>
     );
 }
 

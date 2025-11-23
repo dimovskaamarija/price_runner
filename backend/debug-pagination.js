@@ -22,7 +22,6 @@ async function debugPagination() {
 
         console.log('3. Looking for pagination elements...');
         
-        // Check for pagination patterns
         const paginationPatterns = await page.evaluate(() => {
             const patterns = [
                 '.pagination',
@@ -59,7 +58,6 @@ async function debugPagination() {
             }
         });
 
-        // Look for "Next" or ">" buttons
         const nextButtons = await page.evaluate(() => {
             const buttons = Array.from(document.querySelectorAll('a, button'));
             return buttons
@@ -79,7 +77,6 @@ async function debugPagination() {
             console.log(`${i + 1}. "${btn.text}" - ${btn.href} - classes: ${btn.classes}`);
         });
 
-        // Check URL patterns for pagination
         const currentUrl = page.url();
         console.log(`\nCurrent URL: ${currentUrl}`);
 

@@ -39,7 +39,6 @@ async function debugProductPage() {
 
         console.log('5. Analyzing product page structure...');
         
-        // Check current selectors
         const currentSelectors = await page.evaluate(() => {
             const selectors = {
                 name: '.product-name',
@@ -68,7 +67,6 @@ async function debugProductPage() {
             console.log(`${key}: ${result.count} matches - "${result.text}"`);
         });
 
-        // Look for alternative selectors
         const alternativeSelectors = await page.evaluate(() => {
             const patterns = [
                 'h1', 'h2', 'h3', // for name

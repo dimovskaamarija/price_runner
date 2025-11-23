@@ -22,7 +22,6 @@ async function debugSelectors() {
 
         console.log('3. Analyzing page structure...');
         
-        // Check what links exist
         const allLinks = await page.evaluate(() => {
             const links = Array.from(document.querySelectorAll('a[href]'));
             return links.slice(0, 10).map(link => ({
@@ -37,7 +36,6 @@ async function debugSelectors() {
             console.log(`${i + 1}. ${link.href} | "${link.text}" | classes: ${link.classes}`);
         });
 
-        // Check for different product link patterns
         const productPatterns = await page.evaluate(() => {
             const patterns = [
                 'a[href*="/product/"]',
@@ -63,7 +61,6 @@ async function debugSelectors() {
             console.log(`${pattern}: ${count} matches`);
         });
 
-        // Check for any elements with "product" in class or id
         const productElements = await page.evaluate(() => {
             const elements = Array.from(document.querySelectorAll('*[class*="product"], *[id*="product"]'));
             return elements.slice(0, 5).map(el => ({

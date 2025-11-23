@@ -1,10 +1,11 @@
-﻿import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import FiltersPanel from "../components/FiltersPanel";
 import { getMinPrice } from "../utils/pricing";
 import SortBar from "../components/SortBar";
 import type { SortOption } from "../components/SortBar";
-import { FaFilter } from "react-icons/fa";
+import { FaFilter, FaHeart, FaRegHeart } from "react-icons/fa";
+import Spinner from "../components/Spinner";
 import "../styles/ProductList.css";
 
 export interface Product {
@@ -56,7 +57,7 @@ export default function ProductList() {
     const [currentPage, setCurrentPage] = useState(pageFromUrl);
     const [sort, setSort] = useState<SortOption>(sortFromUrl);
     const [filtersOpen, setFiltersOpen] = useState(false);
-    const [favorites, setFavorites] = useState<Set<string>>(new Set());
+    const [loading, setLoading] = useState(true);
 
     const [filters, setFilters] = useState<Filters>({
         category: categoryFromUrl ? [categoryFromUrl] : [],
@@ -106,9 +107,21 @@ export default function ProductList() {
         brandFromUrl
     ]);
 
+    const prevFiltersSearchRef = useRef({ filters, searchFromUrl });
+    
     useEffect(() => {
-        setCurrentPage(1);
-    }, [filters, searchFromUrl]);
+        const filtersChanged = JSON.stringify(prevFiltersSearchRef.current.filters) !== JSON.stringify(filters);
+        const searchChanged = prevFiltersSearchRef.current.searchFromUrl !== searchFromUrl;
+        
+        if (filtersChanged || searchChanged) {
+            if (currentPage !== 1) {
+                setCurrentPage(1);
+            }
+            prevFiltersSearchRef.current = { filters, searchFromUrl };
+        } else if (pageFromUrl !== currentPage) {
+            setCurrentPage(pageFromUrl);
+        }
+    }, [pageFromUrl, filters, searchFromUrl, currentPage]);
 
     useEffect(() => {
         const q = new URLSearchParams();
@@ -128,13 +141,17 @@ export default function ProductList() {
         q.set("minPrice", String(filters.price[0]));
         q.set("maxPrice", String(filters.price[1]));
 
-        navigate({ search: q.toString() }, { replace: true });
-    }, [currentPage, sort, filters, searchFromUrl]);
+        const newSearch = q.toString();
+        if (location.search !== `?${newSearch}` && location.search !== newSearch) {
+            navigate({ search: newSearch }, { replace: true });
+        }
+    }, [currentPage, sort, filters, searchFromUrl, navigate]);
 
     useEffect(() => {
         let cancel = false;
 
         const load = async () => {
+            setLoading(true);
             const p = new URLSearchParams();
             p.set("page", String(currentPage));
             p.set("sort", sort);
@@ -150,12 +167,24 @@ export default function ProductList() {
             p.set("minPrice", String(filters.price[0]));
             p.set("maxPrice", String(filters.price[1]));
 
-            const r = await fetch(`http://localhost:3000/products?${p.toString()}`);
-            const d = await r.json();
-            if (cancel) return;
-            setProducts(d.items || []);
-            setTotal(d.total || 0);
-            window.scrollTo({ top: 0, behavior: "smooth" });
+            try {
+                const r = await fetch(`http://localhost:3000/products?${p.toString()}`);
+                const d = await r.json();
+                if (cancel) return;
+                setProducts(d.items || []);
+                setTotal(d.total || 0);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            } catch (error) {
+                console.error("Error loading products:", error);
+                if (!cancel) {
+                    setProducts([]);
+                    setTotal(0);
+                }
+            } finally {
+                if (!cancel) {
+                    setLoading(false);
+                }
+            }
         };
 
         load();
@@ -172,14 +201,6 @@ export default function ProductList() {
         if (s + max - 1 > totalPages) s = Math.max(totalPages - max + 1, 1);
         return Array.from({ length: Math.min(max, totalPages) }, (_, i) => s + i);
     }, [currentPage, totalPages]);
-
-    const toggleFavorite = (id: string) => {
-        setFavorites((p) => {
-            const n = new Set(p);
-            n.has(id) ? n.delete(id) : n.add(id);
-            return n;
-        });
-    };
 
     const sortedProducts = useMemo(() => {
         const c = [...products];
@@ -213,6 +234,20 @@ export default function ProductList() {
         }
     }, [products, sort]);
 
+    const hasActiveFilters = useMemo(() => {
+        return (
+            searchFromUrl ||
+            filters.category.length > 0 ||
+            filters.subcategory.length > 0 ||
+            filters.brand.length > 0 ||
+            filters.age.length > 0 ||
+            filters.gender.length > 0 ||
+            filters.color.length > 0 ||
+            filters.price[0] > 0 ||
+            filters.price[1] < 20000
+        );
+    }, [filters, searchFromUrl]);
+
     return (
         <div className="product-list-container">
             <div className="product-controls">
@@ -222,77 +257,111 @@ export default function ProductList() {
                 </button>
 
                 <div className="controls-right">
-                    <div className="results-count">{total} производи</div>
+                    {!loading && <div className="results-count">{total} производи</div>}
                     <SortBar value={sort} onChange={setSort} />
                 </div>
             </div>
 
-            <div className="product-grid">
-                {sortedProducts.map((p) => {
-                    const mp = getMinPrice(p.priceMap);
-                    const sc = Object.keys(p.priceMap || {}).length;
-                    const fav = favorites.has(p.id);
+            {loading ? (
+                <Spinner />
+            ) : sortedProducts.length === 0 ? (
+                <div className="empty-state">
+                    <div className="empty-state-icon">📦</div>
+                    <h2 className="empty-state-title">
+                        {hasActiveFilters
+                            ? "Нема продукти според избраните критериуми"
+                            : "Нема продукти на оваа страна"}
+                    </h2>
+                    <p className="empty-state-message">
+                        {hasActiveFilters
+                            ? "Обидете се да ги промените филтрите или критериумите за пребарување."
+                            : "Во моментов нема достапни производи."}
+                    </p>
+                    {hasActiveFilters && (
+                        <button
+                            className="empty-state-button"
+                            onClick={() => {
+                                setFilters({
+                                    category: [],
+                                    subcategory: [],
+                                    brand: [],
+                                    age: [],
+                                    gender: [],
+                                    color: [],
+                                    price: [0, 20000],
+                                });
+                                navigate("/products");
+                            }}
+                        >
+                            Отстрани филтри
+                        </button>
+                    )}
+                </div>
+            ) : (
+                <div className="product-grid">
+                    {sortedProducts.map((p) => {
+                        const mp = getMinPrice(p.priceMap);
+                        const sc = Object.keys(p.priceMap || {}).length;
 
-                    return (
-                        <div className="product-card" key={p.id}>
-                            <button
-                                className={`fav-btn ${fav ? "active" : ""}`}
-                                onClick={() => toggleFavorite(p.id)}
-                            >
-                                {fav ? "♥" : "♡"}
-                            </button>
+                        return (
+                            <div className="product-card" key={p.id}>
+                                <Link 
+                                    to={`/product/${p.id}`} 
+                                    state={{ from: location.pathname + location.search }}
+                                    className="product-link">
+                                    <div className="product-img-wrapper">
+                                        <img
+                                            src={p.image || ""}
+                                            alt={p.name}
+                                            referrerPolicy="no-referrer"
+                                        />
+                                    </div>
 
-                            <Link to={`/product/${p.id}`} className="product-link">
-                                <div className="product-img-wrapper">
-                                    <img
-                                        src={p.image || ""}
-                                        alt={p.name}
-                                        referrerPolicy="no-referrer"
-                                    />
-                                </div>
+                                    <div className="product-info">
+                                        <h3>{p.name}</h3>
+                                        <p className="price">
+                                            Од <span>{mp ? `${mp.toLocaleString()} ден` : "Нема цена"}</span>
+                                        </p>
+                                        <p className="stores">{sc} продавници</p>
+                                    </div>
+                                </Link>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
 
-                                <div className="product-info">
-                                    <h3>{p.name}</h3>
-                                    <p className="price">
-                                        Од <span>{mp ? `${mp.toLocaleString()} ден` : "Нема цена"}</span>
-                                    </p>
-                                    <p className="stores">{sc} продавници</p>
-                                </div>
-                            </Link>
-                        </div>
-                    );
-                })}
-            </div>
+            {!loading && sortedProducts.length > 0 && (
+                <div className="pagination">
+                    {currentPage > 1 && (
+                        <button
+                            className="page-btn nav-btn"
+                            onClick={() => setCurrentPage(currentPage - 1)}
+                        >
+                            Претходна
+                        </button>
+                    )}
 
-            <div className="pagination">
-                {currentPage > 1 && (
-                    <button
-                        className="page-btn nav-btn"
-                        onClick={() => setCurrentPage(currentPage - 1)}
-                    >
-                        Претходна
-                    </button>
-                )}
+                    {visiblePages.map((p) => (
+                        <button
+                            key={p}
+                            className={`page-btn ${p === currentPage ? "active" : ""}`}
+                            onClick={() => setCurrentPage(p)}
+                        >
+                            {p}
+                        </button>
+                    ))}
 
-                {visiblePages.map((p) => (
-                    <button
-                        key={p}
-                        className={`page-btn ${p === currentPage ? "active" : ""}`}
-                        onClick={() => setCurrentPage(p)}
-                    >
-                        {p}
-                    </button>
-                ))}
-
-                {currentPage < totalPages && (
-                    <button
-                        className="page-btn nav-btn"
-                        onClick={() => setCurrentPage(currentPage + 1)}
-                    >
-                        Следна
-                    </button>
-                )}
-            </div>
+                    {currentPage < totalPages && (
+                        <button
+                            className="page-btn nav-btn"
+                            onClick={() => setCurrentPage(currentPage + 1)}
+                        >
+                            Следна
+                        </button>
+                    )}
+                </div>
+            )}
 
             <FiltersPanel
                 isOpen={filtersOpen}

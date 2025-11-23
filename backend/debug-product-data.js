@@ -57,7 +57,6 @@ async function debugProductData() {
 
         console.log('\n6. Looking for alternative selectors...');
         const alternativeData = await page.evaluate(() => {
-            // Try different selectors
             const selectors = {
                 name: ['h1', 'h2', '.product-title', '.product-name', '[class*="title"]', '[class*="name"]'],
                 price: ['.price', '[class*="price"]', '[class*="cost"]', '[class*="amount"]', '.amount'],
@@ -90,7 +89,6 @@ async function debugProductData() {
             console.log(`${key}:`, value);
         });
 
-        // Check if product would be saved
         const wouldSave = currentData.name && currentData.price > 0;
         console.log(`\nWould save product: ${wouldSave}`);
         if (!wouldSave) {

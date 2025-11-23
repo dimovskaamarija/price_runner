@@ -1,5 +1,6 @@
 ﻿import React, { useEffect, useState } from "react";
 import "../styles/FiltersPanel.css";
+import { IoMdArrowDropright, IoMdArrowDropdown } from "react-icons/io";
 
 export type Filters = {
     category: string[];
@@ -85,7 +86,7 @@ export default function FiltersPanel({
         <div className="filters-section">
             <h4 onClick={() => setOpenSection(openSection === key ? null : key)}>
                 {title}
-                <span className="arrow">{openSection === key ? "❮" : "❯"}</span>
+                <span className="arrow">{openSection === key ? <IoMdArrowDropdown/> : <IoMdArrowDropright/>}</span>
             </h4>
 
             {openSection === key && (
@@ -122,12 +123,10 @@ export default function FiltersPanel({
                 {block("color", "Боја", filterOptions.colors)}
 
                 <div className="filters-section">
-                    <h4 onClick={() => setOpenSection(openSection === "price" ? null : "price")}>
+                    <h4>
                         Цена
-                        <span className="arrow">{openSection === "price" ? "❮" : "❯"}</span>
+                        <span className="arrow"></span>
                     </h4>
-
-                    {openSection === "price" && (
                         <div className="price-slider">
                             <input type="range" min="0" max="20000" step="500" value={temp.price[0]} onChange={min} />
                             <input type="range" min="0" max="20000" step="500" value={temp.price[1]} onChange={max} />
@@ -145,7 +144,6 @@ export default function FiltersPanel({
                                 <span>{temp.price[1]} ден</span>
                             </div>
                         </div>
-                    )}
                 </div>
 
                 <div className="filters-actions">
