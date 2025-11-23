@@ -5,7 +5,7 @@ async function setupDatabase() {
     const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/price_runner';
     
     console.log('Connecting to MongoDB...');
-    console.log('URI:', uri.replace(/\/\/.*@/, '//***:***@')); // Hide credentials
+    console.log('URI:', uri.replace(/\/\/.*@/, '//***:***@'));
     
     try {
         await mongoose.connect(uri);

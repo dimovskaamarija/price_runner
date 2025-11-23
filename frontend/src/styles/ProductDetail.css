@@ -1,6 +1,17 @@
+.page-container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 40px auto;
+    padding: 20px 40px;
+    box-sizing: border-box;
+    background-color: #ffffff !important;
+    min-height: 100vh;
+}
+
 .product-detail-layout {
     width: 100%;
     padding: 20px 40px;
+    box-sizing: border-box;
 }
 
 .product-detail-wrapper {
@@ -29,7 +40,8 @@
 .product-title {
     font-size: 28px;
     font-weight: 600;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
+    margin-top: 45px;
 }
 
 .product-price-box {
@@ -60,6 +72,9 @@
     border-radius: 12px;
     margin-bottom: 30px;
     background: #fff;
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: auto;
 }
 
 .spec-box h2,
@@ -83,6 +98,8 @@
 .store-table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: auto;
+    min-width: 100%;
 }
 
 .store-table th {
@@ -146,7 +163,6 @@
     background: #f3f4f6;
 }
 
-/* PRICE HISTORY BOX */
 .history-box {
     border: 1px solid #ddd;
     background: #fff;
@@ -155,11 +171,11 @@
     margin-top: 30px;
 }
 
-/* STORE BUTTONS */
 .store-buttons {
     display: flex;
     gap: 10px;
     margin-bottom: 15px;
+    flex-wrap: wrap;
 }
 
 .store-toggle {
@@ -177,7 +193,7 @@
     }
 
     .store-toggle span {
-        color: inherit; /* follow button color */
+        color: inherit;
     }
 
 .store-btn-content {
@@ -191,3 +207,34 @@
     height: 20px;
     object-fit: contain;
 }
+
+.product-detail-columns {
+    display: flex;
+    gap: 40px;
+    justify-content: space-between;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.left-column {
+    flex: 0 0 55%;
+    min-width: 0;
+}
+
+.right-column {
+    flex: 0 0 45%;
+    min-width: 0;
+}
+
+@media (max-width: 1200px) {
+    .product-detail-columns {
+        flex-direction: column;
+    }
+    
+    .left-column,
+    .right-column {
+        flex: 1;
+        width: 100%;
+    }
+}
+

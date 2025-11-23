@@ -43,7 +43,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-weight: bold;
+    font-weight: bolder;
 }
 
 .close-btn {
@@ -57,7 +57,7 @@
     display: flex;
     justify-content: space-between;
     padding: 12px 0;
-    font-size: 17px;
+    font-size: 15px;
     border-bottom: 1px solid #eee;
 }
 

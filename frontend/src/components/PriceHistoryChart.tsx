@@ -42,7 +42,7 @@ export default function PriceHistoryChart({ productId, storesMap }: Props) {
             setHistory(data);
 
             const uniqueStores = [...new Set(data.map((i) => i.store))];
-            setSelectedStores(uniqueStores); // default all selected
+            setSelectedStores(uniqueStores);
         };
 
         load();
@@ -50,7 +50,6 @@ export default function PriceHistoryChart({ productId, storesMap }: Props) {
 
     if (history.length === 0) return null;
 
-    // MATCH stores like in product detail table
     const getStoreData = (storeName: string) => {
         const lower = storeName.toLowerCase();
 
@@ -70,28 +69,44 @@ export default function PriceHistoryChart({ productId, storesMap }: Props) {
         );
     };
 
-    const labels = [
-        ...new Set(
-            history.map((i) =>
-                new Date(i.date).toLocaleDateString("en-GB", {
-                    day: "2-digit",
-                    month: "short",
-                })
-            )
-        ),
-    ];
+    const allDates = [...new Set(history.map((i) => i.date))].sort(
+        (a, b) => new Date(a).getTime() - new Date(b).getTime()
+    );
+
+    const labels = allDates.map((date) =>
+        new Date(date).toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+        })
+    );
+
+    const priceMap: Record<string, Record<string, number>> = {};
+    history.forEach((entry) => {
+        if (!priceMap[entry.date]) {
+            priceMap[entry.date] = {};
+        }
+        priceMap[entry.date][entry.store] = entry.price;
+    });
 
     const datasets = selectedStores.map((store, index) => {
-        const entries = history.filter((h) => h.store === store);
+        const data = allDates.map((date) => priceMap[date]?.[store] ?? null);
+
+        const storeData = getStoreData(store);
+        const colors = ["#2563eb", "#16a34a", "#d97706", "#7e22ce", "#dc2626", "#059669"];
+        const color = colors[index % colors.length];
 
         return {
-            label: store,
-            data: entries.map((h) => h.price),
+            label: storeData?.name || store,
+            data: data,
             tension: 0.3,
             borderWidth: 2,
-            borderColor: ["#2563eb", "#16a34a", "#d97706", "#7e22ce"][index] || "#2563eb",
-            pointRadius: 5,
-            pointBackgroundColor: "#2563eb",
+            borderColor: color,
+            backgroundColor: color + "20",
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            pointBackgroundColor: color,
+            pointBorderColor: "#fff",
+            pointBorderWidth: 2,
         };
     });
 
@@ -111,8 +126,8 @@ export default function PriceHistoryChart({ productId, storesMap }: Props) {
                             onClick={() =>
                                 setSelectedStores((prev) =>
                                     isActive
-                                        ? prev.filter((s) => s !== store) // deselect
-                                        : [...prev, store]                // select
+                                        ? prev.filter((s) => s !== store)
+                                        : [...prev, store]
                                 )
                             }
                         >

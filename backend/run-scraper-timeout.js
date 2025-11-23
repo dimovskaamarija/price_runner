@@ -14,7 +14,6 @@ async function runScraper() {
         
         console.log('Starting product scraping with timeout...');
         
-        // Set a timeout for the entire scraping process
         const timeoutPromise = new Promise((_, reject) => {
             setTimeout(() => reject(new Error('Scraping timeout after 5 minutes')), 5 * 60 * 1000);
         });
@@ -32,10 +31,9 @@ async function runScraper() {
     }
 }
 
-// Set a global timeout for the entire process
 setTimeout(() => {
     console.log('Process timeout reached, exiting...');
     process.exit(1);
-}, 10 * 60 * 1000); // 10 minutes total timeout
+}, 10 * 60 * 1000);
 
 runScraper();

@@ -77,8 +77,7 @@ export default function NavigationBar({ user }: Props) {
                 </form>
 
                 <div className="nav-right">
-                    <FaHeart className="nav-fav" />
-
+     
                     {!user && (
                         <>
                             <button
@@ -149,104 +148,414 @@ export default function NavigationBar({ user }: Props) {
                 >
                     {hover === "men" && (
                         <div className="submenu-columns">
-                            {Object.entries(navData.menu.men).map(([cat, subs]) => (
-                                <div className="submenu-col" key={cat}>
+                            {Object.entries(navData.menu.men)
+                                .filter(([cat]) => cat !== "Опрема")
+                                .map(([cat, subs]) => {
+                                    const sortedSubs = [...subs].sort((a, b) => {
+                                        if (a === "Останато") return 1;
+                                        if (b === "Останато") return -1;
+                                        return a.localeCompare(b);
+                                    });
+                                    
+                                    if (cat === "Текстил" && sortedSubs.length > 0) {
+                                        const mid = Math.ceil(sortedSubs.length / 2);
+                                        const firstHalf = sortedSubs.slice(0, mid);
+                                        const secondHalf = sortedSubs.slice(mid);
+                                        
+                                        return (
+                                            <>
+                                                <div className="submenu-col" key={`${cat}-1`}>
+                                                    <Link
+                                                        className="submenu-title"
+                                                        to={go({
+                                                            gender: "Машки",
+                                                            age: "За возрасни",
+                                                            category: cat,
+                                                        })}
+                                                        onClick={clickClose}
+                                                    >
+                                                        {cat}
+                                                    </Link>
+                                                    {firstHalf.map((s) => (
+                                                        <Link
+                                                            key={s}
+                                                            className="submenu-item"
+                                                            to={go({
+                                                                gender: "Машки",
+                                                                age: "За возрасни",
+                                                                category: cat,
+                                                                subcategory: s,
+                                                            })}
+                                                            onClick={clickClose}
+                                                        >
+                                                            {s}
+                                                        </Link>
+                                                    ))}
+                                                </div>
+                                                <div className="submenu-col" key={`${cat}-2`}>
+                                                    <div className="submenu-title" style={{ visibility: 'hidden' }}>
+                                                        {cat}
+                                                    </div>
+                                                    {secondHalf.map((s) => (
+                                                        <Link
+                                                            key={s}
+                                                            className="submenu-item"
+                                                            to={go({
+                                                                gender: "Машки",
+                                                                age: "За возрасни",
+                                                                category: cat,
+                                                                subcategory: s,
+                                                            })}
+                                                            onClick={clickClose}
+                                                        >
+                                                            {s}
+                                                        </Link>
+                                                    ))}
+                                                </div>
+                                            </>
+                                        );
+                                    }
+                                    
+                                    return (
+                                        <div className="submenu-col" key={cat}>
+                                            <Link
+                                                className="submenu-title"
+                                                to={go({
+                                                    gender: "Машки",
+                                                    age: "За возрасни",
+                                                    category: cat,
+                                                })}
+                                                onClick={clickClose}
+                                            >
+                                                {cat}
+                                            </Link>
+
+                                            {sortedSubs.map((s) => (
+                                                <Link
+                                                    key={s}
+                                                    className="submenu-item"
+                                                    to={go({
+                                                        gender: "Машки",
+                                                        age: "За возрасни",
+                                                        category: cat,
+                                                        subcategory: s,
+                                                    })}
+                                                    onClick={clickClose}
+                                                >
+                                                    {s}
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    );
+                                })}
+                            
+                            {navData.equipment.dodatoci.length > 0 && (
+                                <div className="submenu-col">
                                     <Link
                                         className="submenu-title"
                                         to={go({
                                             gender: "Машки",
                                             age: "За возрасни",
-                                            category: cat,
+                                            category: "Опрема",
                                         })}
                                         onClick={clickClose}
                                     >
-                                        {cat === "equipment" ? "Додатоци" : cat}
+                                        Додатоци
                                     </Link>
 
-                                    {subs.map((s) => (
-                                        <Link
-                                            key={s}
-                                            className="submenu-item"
-                                            to={go({
-                                                gender: "Машки",
-                                                age: "За возрасни",
-                                                category: cat,
-                                                subcategory: s,
-                                            })}
-                                            onClick={clickClose}
-                                        >
-                                            {s}
-                                        </Link>
-                                    ))}
+                                    {navData.equipment.dodatoci
+                                        .sort((a, b) => {
+                                            if (a === "Останато") return 1;
+                                            if (b === "Останато") return -1;
+                                            return a.localeCompare(b);
+                                        })
+                                        .map((s) => (
+                                            <Link
+                                                key={s}
+                                                className="submenu-item"
+                                                to={go({
+                                                    gender: "Машки",
+                                                    age: "За возрасни",
+                                                    category: "Опрема",
+                                                    subcategory: s,
+                                                })}
+                                                onClick={clickClose}
+                                            >
+                                                {s}
+                                            </Link>
+                                        ))}
                                 </div>
-                            ))}
+                            )}
                         </div>
                     )}
 
                     {hover === "women" && (
                         <div className="submenu-columns">
-                            {Object.entries(navData.menu.women).map(([cat, subs]) => (
-                                <div className="submenu-col" key={cat}>
+                            {Object.entries(navData.menu.women)
+                                .filter(([cat]) => cat !== "Опрема")
+                                .map(([cat, subs]) => {
+                                    const sortedSubs = [...subs].sort((a, b) => {
+                                        if (a === "Останато") return 1;
+                                        if (b === "Останато") return -1;
+                                        return a.localeCompare(b);
+                                    });
+                                    
+                                    if (cat === "Текстил" && sortedSubs.length > 0) {
+                                        const mid = Math.ceil(sortedSubs.length / 2);
+                                        const firstHalf = sortedSubs.slice(0, mid);
+                                        const secondHalf = sortedSubs.slice(mid);
+                                        
+                                        return (
+                                            <>
+                                                <div className="submenu-col" key={`${cat}-1`}>
+                                                    <Link
+                                                        className="submenu-title"
+                                                        to={go({
+                                                            gender: "Женски",
+                                                            age: "За возрасни",
+                                                            category: cat,
+                                                        })}
+                                                        onClick={clickClose}
+                                                    >
+                                                        {cat}
+                                                    </Link>
+                                                    {firstHalf.map((s) => (
+                                                        <Link
+                                                            key={s}
+                                                            className="submenu-item"
+                                                            to={go({
+                                                                gender: "Женски",
+                                                                age: "За возрасни",
+                                                                category: cat,
+                                                                subcategory: s,
+                                                            })}
+                                                            onClick={clickClose}
+                                                        >
+                                                            {s}
+                                                        </Link>
+                                                    ))}
+                                                </div>
+                                                <div className="submenu-col" key={`${cat}-2`}>
+                                                    <div className="submenu-title" style={{ visibility: 'hidden' }}>
+                                                        {cat}
+                                                    </div>
+                                                    {secondHalf.map((s) => (
+                                                        <Link
+                                                            key={s}
+                                                            className="submenu-item"
+                                                            to={go({
+                                                                gender: "Женски",
+                                                                age: "За возрасни",
+                                                                category: cat,
+                                                                subcategory: s,
+                                                            })}
+                                                            onClick={clickClose}
+                                                        >
+                                                            {s}
+                                                        </Link>
+                                                    ))}
+                                                </div>
+                                            </>
+                                        );
+                                    }
+                                    
+                                    return (
+                                        <div className="submenu-col" key={cat}>
+                                            <Link
+                                                className="submenu-title"
+                                                to={go({
+                                                    gender: "Женски",
+                                                    age: "За возрасни",
+                                                    category: cat,
+                                                })}
+                                                onClick={clickClose}
+                                            >
+                                                {cat}
+                                            </Link>
+
+                                            {sortedSubs.map((s) => (
+                                                <Link
+                                                    key={s}
+                                                    className="submenu-item"
+                                                    to={go({
+                                                        gender: "Женски",
+                                                        age: "За возрасни",
+                                                        category: cat,
+                                                        subcategory: s,
+                                                    })}
+                                                    onClick={clickClose}
+                                                >
+                                                    {s}
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    );
+                                })}
+                            
+                            {navData.equipment.dodatoci.length > 0 && (
+                                <div className="submenu-col">
                                     <Link
                                         className="submenu-title"
                                         to={go({
                                             gender: "Женски",
                                             age: "За возрасни",
-                                            category: cat,
+                                            category: "Опрема",
                                         })}
                                         onClick={clickClose}
                                     >
-                                        {cat === "equipment" ? "Додатоци" : cat}
+                                        Додатоци
                                     </Link>
 
-                                    {subs.map((s) => (
-                                        <Link
-                                            key={s}
-                                            className="submenu-item"
-                                            to={go({
-                                                gender: "Женски",
-                                                age: "За возрасни",
-                                                category: cat,
-                                                subcategory: s,
-                                            })}
-                                            onClick={clickClose}
-                                        >
-                                            {s}
-                                        </Link>
-                                    ))}
+                                    {navData.equipment.dodatoci
+                                        .sort((a, b) => {
+                                            if (a === "Останато") return 1;
+                                            if (b === "Останато") return -1;
+                                            return a.localeCompare(b);
+                                        })
+                                        .map((s) => (
+                                            <Link
+                                                key={s}
+                                                className="submenu-item"
+                                                to={go({
+                                                    gender: "Женски",
+                                                    age: "За возрасни",
+                                                    category: "Опрема",
+                                                    subcategory: s,
+                                                })}
+                                                onClick={clickClose}
+                                            >
+                                                {s}
+                                            </Link>
+                                        ))}
                                 </div>
-                            ))}
+                            )}
                         </div>
                     )}
 
                     {hover === "kids" && (
                         <div className="submenu-columns">
-                            {Object.entries(navData.menu.kids).map(([cat, subs]) => (
-                                <div className="submenu-col" key={cat}>
+                            {Object.entries(navData.menu.kids)
+                                .filter(([cat]) => cat !== "Опрема")
+                                .map(([cat, subs]) => {
+                                    const sortedSubs = [...subs].sort((a, b) => {
+                                        if (a === "Останато") return 1;
+                                        if (b === "Останато") return -1;
+                                        return a.localeCompare(b);
+                                    });
+                                    
+                                    if (cat === "Текстил" && sortedSubs.length > 0) {
+                                        const mid = Math.ceil(sortedSubs.length / 2);
+                                        const firstHalf = sortedSubs.slice(0, mid);
+                                        const secondHalf = sortedSubs.slice(mid);
+                                        
+                                        return (
+                                            <>
+                                                <div className="submenu-col" key={`${cat}-1`}>
+                                                    <Link
+                                                        className="submenu-title"
+                                                        to={go({ age: "За деца", category: cat })}
+                                                        onClick={clickClose}
+                                                    >
+                                                        {cat}
+                                                    </Link>
+                                                    {firstHalf.map((s) => (
+                                                        <Link
+                                                            key={s}
+                                                            className="submenu-item"
+                                                            to={go({
+                                                                age: "За деца",
+                                                                category: cat,
+                                                                subcategory: s,
+                                                            })}
+                                                            onClick={clickClose}
+                                                        >
+                                                            {s}
+                                                        </Link>
+                                                    ))}
+                                                </div>
+                                                <div className="submenu-col" key={`${cat}-2`}>
+                                                    <div className="submenu-title" style={{ visibility: 'hidden' }}>
+                                                        {cat}
+                                                    </div>
+                                                    {secondHalf.map((s) => (
+                                                        <Link
+                                                            key={s}
+                                                            className="submenu-item"
+                                                            to={go({
+                                                                age: "За деца",
+                                                                category: cat,
+                                                                subcategory: s,
+                                                            })}
+                                                            onClick={clickClose}
+                                                        >
+                                                            {s}
+                                                        </Link>
+                                                    ))}
+                                                </div>
+                                            </>
+                                        );
+                                    }
+                                    
+                                    return (
+                                        <div className="submenu-col" key={cat}>
+                                            <Link
+                                                className="submenu-title"
+                                                to={go({ age: "За деца", category: cat })}
+                                                onClick={clickClose}
+                                            >
+                                                {cat}
+                                            </Link>
+
+                                            {sortedSubs.map((s) => (
+                                                <Link
+                                                    key={s}
+                                                    className="submenu-item"
+                                                    to={go({
+                                                        age: "За деца",
+                                                        category: cat,
+                                                        subcategory: s,
+                                                    })}
+                                                    onClick={clickClose}
+                                                >
+                                                    {s}
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    );
+                                })}
+                            
+                            {navData.equipment.dodatoci.length > 0 && (
+                                <div className="submenu-col">
                                     <Link
                                         className="submenu-title"
-                                        to={go({ age: "За деца", category: cat })}
+                                        to={go({ age: "За деца", category: "Опрема" })}
                                         onClick={clickClose}
                                     >
-                                        {cat === "equipment" ? "Додатоци" : cat}
+                                        Додатоци
                                     </Link>
 
-                                    {subs.map((s) => (
-                                        <Link
-                                            key={s}
-                                            className="submenu-item"
-                                            to={go({
-                                                age: "За деца",
-                                                category: cat,
-                                                subcategory: s,
-                                            })}
-                                            onClick={clickClose}
-                                        >
-                                            {s}
-                                        </Link>
-                                    ))}
+                                    {navData.equipment.dodatoci
+                                        .sort((a, b) => {
+                                            if (a === "Останато") return 1;
+                                            if (b === "Останато") return -1;
+                                            return a.localeCompare(b);
+                                        })
+                                        .map((s) => (
+                                            <Link
+                                                key={s}
+                                                className="submenu-item"
+                                                to={go({
+                                                    age: "За деца",
+                                                    category: "Опрема",
+                                                    subcategory: s,
+                                                })}
+                                                onClick={clickClose}
+                                            >
+                                                {s}
+                                            </Link>
+                                        ))}
                                 </div>
-                            ))}
+                            )}
                         </div>
                     )}
 
@@ -254,30 +563,42 @@ export default function NavigationBar({ user }: Props) {
                         <div className="submenu-columns">
                             <div className="submenu-col">
                                 <div className="submenu-title">Додатоци</div>
-                                {navData.equipment.dodatoci.map((s) => (
-                                    <Link
-                                        key={s}
-                                        className="submenu-item"
-                                        to={go({ category: "Опрема", subcategory: s })}
-                                        onClick={clickClose}
-                                    >
-                                        {s}
-                                    </Link>
-                                ))}
+                                {navData.equipment.dodatoci
+                                    .sort((a, b) => {
+                                        if (a === "Останато") return 1;
+                                        if (b === "Останато") return -1;
+                                        return a.localeCompare(b);
+                                    })
+                                    .map((s) => (
+                                        <Link
+                                            key={s}
+                                            className="submenu-item"
+                                            to={go({ category: "Опрема", subcategory: s })}
+                                            onClick={clickClose}
+                                        >
+                                            {s}
+                                        </Link>
+                                    ))}
                             </div>
 
                             <div className="submenu-col">
                                 <div className="submenu-title">Спортска опрема</div>
-                                {navData.equipment.sports.map((s) => (
-                                    <Link
-                                        key={s}
-                                        className="submenu-item"
-                                        to={go({ category: "Опрема", subcategory: s })}
-                                        onClick={clickClose}
-                                    >
-                                        {s}
-                                    </Link>
-                                ))}
+                                {navData.equipment.sports
+                                    .sort((a, b) => {
+                                        if (a === "Останато") return 1;
+                                        if (b === "Останато") return -1;
+                                        return a.localeCompare(b);
+                                    })
+                                    .map((s) => (
+                                        <Link
+                                            key={s}
+                                            className="submenu-item"
+                                            to={go({ category: "Опрема", subcategory: s })}
+                                            onClick={clickClose}
+                                        >
+                                            {s}
+                                        </Link>
+                                    ))}
                             </div>
                         </div>
                     )}

@@ -7,7 +7,7 @@ async function setupDatabase() {
         port: parseInt(process.env.DB_PORT || '5432', 10),
         user: process.env.DB_USERNAME || 'postgres',
         password: process.env.DB_PASSWORD || 'postgres',
-        database: 'postgres', // Connect to default database first
+        database: 'postgres',
     };
 
     console.log('Connecting to PostgreSQL...');
@@ -22,7 +22,6 @@ async function setupDatabase() {
         
         const dbName = process.env.DB_DATABASE || 'price_runner';
         
-        // Check if database exists
         const dbCheck = await client.query(
             "SELECT 1 FROM pg_database WHERE datname = $1",
             [dbName]
@@ -36,14 +35,12 @@ async function setupDatabase() {
             console.log(`\n✅ Database "${dbName}" already exists.`);
         }
         
-        // Switch to the database
         await client.end();
         config.database = dbName;
         
         const dbClient = new Client(config);
         await dbClient.connect();
         
-        // Check if tables exist
         const tablesCheck = await dbClient.query(`
             SELECT table_name 
             FROM information_schema.tables 
