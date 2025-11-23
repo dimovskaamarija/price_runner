@@ -18,7 +18,7 @@ export class PostgresService {
         private priceHistoryRepository: Repository<PriceHistory>,
         @InjectRepository(Store)
         private storeRepository: Repository<Store>,
-    ) { }
+    ) {}
 
     private isPgUniqueViolation(error: any) {
         return (

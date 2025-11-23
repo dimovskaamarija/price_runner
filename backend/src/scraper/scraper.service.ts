@@ -21,8 +21,8 @@ export class ScraperService {
         private readonly dsport: DSportScraper,
         private readonly sizeer: SizeerScraper,
         private readonly sportm: SportMScraper,
-        private readonly db: PostgresService,   
-    ) { }
+        private readonly db: PostgresService,
+    ) {}
 
     @Cron('0 5 * * *')
     async runAll() {

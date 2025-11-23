@@ -4,7 +4,7 @@ import { PriceHistory } from '../postgres/entities/price-history.entity';
 
 @Controller('products')
 export class PriceHistoryController {
-    constructor(private readonly priceHistoryService: PriceHistoryService) { }
+    constructor(private readonly priceHistoryService: PriceHistoryService) {}
 
     @Get(':id/history')
     async getHistory(@Param('id') id: string): Promise<PriceHistory[]> {

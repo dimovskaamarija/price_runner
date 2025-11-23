@@ -1,38 +1,41 @@
 import { Controller, Get, Query, Param, HttpException, HttpStatus } from "@nestjs/common";
-import { ProductsService } from "../services/product.service.ts";
+import { ProductsService } from "../services/product.service";
 import { PostgresService } from "../postgres/postgres.service";
 
 @Controller("products")
 export class ProductController {
-    constructor(private readonly postgresService: PostgresService, private readonly productsService: ProductsService) { }
+    constructor(
+        private readonly postgresService: PostgresService,
+        private readonly productsService: ProductsService,
+    ) {}
 
-    @Get("filter-options")
+    @Get('filter-options')
     async getFilterOptions() {
         return this.postgresService.getFilterOptions();
     }
 
     @Get()
     async getProducts(
-        @Query("page") page = "1",
-        @Query("sort") sort = "price-asc",
-        @Query("category") category?: string,
-        @Query("subcategory") subcategory?: string,
-        @Query("brand") brand?: string,
-        @Query("age") age?: string,
-        @Query("gender") gender?: string,
-        @Query("color") color?: string,
-        @Query("minPrice") minPrice = "0",
-        @Query("maxPrice") maxPrice = "20000",
-        @Query('search') search?: string
+        @Query('page') page = '1',
+        @Query('sort') sort = 'price-asc',
+        @Query('category') category?: string,
+        @Query('subcategory') subcategory?: string,
+        @Query('brand') brand?: string,
+        @Query('age') age?: string,
+        @Query('gender') gender?: string,
+        @Query('color') color?: string,
+        @Query('minPrice') minPrice = '0',
+        @Query('maxPrice') maxPrice = '20000',
+        @Query('search') search?: string,
     ) {
         const filters = {
-            search: search || "",
-            category: category ? category.split(",") : [],
-            subcategory: subcategory ? subcategory.split(",") : [],
-            brand: brand ? brand.split(",") : [],
-            age: age ? age.split(",") : [],
-            gender: gender ? gender.split(",") : [],
-            color: color ? color.split(",") : [],
+            search: search || '',
+            category: category ? category.split(',') : [],
+            subcategory: subcategory ? subcategory.split(',') : [],
+            brand: brand ? brand.split(',') : [],
+            age: age ? age.split(',') : [],
+            gender: gender ? gender.split(',') : [],
+            color: color ? color.split(',') : [],
             minPrice: parseInt(minPrice, 10),
             maxPrice: parseInt(maxPrice, 10),
         };
@@ -43,12 +46,12 @@ export class ProductController {
         try {
             return this.productsService.getFilteredProducts(p, PAGE_SIZE, sort, filters);
         } catch {
-            throw new HttpException("Failed to fetch products", HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new HttpException('Failed to fetch products', HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-   @Get("nav-data")
-async getNavData() {
+    @Get('nav-data')
+    async getNavData() {
     const navbar = await this.postgresService.getFilterNavBarOptions();
 
     const filterOptions = await this.postgresService.getFilterOptions();
@@ -56,18 +59,29 @@ async getNavData() {
     const all = await this.productsService.getAllProducts();
 
     const DODATOCI = [
-        "Ранец", "Торби и торбички", "Шалови", "Врвки",
-        "Ракавици", "Качкети и капи", "Чорапи", "Бандани"
+        'Ранец',
+        'Торби и торбички',
+        'Шалови',
+        'Врвки',
+        'Ракавици',
+        'Качкети и капи',
+        'Чорапи',
+        'Бандани',
     ];
 
     const OPREMA = [
-        "Топки", "Опрема за пливање", "Опрема за тренинг",
-        "Ролери", "Тротинет", "Шишишта", "Останато"
+        'Топки',
+        'Опрема за пливање',
+        'Опрема за тренинг',
+        'Ролери',
+        'Тротинет',
+        'Шишишта',
+        'Останато',
     ];
 
     const equipment = {
         dodatoci: [],
-        sports: []
+        sports: [],
     };
 
     const topBrandCounter: Record<string, number> = {};
@@ -92,7 +106,7 @@ async getNavData() {
             }
         }
 
-        if (category === "Опрема") {
+        if (category === 'Опрема') {
             if (DODATOCI.includes(sub)) push(equipment.dodatoci, sub);
             if (OPREMA.includes(sub)) push(equipment.sports, sub);
         }
@@ -123,30 +137,29 @@ async getNavData() {
                 Обувки: navbar.kidsShoes,
                 Текстил: navbar.kidsClothes,
                 Опрема: navbar.kidsEquipment,
-            }
+            },
         },
 
         equipment,
 
         brands: {
             top: topBrands,
-            all: allBrands
+            all: allBrands,
         },
 
-        filters: filterOptions
+        filters: filterOptions,
     };
 }
 
-    @Get("stores")
+    @Get('stores')
     async getStores() {
         return this.postgresService.getAllStores();
     }
 
-    @Get(":id")
-    async getProductById(@Param("id") id: string) {
+    @Get(':id')
+    async getProductById(@Param('id') id: string) {
         const p = await this.productsService.getProductById(id);
-        if (!p) throw new HttpException("Product not found", HttpStatus.NOT_FOUND);
+        if (!p) throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
         return p;
     }
-
 }

@@ -14,4 +14,4 @@ import { SportMScraper } from './sportm.scraper';
     providers: [ScraperService, SportVisionScraper, SportRealityScraper, BuzzScraper, DSportScraper, SizeerScraper, SportMScraper],
     controllers: [ScraperController],
 })
-export class ScraperModule { }
+export class ScraperModule {}

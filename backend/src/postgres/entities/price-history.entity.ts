@@ -18,4 +18,3 @@ export class PriceHistory {
     @CreateDateColumn()
     date: Date;
 }
-

@@ -14,7 +14,7 @@ export class BuzzScraper {
     private readonly log = new Logger(BuzzScraper.name);
     private readonly limit = pLimit(4);
 
-    constructor(private readonly db: PostgresService) { }
+    constructor(private readonly db: PostgresService) {}
 
     async scrapeCategory(baseUrl: string, topCategory: string) {
         for (let page = 1; page <= 30; page++) {

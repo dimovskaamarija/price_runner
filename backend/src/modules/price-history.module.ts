@@ -10,4 +10,4 @@ import { PriceHistoryController } from '../controllers/price-history.controller'
     controllers: [PriceHistoryController],
     exports: [PriceHistoryService],
 })
-export class PriceHistoryModule { }
+export class PriceHistoryModule {}

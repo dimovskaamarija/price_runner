@@ -14,7 +14,7 @@ export class SportMScraper {
     private readonly log = new Logger(SportMScraper.name);
     private readonly limit = pLimit(4);
 
-    constructor(private readonly db: PostgresService) { }
+    constructor(private readonly db: PostgresService) {}
 
     private readonly CATEGORIES = [
         { url: 'https://www.sport-m.com.mk/ProductCatalog?Segment=03&Grupa=01', category: 'Обувки', gender: 'Машки' },

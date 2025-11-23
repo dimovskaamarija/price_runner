@@ -23,4 +23,4 @@ import { Store } from "./entities/store.entity";
     providers: [PostgresService],
     exports: [PostgresService],
 })
-export class PostgresModule { }
+export class PostgresModule {}
