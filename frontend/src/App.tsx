@@ -4,6 +4,7 @@ import ProductList from "./pages/ProductList";
 import ProductDetail from "./pages/ProductDetail";
 import NavigationBar from "./components/NavigationBar";
 import Brands from "./pages/Brands";
+import Favorites from "./pages/Favorites";
 import { useUser } from "./hooks/useUser";
 import AuthCallback from "./components/AuthCallback";
 
@@ -30,6 +31,7 @@ function App() {
                 <Route path="/" element={<ProductList />} />
                 <Route path="/products" element={<ProductList />} />
                 <Route path="/brands" element={<Brands />} />
+                <Route path="/favorites" element={<Favorites />} />
                 <Route path="/callback" element={<AuthCallback />} />
                 <Route path="/product/:id" element={<ProductDetail />} />
             </Routes>

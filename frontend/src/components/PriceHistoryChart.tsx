@@ -1,14 +1,6 @@
 import { useEffect, useState } from "react";
 import { Line } from "react-chartjs-2";
-import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    LineElement,
-    PointElement,
-    Tooltip,
-    Legend,
-} from "chart.js";
+import {Chart as ChartJS, CategoryScale, LinearScale, LineElement, PointElement, Tooltip, Legend} from "chart.js";
 
 ChartJS.register(CategoryScale, LinearScale, LineElement, PointElement, Tooltip, Legend);
 
@@ -129,8 +121,7 @@ export default function PriceHistoryChart({ productId, storesMap }: Props) {
                                         ? prev.filter((s) => s !== store)
                                         : [...prev, store]
                                 )
-                            }
-                        >
+                            }>
                             <div className="store-btn-content">
                                 {storeData?.logo_url && (
                                     <img

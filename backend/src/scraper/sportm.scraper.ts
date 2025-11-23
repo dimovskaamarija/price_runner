@@ -14,7 +14,7 @@ export class SportMScraper {
     private readonly log = new Logger(SportMScraper.name);
     private readonly limit = pLimit(4);
 
-    constructor(private readonly db: PostgresService) { }
+    constructor(private readonly db: PostgresService) {}
 
     private readonly CATEGORIES = [
         { url: 'https://www.sport-m.com.mk/ProductCatalog?Segment=03&Grupa=01', category: 'Обувки', gender: 'Машки' },
@@ -98,7 +98,7 @@ export class SportMScraper {
         const id = createId(uniqueKey);
         const now = dayjs();
 
-        const doc = {
+        const product = {
             id,
             name,
             brand,
@@ -116,7 +116,7 @@ export class SportMScraper {
             updatedAt: now.toDate(),
         };
 
-        await this.db.upsertProduct(doc, STORE, price, now.toDate());
+        await this.db.upsertProduct(product, STORE, price, now.toDate());
     }
 
    private extractPrice($: cheerio.CheerioAPI): number | null {

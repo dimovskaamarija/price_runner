@@ -3,7 +3,7 @@ import { PostgresService } from "../postgres/postgres.service";
 
 @Injectable()
 export class ProductsService {
-    constructor(private readonly postgres: PostgresService) { }
+    constructor(private readonly postgres: PostgresService) {}
 
     async getFilterOptions() {
         return this.postgres.getFilterOptions();
@@ -24,27 +24,27 @@ export class ProductsService {
         let f = all;
 
         if (filters.category.length) {
-            f = f.filter((p) => filters.category.includes(p.category || ""));
+            f = f.filter((p) => filters.category.includes(p.category || ''));
         }
 
         if (filters.subcategory.length) {
-            f = f.filter((p) => filters.subcategory.includes(p.subcategory || ""));
+            f = f.filter((p) => filters.subcategory.includes(p.subcategory || ''));
         }
 
         if (filters.brand.length) {
-            f = f.filter((p) => filters.brand.includes(p.brand || ""));
+            f = f.filter((p) => filters.brand.includes(p.brand || ''));
         }
 
         if (filters.age.length) {
-            f = f.filter((p) => filters.age.includes(p.age || ""));
+            f = f.filter((p) => filters.age.includes(p.age || ''));
         }
 
         if (filters.gender.length) {
-            f = f.filter((p) => filters.gender.includes(p.gender || ""));
+            f = f.filter((p) => filters.gender.includes(p.gender || ''));
         }
 
         if (filters.color.length) {
-            f = f.filter((p) => filters.color.includes(p.color || ""));
+            f = f.filter((p) => filters.color.includes(p.color || ''));
         }
 
         if (filters.search) {
@@ -61,7 +61,7 @@ export class ProductsService {
                     p.subcategory,
                 ]
                     .filter(Boolean)
-                    .some((v) => v.toLowerCase().includes(q))
+                    .some((v) => v.toLowerCase().includes(q)),
             );
         }
 
@@ -83,27 +83,27 @@ export class ProductsService {
 
     private sortProducts(list: any[], sort: string, gm: any) {
         switch (sort) {
-            case "price-asc":
+            case 'price-asc':
                 return [...list].sort(
-                    (a, b) => (gm(a.priceMap) ?? Infinity) - (gm(b.priceMap) ?? Infinity)
+                    (a, b) => (gm(a.priceMap) ?? Infinity) - (gm(b.priceMap) ?? Infinity),
                 );
-            case "price-desc":
+            case 'price-desc':
                 return [...list].sort(
-                    (a, b) => (gm(b.priceMap) ?? -Infinity) - (gm(a.priceMap) ?? -Infinity)
+                    (a, b) => (gm(b.priceMap) ?? -Infinity) - (gm(a.priceMap) ?? -Infinity),
                 );
-            case "name-asc":
+            case 'name-asc':
                 return [...list].sort((a, b) => a.name.localeCompare(b.name));
-            case "name-desc":
+            case 'name-desc':
                 return [...list].sort((a, b) => b.name.localeCompare(a.name));
-            case "newest":
+            case 'newest':
                 return [...list].sort(
                     (a, b) =>
                         new Date(b.updatedAt || 0).getTime() -
-                        new Date(a.updatedAt || 0).getTime()
+                        new Date(a.updatedAt || 0).getTime(),
                 );
-            case "popular":
+            case 'popular':
                 return [...list].sort(
-                    (a, b) => (b.popularity || 0) - (a.popularity || 0)
+                    (a, b) => (b.popularity || 0) - (a.popularity || 0),
                 );
             default:
                 return list;

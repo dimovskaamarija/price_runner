@@ -16,7 +16,7 @@ export class DSportScraper {
     private readonly log = new Logger(DSportScraper.name);
     private readonly limit = pLimit(4);
 
-    constructor(private readonly db: PostgresService) { }
+    constructor(private readonly db: PostgresService) {}
 
     private readonly CATEGORIES: Array<{ url: string; category: string; gender: Gender }> = [
         { url: 'https://www.dsport.mk/muskarci/obuca', category: 'Обувки', gender: 'Машки' },
@@ -111,7 +111,7 @@ if (!name) {
             const id = createId(uniqueKey);
             const now = dayjs();
 
-            const doc = {
+            const product = {
                 id,
                 name,
                 brand,
@@ -129,7 +129,7 @@ if (!name) {
                 updatedAt: now.toDate(),
             };
 
-            await this.db.upsertProduct(doc, STORE, price, now.toDate());
+            await this.db.upsertProduct(product, STORE, price, now.toDate());
         } catch (error) {
             this.log.error(`Error scraping PDP ${productUrl}:`, error.message);
         }

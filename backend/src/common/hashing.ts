@@ -3,7 +3,7 @@ import { createHash } from 'crypto';
 function normalizeString(s: string): string {
     return s
         .toLowerCase()
-        .replace(/\s+/g, ' ') 
+        .replace(/\s+/g, ' ')
         .trim();
 }
 

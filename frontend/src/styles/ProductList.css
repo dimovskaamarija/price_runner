@@ -99,7 +99,6 @@
     z-index: 9999;
 }
 
-
 .product-card:hover .fav-btn {
     display: flex;
 }

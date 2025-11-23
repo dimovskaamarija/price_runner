@@ -18,7 +18,7 @@ export class PostgresService {
         private priceHistoryRepository: Repository<PriceHistory>,
         @InjectRepository(Store)
         private storeRepository: Repository<Store>,
-    ) { }
+    ) {}
 
     private isPgUniqueViolation(error: any) {
         return (
@@ -29,12 +29,7 @@ export class PostgresService {
         );
     }
 
-    async upsertProduct(
-        doc: ProductType,
-        store?: string,
-        price?: number | null,
-        date?: Date,
-    ): Promise<void> {
+    async upsertProduct(doc: ProductType, store?: string, price?: number | null, date?: Date): Promise<void> {
         const now = date || new Date();
 
         if (store && price != null) {
@@ -309,5 +304,4 @@ export class PostgresService {
             order: { name: 'ASC' },
         });
     }
-
 }

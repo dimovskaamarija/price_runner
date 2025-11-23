@@ -169,6 +169,7 @@
     padding: 20px;
     border-radius: 16px;
     margin-top: 30px;
+    margin-right: 40px;
 }
 
 .store-buttons {
@@ -188,13 +189,13 @@
     transition: 0.2s;
 }
 
-    .store-toggle.active {
-        border-color: black;
-    }
+.store-toggle.active {
+    border-color: black;
+}
 
-    .store-toggle span {
-        color: inherit;
-    }
+.store-toggle span {
+    color: inherit;
+}
 
 .store-btn-content {
     display: flex;
@@ -224,6 +225,7 @@
 .right-column {
     flex: 0 0 45%;
     min-width: 0;
+    margin-right: 40px;
 }
 
 @media (max-width: 1200px) {
@@ -238,3 +240,7 @@
     }
 }
 
+.spec-box {
+    margin-right: 40px;
+    width: 93%;
+}

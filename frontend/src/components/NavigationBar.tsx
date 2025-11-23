@@ -64,33 +64,26 @@ export default function NavigationBar({ user }: Props) {
 
                 <form className="nav-search-form" onSubmit={submitSearch}>
                     <FaSearch className="nav-search-icon" />
-                    <input
-                        type="text"
-                        placeholder="Пребарувај производи..."
-                        value={query}
+                    <input type="text" placeholder="Пребарувај производи..." value={query}
                         onChange={(e) => {
                             const v = e.target.value;
                             setQuery(v);
                             if (v.trim() === "") navigate("/products");
-                        }}
-                    />
+                        }} />
                 </form>
 
                 <div className="nav-right">
-     
+                    <button className="nav-favorites" onClick={() => navigate('/favorites')} title="Омилени производи">
+                        <FaHeart />
+                    </button>
+
                     {!user && (
                         <>
-                            <button
-                                className="nav-login"
-                                onClick={() => (window.location.href = LOGIN_URL)}
-                            >
+                            <button className="nav-login" onClick={() => (window.location.href = LOGIN_URL)}>
                                 Најава
                             </button>
 
-                            <button
-                                className="nav-register"
-                                onClick={() => (window.location.href = LOGIN_URL)}
-                            >
+                            <button className="nav-register" onClick={() => (window.location.href = LOGIN_URL)}>
                                 Регистрација
                             </button>
                         </>
@@ -141,11 +134,7 @@ export default function NavigationBar({ user }: Props) {
             </div>
 
             {hover && navData && (
-                <div
-                    className="nav-submenu"
-                    onMouseEnter={() => openMenu(hover)}
-                    onMouseLeave={closeMenu}
-                >
+                <div className="nav-submenu" onMouseEnter={() => openMenu(hover)} onMouseLeave={closeMenu}>
                     {hover === "men" && (
                         <div className="submenu-columns">
                             {Object.entries(navData.menu.men)
@@ -172,8 +161,7 @@ export default function NavigationBar({ user }: Props) {
                                                             age: "За возрасни",
                                                             category: cat,
                                                         })}
-                                                        onClick={clickClose}
-                                                    >
+                                                        onClick={clickClose}>
                                                         {cat}
                                                     </Link>
                                                     {firstHalf.map((s) => (
@@ -186,8 +174,7 @@ export default function NavigationBar({ user }: Props) {
                                                                 category: cat,
                                                                 subcategory: s,
                                                             })}
-                                                            onClick={clickClose}
-                                                        >
+                                                            onClick={clickClose}>
                                                             {s}
                                                         </Link>
                                                     ))}
@@ -206,8 +193,7 @@ export default function NavigationBar({ user }: Props) {
                                                                 category: cat,
                                                                 subcategory: s,
                                                             })}
-                                                            onClick={clickClose}
-                                                        >
+                                                            onClick={clickClose}>
                                                             {s}
                                                         </Link>
                                                     ))}
@@ -225,8 +211,7 @@ export default function NavigationBar({ user }: Props) {
                                                     age: "За возрасни",
                                                     category: cat,
                                                 })}
-                                                onClick={clickClose}
-                                            >
+                                                onClick={clickClose}>
                                                 {cat}
                                             </Link>
 
@@ -240,8 +225,7 @@ export default function NavigationBar({ user }: Props) {
                                                         category: cat,
                                                         subcategory: s,
                                                     })}
-                                                    onClick={clickClose}
-                                                >
+                                                    onClick={clickClose}>
                                                     {s}
                                                 </Link>
                                             ))}
@@ -258,8 +242,7 @@ export default function NavigationBar({ user }: Props) {
                                             age: "За возрасни",
                                             category: "Опрема",
                                         })}
-                                        onClick={clickClose}
-                                    >
+                                        onClick={clickClose}>
                                         Додатоци
                                     </Link>
 
@@ -279,8 +262,7 @@ export default function NavigationBar({ user }: Props) {
                                                     category: "Опрема",
                                                     subcategory: s,
                                                 })}
-                                                onClick={clickClose}
-                                            >
+                                                onClick={clickClose}>
                                                 {s}
                                             </Link>
                                         ))}
@@ -315,8 +297,7 @@ export default function NavigationBar({ user }: Props) {
                                                             age: "За возрасни",
                                                             category: cat,
                                                         })}
-                                                        onClick={clickClose}
-                                                    >
+                                                        onClick={clickClose}>
                                                         {cat}
                                                     </Link>
                                                     {firstHalf.map((s) => (
@@ -329,8 +310,7 @@ export default function NavigationBar({ user }: Props) {
                                                                 category: cat,
                                                                 subcategory: s,
                                                             })}
-                                                            onClick={clickClose}
-                                                        >
+                                                            onClick={clickClose}>
                                                             {s}
                                                         </Link>
                                                     ))}
@@ -349,8 +329,7 @@ export default function NavigationBar({ user }: Props) {
                                                                 category: cat,
                                                                 subcategory: s,
                                                             })}
-                                                            onClick={clickClose}
-                                                        >
+                                                            onClick={clickClose}>
                                                             {s}
                                                         </Link>
                                                     ))}
@@ -368,8 +347,7 @@ export default function NavigationBar({ user }: Props) {
                                                     age: "За возрасни",
                                                     category: cat,
                                                 })}
-                                                onClick={clickClose}
-                                            >
+                                                onClick={clickClose}>
                                                 {cat}
                                             </Link>
 
@@ -383,8 +361,7 @@ export default function NavigationBar({ user }: Props) {
                                                         category: cat,
                                                         subcategory: s,
                                                     })}
-                                                    onClick={clickClose}
-                                                >
+                                                    onClick={clickClose}>
                                                     {s}
                                                 </Link>
                                             ))}
@@ -401,8 +378,7 @@ export default function NavigationBar({ user }: Props) {
                                             age: "За возрасни",
                                             category: "Опрема",
                                         })}
-                                        onClick={clickClose}
-                                    >
+                                        onClick={clickClose}>
                                         Додатоци
                                     </Link>
 
@@ -422,8 +398,7 @@ export default function NavigationBar({ user }: Props) {
                                                     category: "Опрема",
                                                     subcategory: s,
                                                 })}
-                                                onClick={clickClose}
-                                            >
+                                                onClick={clickClose}>
                                                 {s}
                                             </Link>
                                         ))}
@@ -454,8 +429,7 @@ export default function NavigationBar({ user }: Props) {
                                                     <Link
                                                         className="submenu-title"
                                                         to={go({ age: "За деца", category: cat })}
-                                                        onClick={clickClose}
-                                                    >
+                                                        onClick={clickClose}>
                                                         {cat}
                                                     </Link>
                                                     {firstHalf.map((s) => (
@@ -467,8 +441,7 @@ export default function NavigationBar({ user }: Props) {
                                                                 category: cat,
                                                                 subcategory: s,
                                                             })}
-                                                            onClick={clickClose}
-                                                        >
+                                                            onClick={clickClose}>
                                                             {s}
                                                         </Link>
                                                     ))}
@@ -486,8 +459,7 @@ export default function NavigationBar({ user }: Props) {
                                                                 category: cat,
                                                                 subcategory: s,
                                                             })}
-                                                            onClick={clickClose}
-                                                        >
+                                                            onClick={clickClose}>
                                                             {s}
                                                         </Link>
                                                     ))}
@@ -501,8 +473,7 @@ export default function NavigationBar({ user }: Props) {
                                             <Link
                                                 className="submenu-title"
                                                 to={go({ age: "За деца", category: cat })}
-                                                onClick={clickClose}
-                                            >
+                                                onClick={clickClose}>
                                                 {cat}
                                             </Link>
 
@@ -515,8 +486,7 @@ export default function NavigationBar({ user }: Props) {
                                                         category: cat,
                                                         subcategory: s,
                                                     })}
-                                                    onClick={clickClose}
-                                                >
+                                                    onClick={clickClose}>
                                                     {s}
                                                 </Link>
                                             ))}
@@ -529,8 +499,7 @@ export default function NavigationBar({ user }: Props) {
                                     <Link
                                         className="submenu-title"
                                         to={go({ age: "За деца", category: "Опрема" })}
-                                        onClick={clickClose}
-                                    >
+                                        onClick={clickClose}>
                                         Додатоци
                                     </Link>
 
@@ -549,8 +518,7 @@ export default function NavigationBar({ user }: Props) {
                                                     category: "Опрема",
                                                     subcategory: s,
                                                 })}
-                                                onClick={clickClose}
-                                            >
+                                                onClick={clickClose}>
                                                 {s}
                                             </Link>
                                         ))}
@@ -574,8 +542,7 @@ export default function NavigationBar({ user }: Props) {
                                             key={s}
                                             className="submenu-item"
                                             to={go({ category: "Опрема", subcategory: s })}
-                                            onClick={clickClose}
-                                        >
+                                            onClick={clickClose}>
                                             {s}
                                         </Link>
                                     ))}
@@ -594,8 +561,7 @@ export default function NavigationBar({ user }: Props) {
                                             key={s}
                                             className="submenu-item"
                                             to={go({ category: "Опрема", subcategory: s })}
-                                            onClick={clickClose}
-                                        >
+                                            onClick={clickClose}>
                                             {s}
                                         </Link>
                                     ))}
@@ -613,8 +579,7 @@ export default function NavigationBar({ user }: Props) {
                                         onClick={() => {
                                             clickClose();
                                             navigate(go({ brand: b.name }));
-                                        }}
-                                    >
+                                        }}>
                                         {b.name}
                                     </button>
                                 ))}
@@ -624,8 +589,7 @@ export default function NavigationBar({ user }: Props) {
                                     onClick={() => {
                                         clickClose();
                                         navigate("/brands");
-                                    }}
-                                >
+                                    }}>
                                     Сите брендови →
                                 </button>
                             </div>

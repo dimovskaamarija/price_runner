@@ -27,13 +27,7 @@ interface Props {
     };
 }
 
-export default function FiltersPanel({
-    isOpen,
-    onClose,
-    filters,
-    setFilters,
-    filterOptions,
-}: Props) {
+export default function FiltersPanel({ isOpen, onClose, filters, setFilters, filterOptions}: Props) {
     const [temp, setTemp] = useState(filters);
     const [openSection, setOpenSection] = useState<string | null>(null);
 
@@ -93,12 +87,7 @@ export default function FiltersPanel({
                 <div className="filter-items">
                     {values.map((v) => (
                         <label key={v} className="checkbox-row">
-                            <input
-                                type="checkbox"
-                                className="styled-checkbox"
-                                checked={temp[key].includes(v)}
-                                onChange={() => toggle(key, v)}
-                            />
+                            <input type="checkbox" className="styled-checkbox" checked={temp[key].includes(v)} onChange={() => toggle(key, v)}/>
                             {v}
                         </label>
                     ))}
@@ -133,11 +122,7 @@ export default function FiltersPanel({
 
                             <div
                                 className="slider-track-active"
-                                style={{
-                                    left: `${(temp.price[0] / 20000) * 100}%`,
-                                    right: `${100 - (temp.price[1] / 20000) * 100}%`,
-                                }}
-                            />
+                                style={{left: `${(temp.price[0] / 20000) * 100}%`, right: `${100 - (temp.price[1] / 20000) * 100}%`}}/>
 
                             <div className="range-values">
                                 <span>{temp.price[0]} ден</span>

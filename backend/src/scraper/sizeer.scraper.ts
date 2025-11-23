@@ -14,7 +14,7 @@ export class SizeerScraper {
     private readonly log = new Logger(SizeerScraper.name);
     private readonly limit = pLimit(4);
 
-    constructor(private readonly db: PostgresService) { }
+    constructor(private readonly db: PostgresService) {}
 
     async scrapeCategory(baseUrl: string, topCategory: string) {
         for (let page = 1; page <= 10; page++) {
@@ -70,7 +70,7 @@ export class SizeerScraper {
         const id = createId(uniqueKey);
         const now = dayjs();
 
-        const doc = {
+        const product = {
             id,
             name,
             brand,
@@ -88,7 +88,7 @@ export class SizeerScraper {
             updatedAt: now.toDate(),
         };
 
-        await this.db.upsertProduct(doc, STORE, priceMKD, now.toDate());
+        await this.db.upsertProduct(product, STORE, priceMKD, now.toDate());
     }
 
     private async fetch(url: string): Promise<string | null> {

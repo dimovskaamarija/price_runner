@@ -8,7 +8,7 @@ export class PriceHistoryService {
     constructor(
         @InjectRepository(PriceHistory)
         private readonly repo: Repository<PriceHistory>,
-    ) { }
+    ) {}
 
     async getLast30Days(productId: string): Promise<PriceHistory[]> {
         const today = new Date();
