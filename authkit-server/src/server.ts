@@ -22,9 +22,4 @@ app.get("/", (req, res) => {
 
 app.listen(4000, "0.0.0.0", () => {
     console.log("Auth server running on http://localhost:4000");
-    console.log("Available routes:");
-    console.log("  GET  /auth/login");
-    console.log("  GET  /auth/callback");
-    console.log("  GET  /auth/me");
-    console.log("  GET  /auth/logout");
 });

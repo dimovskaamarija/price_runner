@@ -98,7 +98,7 @@ export class SportMScraper {
         const id = createId(uniqueKey);
         const now = dayjs();
 
-        const doc = {
+        const product = {
             id,
             name,
             brand,
@@ -116,7 +116,7 @@ export class SportMScraper {
             updatedAt: now.toDate(),
         };
 
-        await this.db.upsertProduct(doc, STORE, price, now.toDate());
+        await this.db.upsertProduct(product, STORE, price, now.toDate());
     }
 
    private extractPrice($: cheerio.CheerioAPI): number | null {

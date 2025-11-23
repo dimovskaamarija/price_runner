@@ -94,7 +94,7 @@ export class BuzzScraper {
 
         name = latinOnlyName;
 
-        const doc = {
+        const product = {
             id,
             name,
             brand,
@@ -112,7 +112,7 @@ export class BuzzScraper {
             updatedAt: now.toDate(),
         };
 
-        await this.db.upsertProduct(doc);
+        await this.db.upsertProduct(product);
         await this.db.addPriceHistory(id, STORE, priceMKD, now.toDate());
     }
 

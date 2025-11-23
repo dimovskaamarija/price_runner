@@ -166,8 +166,7 @@ export default function ProductDetail() {
                                     navigate('/products');
                                 }
                             }
-                        }}
-                    >
+                        }}>
                         <IoArrowBackOutline />
                         Назад
                     </button>
@@ -177,8 +176,7 @@ export default function ProductDetail() {
                             <img
                                 src={product.image}
                                 alt={product.name}
-                                className="product-image-big"
-                            />
+                                className="product-image-big"/>
                         )}
                     </div>
 
@@ -257,8 +255,7 @@ export default function ProductDetail() {
                                 color: isFavorite ? '#e91e63' : '#666',
                                 transition: 'color 0.2s',
                             }}
-                            title={isFavorite ? 'Отстрани од омилени' : 'Додај во омилени'}
-                        >
+                            title={isFavorite ? 'Отстрани од омилени' : 'Додај во омилени'}>
                             {isFavorite ? <FaHeart /> : <FaRegHeart />}
                         </button>
                     </div>

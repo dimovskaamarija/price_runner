@@ -189,13 +189,13 @@
     transition: 0.2s;
 }
 
-    .store-toggle.active {
-        border-color: black;
-    }
+.store-toggle.active {
+    border-color: black;
+}
 
-    .store-toggle span {
-        color: inherit;
-    }
+.store-toggle span {
+    color: inherit;
+}
 
 .store-btn-content {
     display: flex;

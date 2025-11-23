@@ -11,13 +11,10 @@ async function bootstrap() {
             credentials: true,
         });
 
-        console.log('NestJS application created successfully');
-
         await app.listen(3000);
         console.log('Application is running on: http://localhost:3000');
     } catch (error) {
         console.error('Error starting application:', error);
-        console.error('Stack trace:', error.stack);
         process.exit(1);
     }
 }

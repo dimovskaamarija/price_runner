@@ -111,14 +111,12 @@ export default function Favorites() {
                                 <div key={product.id} className="favorite-card">
                                     <div
                                         className="favorite-image-container"
-                                        onClick={() => navigate(`/product/${product.id}`)}
-                                    >
+                                        onClick={() => navigate(`/product/${product.id}`)}>
                                         {product.image ? (
                                             <img
                                                 src={product.image}
                                                 alt={product.name}
-                                                className="favorite-image"
-                                            />
+                                                className="favorite-image"/>
                                         ) : (
                                             <div className="favorite-image-placeholder">Нема слика</div>
                                         )}
@@ -126,8 +124,7 @@ export default function Favorites() {
                                     <div className="favorite-info">
                                         <h3
                                             className="favorite-name"
-                                            onClick={() => navigate(`/product/${product.id}`)}
-                                        >
+                                            onClick={() => navigate(`/product/${product.id}`)}>
                                             {product.name}
                                         </h3>
                                         {minPrice && (
@@ -138,8 +135,7 @@ export default function Favorites() {
                                         <button
                                             className="remove-favorite-btn"
                                             onClick={() => removeFavorite(product.id)}
-                                            title="Отстрани од омилени"
-                                        >
+                                            title="Отстрани од омилени">
                                             <FaTrash /> Отстрани
                                         </button>
                                     </div>

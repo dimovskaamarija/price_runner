@@ -70,7 +70,7 @@ export class SizeerScraper {
         const id = createId(uniqueKey);
         const now = dayjs();
 
-        const doc = {
+        const product = {
             id,
             name,
             brand,
@@ -88,7 +88,7 @@ export class SizeerScraper {
             updatedAt: now.toDate(),
         };
 
-        await this.db.upsertProduct(doc, STORE, priceMKD, now.toDate());
+        await this.db.upsertProduct(product, STORE, priceMKD, now.toDate());
     }
 
     private async fetch(url: string): Promise<string | null> {

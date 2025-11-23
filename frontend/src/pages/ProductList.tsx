@@ -291,8 +291,7 @@ export default function ProductList() {
                                     price: [0, 20000],
                                 });
                                 navigate("/products");
-                            }}
-                        >
+                            }}>
                             Отстрани филтри
                         </button>
                     )}
@@ -336,8 +335,7 @@ export default function ProductList() {
                     {currentPage > 1 && (
                         <button
                             className="page-btn nav-btn"
-                            onClick={() => setCurrentPage(currentPage - 1)}
-                        >
+                            onClick={() => setCurrentPage(currentPage - 1)}>
                             Претходна
                         </button>
                     )}
@@ -346,8 +344,7 @@ export default function ProductList() {
                         <button
                             key={p}
                             className={`page-btn ${p === currentPage ? "active" : ""}`}
-                            onClick={() => setCurrentPage(p)}
-                        >
+                            onClick={() => setCurrentPage(p)}>
                             {p}
                         </button>
                     ))}
@@ -368,8 +365,7 @@ export default function ProductList() {
                 onClose={() => setFiltersOpen(false)}
                 filters={filters}
                 setFilters={setFilters}
-                filterOptions={filterOptions}
-            />
+                filterOptions={filterOptions}/>
         </div>
     );
 }

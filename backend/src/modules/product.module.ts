@@ -7,8 +7,7 @@ import { PostgresModule } from '../postgres/postgres.module';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Product]),
-        PostgresModule,
+        TypeOrmModule.forFeature([Product]),PostgresModule,
     ],
     controllers: [ProductController],
     providers: [ProductsService],

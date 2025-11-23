@@ -111,7 +111,7 @@ if (!name) {
             const id = createId(uniqueKey);
             const now = dayjs();
 
-            const doc = {
+            const product = {
                 id,
                 name,
                 brand,
@@ -129,7 +129,7 @@ if (!name) {
                 updatedAt: now.toDate(),
             };
 
-            await this.db.upsertProduct(doc, STORE, price, now.toDate());
+            await this.db.upsertProduct(product, STORE, price, now.toDate());
         } catch (error) {
             this.log.error(`Error scraping PDP ${productUrl}:`, error.message);
         }
