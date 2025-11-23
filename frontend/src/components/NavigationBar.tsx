@@ -77,7 +77,14 @@ export default function NavigationBar({ user }: Props) {
                 </form>
 
                 <div className="nav-right">
-     
+                    <button
+                        className="nav-favorites"
+                        onClick={() => navigate('/favorites')}
+                        title="Омилени производи"
+                    >
+                        <FaHeart />
+                    </button>
+
                     {!user && (
                         <>
                             <button

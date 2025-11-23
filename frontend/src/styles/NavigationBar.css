@@ -67,6 +67,20 @@
     cursor: pointer;
 }
 
+.nav-favorites {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 20px;
+    color: #666;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+    border-radius: 8px;
+}
+
 .nav-login,
 .nav-register {
     padding: 8px 14px;

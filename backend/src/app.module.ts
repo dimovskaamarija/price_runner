@@ -5,6 +5,7 @@ import { ScraperModule } from './scraper/scraper.module';
 import { PostgresModule } from './postgres/postgres.module';
 import { ProductModule } from './modules/product.module';
 import { PriceHistoryModule } from './modules/price-history.module';
+import { FavoritesModule } from './modules/favorites.module';
 
 @Module({
     imports: [
@@ -16,7 +17,8 @@ import { PriceHistoryModule } from './modules/price-history.module';
         PostgresModule,
         ScraperModule,
         ProductModule,
-        PriceHistoryModule
+        PriceHistoryModule,
+        FavoritesModule,
     ],
 })
 export class AppModule {}
