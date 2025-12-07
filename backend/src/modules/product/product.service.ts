@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { PostgresService } from "../postgres/postgres.service";
+import { PostgresService } from "../../database/postgres.service";
 
 @Injectable()
 export class ProductsService {
@@ -101,9 +101,11 @@ export class ProductsService {
                         new Date(b.updatedAt || 0).getTime() -
                         new Date(a.updatedAt || 0).getTime(),
                 );
-            case 'popular':
+            case 'available-desc':
                 return [...list].sort(
-                    (a, b) => (b.popularity || 0) - (a.popularity || 0),
+                    (a, b) =>
+                        Object.values(b.priceMap || {}).filter((p) => p != null).length -
+                        Object.values(a.priceMap || {}).filter((p) => p != null).length,
                 );
             default:
                 return list;

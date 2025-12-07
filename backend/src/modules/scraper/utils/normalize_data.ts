@@ -194,16 +194,24 @@ export function normalizeAge(age: string): string {
     const a = normalizeInput(age);
     if (adultAge.includes(a)) return 'За возрасни';
     if (kidsAge.includes(a)) return 'За деца';
-    return 'Неопределено';
+    return 'За деца';
 }
 
 export function normalizeColor(color: string): string {
     const c = normalizeInput(color);
+
+    const capitalize = (s: string) =>
+        s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+
     for (const [standard, variants] of Object.entries(colors)) {
-        if (variants.includes(c)) return standard;
+        if (variants.includes(c)) {
+            return capitalize(standard);
+        }
     }
-    return 'Мултиколор';
+
+    return capitalize('Мултиколор');
 }
+
 
 export function normalizeSubcategory(subcategory: string): string {
     const c = normalizeInput(subcategory);
@@ -213,4 +221,9 @@ export function normalizeSubcategory(subcategory: string): string {
         }
     }
     return 'Останато';
+}
+
+export function capitalizeFirstLetter(brand: string): string {
+    if (!brand) return brand;
+    return brand.charAt(0).toUpperCase() + brand.slice(1).toLowerCase();
 }

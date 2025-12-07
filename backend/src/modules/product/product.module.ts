@@ -1,9 +1,9 @@
 ﻿import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Product } from '../postgres/entities/product.entity';
-import { ProductsService } from '../services/product.service';
-import { ProductController } from '../controllers/product.controller';
-import { PostgresModule } from '../postgres/postgres.module';
+import { Product } from '../../database/entities/product.entity';
+import { ProductsService } from './product.service';
+import { ProductController } from './product.controller';
+import { PostgresModule } from '../../database/postgres.module';
 
 @Module({
     imports: [

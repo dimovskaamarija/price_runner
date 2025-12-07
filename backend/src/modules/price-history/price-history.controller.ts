@@ -1,6 +1,6 @@
 import { Controller, Get, Param } from '@nestjs/common';
-import { PriceHistoryService } from '../services/price-history.service';
-import { PriceHistory } from '../postgres/entities/price-history.entity';
+import { PriceHistoryService } from './price-history.service';
+import { PriceHistory } from '../../database/entities/price-history.entity';
 
 @Controller('products')
 export class PriceHistoryController {

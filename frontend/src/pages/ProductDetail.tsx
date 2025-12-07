@@ -14,6 +14,7 @@ interface Product {
     gender?: string;
     age?: string;
     subcategory?: string;
+    category?: string;
     color?: string;
     image?: string;
     priceMap?: Record<string, number | null>;
@@ -271,11 +272,11 @@ export default function ProductDetail() {
                         <h2>Спецификации</h2>
                         <div className="spec-row">
                             <strong>Категорија</strong>
-                            <span>{product.subcategory || '-'}</span>
+                            <span>{product.category || '-'}</span>
                         </div>
                         <div className="spec-row">
-                            <strong>Подкатегорија</strong>
-                            <span>{product.age || '-'}</span>
+                            <strong>Поткатегорија</strong>
+                            <span>{product.subcategory || '-'}</span>
                         </div>
                         <div className="spec-row">
                             <strong>Пол</strong>

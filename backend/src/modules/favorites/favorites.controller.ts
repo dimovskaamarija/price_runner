@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Delete, Param, Body, HttpException, HttpStatus, Req } from '@nestjs/common';
 import { Request } from 'express';
-import { FavoritesService } from '../services/favorites.service';
-import { AuthService } from '../services/auth.service';
+import { FavoritesService } from './favorites.service';
+import { AuthService } from '../auth/auth.service';
 
 @Controller('favorites')
 export class FavoritesController {

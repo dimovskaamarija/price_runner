@@ -3,9 +3,9 @@ import * as cheerio from 'cheerio';
 import pLimit from 'p-limit';
 import dayjs from 'dayjs';
 import { Injectable, Logger } from '@nestjs/common';
-import { PostgresService } from '../postgres/postgres.service';
-import { createId } from '../common/hashing';
-import { normalizeGender, normalizeAge, normalizeColor, normalizeSubcategory } from '../utils/normalize_data';
+import { PostgresService } from '../../../database/postgres.service';
+import { createId } from '../../../common/hashing';
+import { normalizeGender, normalizeAge, normalizeColor, normalizeSubcategory, capitalizeFirstLetter } from '../utils/normalize_data';
 
 const STORE = 'Sport M';
 
@@ -40,7 +40,7 @@ export class SportMScraper {
     }
 
     async scrapeCategory(baseUrl: string, category: string, gender: string) {
-        for (let page = 1; page <= 10; page++) {
+        for (let page = 1; page <= 7; page++) {
             const pageUrl = `${baseUrl}&Page=${page}`;
             this.log.log(`Scraping URL: ${pageUrl}`);
             this.log.log(`Fetching ${category} - Page ${page}`);
@@ -87,14 +87,24 @@ export class SportMScraper {
         });
 
         const age = normalizeAge(spec['Возраст']);
-        const color = normalizeColor(spec['Боја']);
+        const rawColor = normalizeColor(spec['Боја']);
+        const color = capitalizeFirstLetter(rawColor);
         const subcategory = normalizeSubcategory(spec['Подгрупа'] || category);
-        const brand = spec['Бренд'] || this.guessBrandFromName(name);
+        const rawBrand = spec['Бренд'] || this.guessBrandFromName(name);
+        const brand = capitalizeFirstLetter(rawBrand);
+        const code =
+            $('.ow-colors-text')
+                .text()
+                .replace('Шифра на производ:', '')
+                .trim() ||
+            productId ||  
+            'Unknown';
+
         gender = normalizeGender(gender);
 
         const price = this.extractPrice($);
 
-        const uniqueKey = `${name.toLowerCase()}::${brand.toLowerCase()}::${subcategory.toLowerCase()}::${gender.toLowerCase()}::${age.toLowerCase()}::${color.toLowerCase()}`;
+        const uniqueKey = `${code.toLowerCase()}::${brand.toLowerCase()}::${subcategory.toLowerCase()}::${gender.toLowerCase()}::${age.toLowerCase()}::${color.toLowerCase()}`;
         const id = createId(uniqueKey);
         const now = dayjs();
 

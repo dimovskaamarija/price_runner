@@ -1,6 +1,6 @@
 import { Controller, Get, Query, Param, HttpException, HttpStatus } from "@nestjs/common";
-import { ProductsService } from "../services/product.service";
-import { PostgresService } from "../postgres/postgres.service";
+import { ProductsService } from "./product.service";
+import { PostgresService } from "../../database/postgres.service";
 
 @Controller("products")
 export class ProductController {

@@ -1,5 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
-import { ScraperService } from './scraper.service';
+import { ScraperService } from './services/scraper.service';
 
 @Controller('scraper')
 export class ScraperController {

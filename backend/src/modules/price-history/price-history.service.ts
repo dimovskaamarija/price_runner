@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
-import { PriceHistory } from '../postgres/entities/price-history.entity';
+import { PriceHistory } from '../../database/entities/price-history.entity';
 
 @Injectable()
 export class PriceHistoryService {

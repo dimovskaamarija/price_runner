@@ -6,7 +6,7 @@ import { BuzzScraper } from './buzz.scraper';
 import { DSportScraper } from './dsport.scraper';
 import { SizeerScraper } from './sizeer.scraper';
 import { SportMScraper } from './sportm.scraper';
-import { PostgresService } from '../postgres/postgres.service';
+import { PostgresService } from '../../../database/postgres.service';
 
 @Injectable()
 export class ScraperService {

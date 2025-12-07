@@ -2,7 +2,7 @@ const { Client } = require('pg');
 require('dotenv').config();
 
 const storesData = [
-    { id: 'Buzz Sneaker Station', name: 'Buzz Sneaker Station', logo_url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQmQeTJJOCr9rk6nOJKF8_wtWgs8xm-vUh3e89VpCTtUtgAH0nCBPmABqElYNHvPT1aKzw&usqp=CAU" },
+    { id: 'Buzz Sneaker Station', name: 'Buzz Sneaker Station', logo_url: "https://www.supernova-novomesto.si//fileadmin/shared/logos/Buzz.jpg" },
     { id: 'D Sportska Oprema', name: 'D Sportska Oprema', logo_url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSjNCR1NTgfwn__qPZ7R8mArX_Gs2ydTbChZQ&s" },
     { id: 'Sport M', name: 'Sport M', logo_url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQaxbdwUQPoBxUWZrnCZGXb4EorG5axpAu9A&s" },
     { id: 'Sizeer', name: 'Sizeer', logo_url: "https://www.pepper.pl/kupony/images/256x/images/s/sizeer_logo.png" },
