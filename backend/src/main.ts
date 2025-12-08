@@ -2,9 +2,9 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  try {
-    console.log('Starting NestJS application...');
-    const app = await NestFactory.create(AppModule);
+    try {
+        console.log('Starting NestJS application...');
+        const app = await NestFactory.create(AppModule);
 
     // CORS configuration - allow localhost for dev and production URL from env
     const allowedOrigins = [
@@ -14,17 +14,17 @@ async function bootstrap() {
       process.env.FRONTEND_URL || '',
     ].filter(Boolean);
 
-    app.enableCors({
+        app.enableCors({
       origin: allowedOrigins,
-      credentials: true,
-    });
+            credentials: true,
+        });
 
     const port = process.env.PORT || 3000;
     await app.listen(port);
     console.log(`Application is running on: http://0.0.0.0:${port}`);
-  } catch (error) {
-    console.error('Error starting application:', error);
-    process.exit(1);
-  }
+    } catch (error) {
+        console.error('Error starting application:', error);
+        process.exit(1);
+    }
 }
 bootstrap();

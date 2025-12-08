@@ -26,7 +26,7 @@ app.get("/", (req, res) => {
     res.json({ message: "Auth server is running", routes: ["/auth/login", "/auth/callback", "/auth/me", "/auth/logout"] });
 });
 
-const port = process.env.PORT || 4000;
+const port = parseInt(process.env.PORT || "4000", 10);
 app.listen(port, "0.0.0.0", () => {
     console.log(`Auth server running on http://0.0.0.0:${port}`);
 });
