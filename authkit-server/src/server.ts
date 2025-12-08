@@ -20,23 +20,28 @@ app.use(
     })
 );
 
+const port = parseInt(process.env.PORT || "4000", 10);
+
 app.use("/auth", authRouter);
 
 app.get("/", (req, res) => {
-    res.json({ 
-        message: "Auth server is running", 
-        routes: ["/auth/login", "/auth/callback", "/auth/me", "/auth/logout"],
-        port: port,
-        env: process.env.NODE_ENV || "development"
-    });
+    try {
+        res.json({ 
+            message: "Auth server is running", 
+            routes: ["/auth/login", "/auth/callback", "/auth/me", "/auth/logout"],
+            port: port,
+            env: process.env.NODE_ENV || "development"
+        });
+    } catch (error) {
+        console.error("Root route error:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
 });
 
 // Health check endpoint
 app.get("/health", (req, res) => {
     res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
 });
-
-const port = parseInt(process.env.PORT || "4000", 10);
 app.listen(port, "0.0.0.0", () => {
     console.log(`Auth server running on http://0.0.0.0:${port}`);
     console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
