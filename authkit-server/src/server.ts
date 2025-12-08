@@ -22,7 +22,22 @@ app.use(
 
 const port = parseInt(process.env.PORT || "4000", 10);
 
-app.use("/auth", authRouter);
+// Simple test route before auth routes
+app.get("/test", (req, res) => {
+    res.json({ message: "Test endpoint works", timestamp: new Date().toISOString() });
+});
+
+// Health check endpoint (before auth routes)
+app.get("/health", (req, res) => {
+    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+// Load auth routes (might fail if there are import errors)
+try {
+    app.use("/auth", authRouter);
+} catch (error) {
+    console.error("Failed to load auth routes:", error);
+}
 
 app.get("/", (req, res) => {
     try {
@@ -38,10 +53,6 @@ app.get("/", (req, res) => {
     }
 });
 
-// Health check endpoint
-app.get("/health", (req, res) => {
-    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
-});
 app.listen(port, "0.0.0.0", () => {
     console.log(`Auth server running on http://0.0.0.0:${port}`);
     console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
