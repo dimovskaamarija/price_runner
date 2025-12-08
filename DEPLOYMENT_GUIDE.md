@@ -183,7 +183,7 @@ Your app consists of:
 ## 🥉 **ALTERNATIVE: Vercel (Frontend) + Railway/Render (Backend)**
 
 **Cost**: Free for frontend, ~$5-10/month for backend
-
+image.png
 **Why this combo?**
 - ✅ Vercel is best-in-class for frontend (free, fast CDN)
 - ✅ Use Railway/Render for backend (cheaper than Vercel Pro)
