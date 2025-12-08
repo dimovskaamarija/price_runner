@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { FaExternalLinkAlt, FaHeart, FaRegHeart } from 'react-icons/fa';
 import '../styles/ProductDetail.css';
@@ -6,90 +6,35 @@ import { IoArrowBackOutline } from 'react-icons/io5';
 import PriceHistoryChart from '../components/PriceHistoryChart';
 import Spinner from '../components/Spinner';
 import { useUser } from '../hooks/useUser';
-
-interface Product {
-    id: string;
-    name: string;
-    brand?: string;
-    gender?: string;
-    age?: string;
-    subcategory?: string;
-    category?: string;
-    color?: string;
-    image?: string;
-    priceMap?: Record<string, number | null>;
-    storeLinks?: Record<string, string>;
-}
-
-interface Store {
-    id: string;
-    name: string;
-    logo_url?: string;
-}
+import { useProduct } from '../hooks/useProducts';
+import { useStores, type Store } from '../hooks/useStores';
+import { useFavoriteStatus } from '../hooks/useFavorites';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '../utils/api';
+import { capitalizeBrand } from '../utils/formatting';
 
 export default function ProductDetail() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const location = useLocation();
     const { user } = useUser();
-    const [product, setProduct] = useState<Product | null>(null);
-    const [stores, setStores] = useState<Store[]>([]);
-    const [storesMap, setStoresMap] = useState<Record<string, Store | undefined>>({});
-    const [isFavorite, setIsFavorite] = useState(false);
+    const queryClient = useQueryClient();
 
-    useEffect(() => {
-        const fetchStores = async () => {
-            const response = await fetch('http://localhost:3000/products/stores');
-            const data = await response.json();
-            setStores(data);
+    const { data: product, isLoading: productLoading } = useProduct(id);
+    const { data: stores = [] } = useStores();
+    const { data: favoriteStatus } = useFavoriteStatus(id, user);
+    const isFavorite = favoriteStatus?.isFavorite || false;
 
-            const map: Record<string, Store | undefined> = {};
-            data.forEach((s: Store) => {
-                map[s.id] = s;
-                map[s.id.toLowerCase()] = s;
-                map[s.name] = s;
-                map[s.name.toLowerCase()] = s;
-            });
-            setStoresMap(map);
-        };
-
-        fetchStores();
-    }, []);
-
-    useEffect(() => {
-        if (!id) return;
-
-        const fetchProduct = async () => {
-            const response = await fetch(`http://localhost:3000/products/${id}`);
-            const data = await response.json();
-            if (!data.error) setProduct(data);
-        };
-
-        fetchProduct();
-    }, [id]);
-
-    useEffect(() => {
-        if (!id) return;
-
-        const checkFavorite = async () => {
-            if (user) {
-                try {
-                    const response = await fetch(`http://localhost:3000/favorites/${id}`, {
-                        credentials: 'include',
-                    });
-                    const data = await response.json();
-                    setIsFavorite(data.isFavorite || false);
-                } catch (error) {
-                    console.error('Error checking favorite:', error);
-                }
-            } else {
-                const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-                setIsFavorite(favorites.includes(id));
-            }
-        };
-
-        checkFavorite();
-    }, [id, user]);
+    const storesMap = useMemo(() => {
+        const map: Record<string, Store | undefined> = {};
+        stores.forEach((s) => {
+            map[s.id] = s;
+            map[s.id.toLowerCase()] = s;
+            map[s.name] = s;
+            map[s.name.toLowerCase()] = s;
+        });
+        return map;
+    }, [stores]);
 
     const getStoreLogo = (storeName: string): string | undefined => {
         let store = storesMap[storeName] || storesMap[storeName.toLowerCase()];
@@ -105,46 +50,40 @@ export default function ProductDetail() {
         return store?.logo_url;
     };
 
-    const toggleFavorite = async () => {
-        if (!id || !product) return;
-
-        if (user) {
-            try {
+    const toggleFavoriteMutation = useMutation({
+        mutationFn: async () => {
+            if (!id) return;
+            
+            if (user) {
                 if (isFavorite) {
-                    await fetch(`http://localhost:3000/favorites/${id}`, {
-                        method: 'DELETE',
-                        credentials: 'include',
-                    });
+                    return api.delete(`/favorites/${id}`);
                 } else {
-                    await fetch('http://localhost:3000/favorites', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        credentials: 'include',
-                        body: JSON.stringify({
-                            productId: id,
-                        }),
-                    });
+                    return api.post('/favorites', { productId: id });
                 }
-                setIsFavorite(!isFavorite);
-            } catch (error) {
-                console.error('Error toggling favorite:', error);
-            }
-        } else {
-            const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-            if (isFavorite) {
-                const updated = favorites.filter((favId: string) => favId !== id);
-                localStorage.setItem('favorites', JSON.stringify(updated));
             } else {
-                favorites.push(id);
-                localStorage.setItem('favorites', JSON.stringify(favorites));
+                const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+                if (isFavorite) {
+                    const updated = favorites.filter((favId: string) => favId !== id);
+                    localStorage.setItem('favorites', JSON.stringify(updated));
+                } else {
+                    favorites.push(id);
+                    localStorage.setItem('favorites', JSON.stringify(favorites));
+                }
+                return { success: true };
             }
-            setIsFavorite(!isFavorite);
-        }
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['favorite-status', id] });
+            queryClient.invalidateQueries({ queryKey: ['favorites'] });
+        },
+    });
+
+    const toggleFavorite = () => {
+        if (!id || !product) return;
+        toggleFavoriteMutation.mutate();
     };
 
-    if (!product) return <Spinner />;
+    if (productLoading || !product) return <Spinner />;
 
     const prices = Object.values(product.priceMap || {}).filter(
         (p): p is number => p !== null
@@ -177,7 +116,8 @@ export default function ProductDetail() {
                             <img
                                 src={product.image}
                                 alt={product.name}
-                                className="product-image-big"/>
+                                className="product-image-big"
+                                loading="lazy"/>
                         )}
                     </div>
 
@@ -288,7 +228,7 @@ export default function ProductDetail() {
                         </div>
                         <div className="spec-row">
                             <strong>Бренд</strong>
-                            <span>{product.brand || '-'}</span>
+                            <span>{product.brand ? capitalizeBrand(product.brand) : '-'}</span>
                         </div>
                         <div className="spec-row">
                             <strong>Боја</strong>

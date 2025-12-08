@@ -29,6 +29,67 @@ export class PostgresService {
         );
     }
 
+    private capitalizeColor(color: string): string {
+        if (!color) return color;
+        return color.charAt(0).toUpperCase() + color.slice(1).toLowerCase();
+    }
+
+    private capitalizeBrand(brand: string): string {
+        if (!brand) return brand;
+        return brand
+            .split(' ')
+            .map((word) => {
+                if (!word) return word;
+                return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+            })
+            .join(' ');
+    }
+
+    private getDistinctAndNormalized(column: string, normalizeFn?: (val: string) => string): Promise<string[]> {
+        return this.productRepository
+            .createQueryBuilder("p")
+            .select(`p.${column}`, column)
+            .where(`p.${column} IS NOT NULL AND p.${column} != ''`)
+            .getRawMany()
+            .then(rows => {
+                const values = rows.map((r) => r[column] as string);
+                
+                const uniqueMap = new Map<string, string>();
+                
+                for (const value of values) {
+                    if (!value) continue;
+                    const lowerKey = value.toLowerCase().trim();
+                    
+                    if (!uniqueMap.has(lowerKey)) {
+                        uniqueMap.set(lowerKey, value);
+                    } else {
+                        if (normalizeFn) {
+                            const current = uniqueMap.get(lowerKey)!;
+                            const normalized = normalizeFn(value);
+                            if (normalized !== normalized.toLowerCase() && current === current.toLowerCase()) {
+                                uniqueMap.set(lowerKey, normalized);
+                            }
+                        }
+                    }
+                }
+                
+                let result = Array.from(uniqueMap.values());
+                if (normalizeFn) {
+                    result = result.map(normalizeFn);
+                    const normalizedMap = new Map<string, string>();
+                    for (const value of result) {
+                        const lowerKey = value.toLowerCase().trim();
+                        if (!normalizedMap.has(lowerKey)) {
+                            normalizedMap.set(lowerKey, value);
+                        }
+                    }
+                    result = Array.from(normalizedMap.values());
+                }
+                
+                return result.sort((a, b) => a.localeCompare(b));
+            });
+    }
+
     async upsertProduct(doc: ProductType, store?: string, price?: number | null, date?: Date): Promise<void> {
         const now = date || new Date();
 
@@ -56,12 +117,12 @@ export class PostgresService {
                 { id: doc.id },
                 {
                     name: doc.name,
-                    brand: doc.brand,
+                    brand: doc.brand ? this.capitalizeBrand(doc.brand) : doc.brand,
                     category: doc.category,
                     subcategory: doc.subcategory,
                     gender: doc.gender,
                     age: doc.age,
-                    color: doc.color ? doc.color.toLowerCase() : doc.color,
+                    color: doc.color ? this.capitalizeColor(doc.color) : doc.color,
                     image: doc.image,
                     priceMap: mergedPriceMap,
                     storeLinks: mergedStoreLinks,
@@ -89,7 +150,7 @@ export class PostgresService {
                 subcategory: doc.subcategory,
                 gender: doc.gender,
                 age: doc.age,
-                color: doc.color ? doc.color.toLowerCase() : doc.color,
+                color: doc.color ? this.capitalizeColor(doc.color) : doc.color,
                 image: doc.image,
                 priceMap: initialPriceMap,
                 storeLinks: doc.storeLinks || {},
@@ -278,10 +339,10 @@ export class PostgresService {
         return {
             categories: await this.getDistinctValues("category"),
             subcategories: await this.getDistinctValues("subcategory"),
-            brands: await this.getDistinctValues("brand"),
+            brands: await this.getDistinctAndNormalized("brand", (b) => this.capitalizeBrand(b)),
             genders: await this.getDistinctValues("gender"),
             ages: await this.getDistinctValues("age"),
-            colors: await this.getDistinctValues("color"),
+            colors: await this.getDistinctAndNormalized("color", (c) => this.capitalizeColor(c)),
         };
     }
 

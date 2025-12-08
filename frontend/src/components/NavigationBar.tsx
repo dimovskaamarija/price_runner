@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "../styles/NavigationBar.css";
 import logo from "../assets/logo.svg";
 import { FaSearch, FaHeart } from "react-icons/fa";
-import type { NavData } from "../types/navData";
 import type { User } from "../types/user";
+import { useNavData } from "../hooks/useNavData";
+import { capitalizeBrand } from "../utils/formatting";
 
 interface Props {
     user: User | null;
@@ -13,15 +14,9 @@ interface Props {
 export default function NavigationBar({ user }: Props) {
     const [query, setQuery] = useState("");
     const [hover, setHover] = useState<string | null>(null);
-    const [navData, setNavData] = useState<NavData | null>(null);
+    const { data: navData } = useNavData();
     const timeoutRef = useRef<number | null>(null);
     const navigate = useNavigate();
-
-    useEffect(() => {
-        fetch("http://localhost:3000/products/nav-data")
-            .then((r) => r.json())
-            .then((d: NavData) => setNavData(d));
-    }, []);
 
     const submitSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -580,7 +575,7 @@ export default function NavigationBar({ user }: Props) {
                                             clickClose();
                                             navigate(go({ brand: b.name }));
                                         }}>
-                                        {b.name}
+                                        {capitalizeBrand(b.name)}
                                     </button>
                                 ))}
 

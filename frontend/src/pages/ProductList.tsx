@@ -1,21 +1,13 @@
-﻿import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import FiltersPanel from "../components/FiltersPanel";
 import { getMinPrice } from "../utils/pricing";
 import SortBar from "../components/SortBar";
 import type { SortOption } from "../components/SortBar";
-import { FaFilter, FaHeart, FaRegHeart } from "react-icons/fa";
+import { FaFilter } from "react-icons/fa";
 import Spinner from "../components/Spinner";
+import { useProducts, useFilterOptions, type Product } from "../hooks/useProducts";
 import "../styles/ProductList.css";
-
-export interface Product {
-    id: string;
-    name: string;
-    image?: string;
-    priceMap?: Record<string, number | null>;
-    updatedAt?: string;
-    popularity?: number;
-}
 
 type Filters = {
     category: string[];
@@ -52,12 +44,9 @@ export default function ProductList() {
     const genderFromUrl = params.get("gender") || "";
     const brandFromUrl = params.get("brand") || "";
 
-    const [products, setProducts] = useState<Product[]>([]);
-    const [total, setTotal] = useState(0);
     const [currentPage, setCurrentPage] = useState(pageFromUrl);
     const [sort, setSort] = useState<SortOption>(sortFromUrl);
     const [filtersOpen, setFiltersOpen] = useState(false);
-    const [loading, setLoading] = useState(true);
 
     const [filters, setFilters] = useState<Filters>({
         category: categoryFromUrl ? [categoryFromUrl] : [],
@@ -72,56 +61,63 @@ export default function ProductList() {
         ],
     });
 
-    const [filterOptions, setFilterOptions] = useState<FilterOptions>({
+    const { data: filterOptionsData } = useFilterOptions();
+    const filterOptions: FilterOptions = filterOptionsData || {
         categories: [],
         subcategories: [],
         brands: [],
         ages: [],
         genders: [],
         colors: [],
-    });
+    };
+
+    const isUpdatingUrlRef = useRef(false);
+    const prevUrlSearchRef = useRef(location.search);
 
     useEffect(() => {
-        const load = async () => {
-            const r = await fetch("http://localhost:3000/products/filter-options");
-            const d = await r.json();
-            setFilterOptions(d);
-        };
-        load();
-    }, []);
+        if (isUpdatingUrlRef.current) {
+            isUpdatingUrlRef.current = false;
+            prevUrlSearchRef.current = location.search;
+            return;
+        }
 
-    useEffect(() => {
-        setFilters(prev => ({
-            ...prev,
-            category: categoryFromUrl ? [categoryFromUrl] : [],
-            subcategory: subcategoryFromUrl ? [subcategoryFromUrl] : [],
-            age: ageFromUrl ? [ageFromUrl] : [],
-            gender: genderFromUrl ? [genderFromUrl] : [],
-            brand: brandFromUrl ? [brandFromUrl] : []
-        }));
-    }, [
-        categoryFromUrl,
-        subcategoryFromUrl,
-        ageFromUrl,
-        genderFromUrl,
-        brandFromUrl
-    ]);
+        if (prevUrlSearchRef.current !== location.search) {
+            if (pageFromUrl !== currentPage) {
+                setCurrentPage(pageFromUrl);
+            }
+            if (sortFromUrl !== sort) {
+                setSort(sortFromUrl);
+            }
+            setFilters(prev => ({
+                ...prev,
+                category: categoryFromUrl ? [categoryFromUrl] : [],
+                subcategory: subcategoryFromUrl ? [subcategoryFromUrl] : [],
+                age: ageFromUrl ? [ageFromUrl] : [],
+                gender: genderFromUrl ? [genderFromUrl] : [],
+                brand: brandFromUrl ? [brandFromUrl] : [],
+                price: [
+                    Number(params.get("minPrice") || 0),
+                    Number(params.get("maxPrice") || 20000),
+                ],
+            }));
+            prevUrlSearchRef.current = location.search;
+        }
+    }, [location.search, pageFromUrl, sortFromUrl, currentPage, sort, categoryFromUrl, subcategoryFromUrl, ageFromUrl, genderFromUrl, brandFromUrl, params]);
 
-    const prevFiltersSearchRef = useRef({ filters, searchFromUrl });
-    
+    const prevFiltersSearchRef = useRef(JSON.stringify({ filters, searchFromUrl }));
     useEffect(() => {
-        const filtersChanged = JSON.stringify(prevFiltersSearchRef.current.filters) !== JSON.stringify(filters);
-        const searchChanged = prevFiltersSearchRef.current.searchFromUrl !== searchFromUrl;
-        
-        if (filtersChanged || searchChanged) {
-            if (currentPage !== 1) {
+        const currentKey = JSON.stringify({ filters, searchFromUrl });
+        if (prevFiltersSearchRef.current !== currentKey) {
+            const prev = JSON.parse(prevFiltersSearchRef.current);
+            const filtersChanged = JSON.stringify(prev.filters) !== JSON.stringify(filters);
+            const searchChanged = prev.searchFromUrl !== searchFromUrl;
+            
+            if ((filtersChanged || searchChanged) && currentPage !== 1) {
                 setCurrentPage(1);
             }
-            prevFiltersSearchRef.current = { filters, searchFromUrl };
-        } else if (pageFromUrl !== currentPage) {
-            setCurrentPage(pageFromUrl);
+            prevFiltersSearchRef.current = currentKey;
         }
-    }, [pageFromUrl, filters, searchFromUrl, currentPage]);
+    }, [filters, searchFromUrl, currentPage]);
 
     useEffect(() => {
         const q = new URLSearchParams();
@@ -142,56 +138,35 @@ export default function ProductList() {
         q.set("maxPrice", String(filters.price[1]));
 
         const newSearch = q.toString();
-        if (location.search !== `?${newSearch}` && location.search !== newSearch) {
+        const currentSearch = location.search.startsWith("?") ? location.search.slice(1) : location.search;
+        
+        if (currentSearch !== newSearch) {
+            isUpdatingUrlRef.current = true;
             navigate({ search: newSearch }, { replace: true });
         }
     }, [currentPage, sort, filters, searchFromUrl, navigate]);
 
+    const productFilters = useMemo(() => ({
+        page: currentPage,
+        sort,
+        search: searchFromUrl || undefined,
+        category: filters.category.length > 0 ? filters.category.join(",") : undefined,
+        subcategory: filters.subcategory.length > 0 ? filters.subcategory.join(",") : undefined,
+        brand: filters.brand.length > 0 ? filters.brand.join(",") : undefined,
+        age: filters.age.length > 0 ? filters.age.join(",") : undefined,
+        gender: filters.gender.length > 0 ? filters.gender.join(",") : undefined,
+        color: filters.color.length > 0 ? filters.color.join(",") : undefined,
+        minPrice: filters.price[0],
+        maxPrice: filters.price[1],
+    }), [currentPage, sort, filters, searchFromUrl]);
+
+    const { data: productsData, isLoading: loading } = useProducts(productFilters);
+    const products = productsData?.items || [];
+    const total = productsData?.total || 0;
+
     useEffect(() => {
-        let cancel = false;
-
-        const load = async () => {
-            setLoading(true);
-            const p = new URLSearchParams();
-            p.set("page", String(currentPage));
-            p.set("sort", sort);
-
-            if (searchFromUrl) p.set("search", searchFromUrl);
-
-            Object.entries(filters).forEach(([k, v]) => {
-                if (k !== "price" && Array.isArray(v) && v.length) {
-                    p.set(k, v.join(","));
-                }
-            });
-
-            p.set("minPrice", String(filters.price[0]));
-            p.set("maxPrice", String(filters.price[1]));
-
-            try {
-                const r = await fetch(`http://localhost:3000/products?${p.toString()}`);
-                const d = await r.json();
-                if (cancel) return;
-                setProducts(d.items || []);
-                setTotal(d.total || 0);
-                window.scrollTo({ top: 0, behavior: "smooth" });
-            } catch (error) {
-                console.error("Error loading products:", error);
-                if (!cancel) {
-                    setProducts([]);
-                    setTotal(0);
-                }
-            } finally {
-                if (!cancel) {
-                    setLoading(false);
-                }
-            }
-        };
-
-        load();
-        return () => {
-            cancel = true;
-        };
-    }, [currentPage, sort, filters, searchFromUrl]);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }, [currentPage]);
 
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -313,6 +288,7 @@ export default function ProductList() {
                                             src={p.image || ""}
                                             alt={p.name}
                                             referrerPolicy="no-referrer"
+                                            loading="lazy"
                                         />
                                     </div>
 
