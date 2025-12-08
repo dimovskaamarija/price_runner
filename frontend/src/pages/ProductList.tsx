@@ -6,7 +6,7 @@ import SortBar from "../components/SortBar";
 import type { SortOption } from "../components/SortBar";
 import { FaFilter } from "react-icons/fa";
 import Spinner from "../components/Spinner";
-import { useProducts, useFilterOptions, type Product } from "../hooks/useProducts";
+import { useProducts, useFilterOptions } from "../hooks/useProducts";
 import "../styles/ProductList.css";
 
 type Filters = {
@@ -62,7 +62,7 @@ export default function ProductList() {
     });
 
     const { data: filterOptionsData } = useFilterOptions();
-    const filterOptions: FilterOptions = filterOptionsData || {
+    const filterOptions: FilterOptions = (filterOptionsData as FilterOptions | undefined) || {
         categories: [],
         subcategories: [],
         brands: [],
