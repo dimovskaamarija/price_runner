@@ -1,5 +1,6 @@
 import {createContext, useContext, useEffect, useState} from "react";
 import type { ReactNode } from "react";
+import { api } from "../utils/api";
 
 type MenuGroup = {
     shoes: string[];
@@ -48,8 +49,7 @@ export function NavDataProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         const load = async () => {
             try {
-                const res = await fetch("http://localhost:3000/products/nav-data");
-                const data = await res.json();
+                const data = await api.get<NavData>("/products/nav-data");
                 setNavData(data);
             } catch (err) {
                 console.error("Failed to load nav-data:", err);

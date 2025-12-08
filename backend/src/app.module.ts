@@ -6,6 +6,7 @@ import { PostgresModule } from './database/postgres.module';
 import { ProductModule } from './modules/product/product.module';
 import { PriceHistoryModule } from './modules/price-history/price-history.module';
 import { FavoritesModule } from './modules/favorites/favorites.module';
+import { AppController } from './app.controller';
 
 @Module({
     imports: [
@@ -20,5 +21,6 @@ import { FavoritesModule } from './modules/favorites/favorites.module';
         PriceHistoryModule,
         FavoritesModule,
     ],
+    controllers: [AppController],
 })
 export class AppModule {}

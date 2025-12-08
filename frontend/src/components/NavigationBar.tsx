@@ -6,6 +6,7 @@ import { FaSearch, FaHeart } from "react-icons/fa";
 import type { User } from "../types/user";
 import { useNavData } from "../hooks/useNavData";
 import { capitalizeBrand } from "../utils/formatting";
+import { AUTH_API_BASE_URL } from "../utils/api";
 
 interface Props {
     user: User | null;
@@ -46,7 +47,7 @@ export default function NavigationBar({ user }: Props) {
         setHover(null);
     };
 
-    const LOGIN_URL = "http://localhost:4000/auth/login";
+    const LOGIN_URL = `${AUTH_API_BASE_URL}/auth/login`;
 
     return (
         <div className="nav-container">
@@ -90,7 +91,7 @@ export default function NavigationBar({ user }: Props) {
 
                            <button className="nav-logout"
                             onClick={() => {
-                            window.location.href = "http://localhost:4000/auth/logout";
+                            window.location.href = `${AUTH_API_BASE_URL}/auth/logout`;
                             }}>Одјава</button>
 
                         </>
