@@ -23,10 +23,31 @@ app.use(
 app.use("/auth", authRouter);
 
 app.get("/", (req, res) => {
-    res.json({ message: "Auth server is running", routes: ["/auth/login", "/auth/callback", "/auth/me", "/auth/logout"] });
+    res.json({ 
+        message: "Auth server is running", 
+        routes: ["/auth/login", "/auth/callback", "/auth/me", "/auth/logout"],
+        port: port,
+        env: process.env.NODE_ENV || "development"
+    });
+});
+
+// Health check endpoint
+app.get("/health", (req, res) => {
+    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
 const port = parseInt(process.env.PORT || "4000", 10);
 app.listen(port, "0.0.0.0", () => {
     console.log(`Auth server running on http://0.0.0.0:${port}`);
+    console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+    console.log(`Database URL configured: ${process.env.DATABASE_URL ? "Yes" : "No"}`);
+});
+
+// Handle uncaught errors
+process.on("uncaughtException", (error) => {
+    console.error("Uncaught Exception:", error);
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+    console.error("Unhandled Rejection at:", promise, "reason:", reason);
 });
