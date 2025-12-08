@@ -22,7 +22,7 @@ export class ScraperService {
         private readonly db: PostgresService,
     ) {}
 
-    @Cron('0 5 * * *')
+    @Cron('0 16 * * *')
     async runAll() {
         this.log.log('Starting SportVision scrape…');
         await this.sportvision.scrapeCategory('https://www.sportvision.mk/mk/obuvki', 'Обувки');
