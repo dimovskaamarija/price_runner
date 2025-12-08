@@ -1,0 +1,173 @@
+.favorites-container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 40px auto;
+    padding: 20px 40px;
+    box-sizing: border-box;
+    background-color: #ffffff;
+    min-height: 100vh;
+}
+
+.favorites-content {
+    width: 100%;
+}
+
+.favorites-title {
+    font-size: 32px;
+    font-weight: 600;
+    margin-bottom: 30px;
+    color: #1a1a1a;
+}
+
+.favorites-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 20px;
+    text-align: center;
+}
+
+.empty-heart-icon {
+    font-size: 64px;
+    color: #ddd;
+    margin-bottom: 20px;
+}
+
+.favorites-empty p {
+    font-size: 18px;
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.browse-button {
+    padding: 12px 24px;
+    background: #f5f7ff;
+    border: 1px solid #d7defa;
+    color: #1d4ed8;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.favorites-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+    margin-top: 20px;
+}
+
+.favorite-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    background: white;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.favorite-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.favorite-image-container {
+    width: 100%;
+    height: 280px;
+    overflow: hidden;
+    background: #f9fafb;
+    cursor: pointer;
+}
+
+.favorite-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s;
+}
+
+.favorite-image-container:hover .favorite-image {
+    transform: scale(1.05);
+}
+
+.favorite-image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+    font-size: 14px;
+}
+
+.favorite-info {
+    padding: 16px;
+}
+
+.favorite-name {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    color: #1a1a1a;
+    cursor: pointer;
+    transition: color 0.2s;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.favorite-name:hover {
+    color: #1d4ed8;
+}
+
+.favorite-price {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1d4ed8;
+    margin: 0 0 12px 0;
+}
+
+.remove-favorite-btn {
+    width: 100%;
+    padding: 10px;
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.2s, color 0.2s;
+}
+
+.remove-favorite-btn:hover {
+    background: #fecaca;
+    color: #b91c1c;
+}
+
+@media (max-width: 768px) {
+    .favorites-container {
+        padding: 20px;
+    }
+
+    .favorites-title {
+        font-size: 24px;
+    }
+
+    .favorites-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 16px;
+    }
+
+    .favorite-image-container {
+        height: 200px;
+    }
+}
+

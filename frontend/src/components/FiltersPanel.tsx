@@ -1,5 +1,7 @@
-﻿import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import "../styles/FiltersPanel.css";
+import { IoMdArrowDropright, IoMdArrowDropdown } from "react-icons/io";
+import { capitalizeBrand, capitalizeFirstLetter } from "../utils/formatting";
 
 export type Filters = {
     category: string[];
@@ -26,15 +28,15 @@ interface Props {
     };
 }
 
-export default function FiltersPanel({
-    isOpen,
-    onClose,
-    filters,
-    setFilters,
-    filterOptions,
-}: Props) {
+export default function FiltersPanel({ isOpen, onClose, filters, setFilters, filterOptions}: Props) {
     const [temp, setTemp] = useState(filters);
     const [openSection, setOpenSection] = useState<string | null>(null);
+
+    const formattedFilterOptions = useMemo(() => ({
+        ...filterOptions,
+        brands: filterOptions.brands.map(b => capitalizeBrand(b)),
+        colors: filterOptions.colors.map(c => capitalizeFirstLetter(c)),
+    }), [filterOptions]);
 
     useEffect(() => {
         if (isOpen) setTemp(filters);
@@ -81,30 +83,28 @@ export default function FiltersPanel({
         onClose();
     };
 
-    const block = (key: Keys, title: string, values: string[]) => (
-        <div className="filters-section">
-            <h4 onClick={() => setOpenSection(openSection === key ? null : key)}>
-                {title}
-                <span className="arrow">{openSection === key ? "❮" : "❯"}</span>
-            </h4>
+    const block = (key: Keys, title: string, values: string[], displayValues?: string[]) => {
+        const display = displayValues || values;
+        return (
+            <div className="filters-section">
+                <h4 onClick={() => setOpenSection(openSection === key ? null : key)}>
+                    {title}
+                    <span className="arrow">{openSection === key ? <IoMdArrowDropdown/> : <IoMdArrowDropright/>}</span>
+                </h4>
 
-            {openSection === key && (
-                <div className="filter-items">
-                    {values.map((v) => (
-                        <label key={v} className="checkbox-row">
-                            <input
-                                type="checkbox"
-                                className="styled-checkbox"
-                                checked={temp[key].includes(v)}
-                                onChange={() => toggle(key, v)}
-                            />
-                            {v}
-                        </label>
-                    ))}
-                </div>
-            )}
-        </div>
-    );
+                {openSection === key && (
+                    <div className="filter-items">
+                        {values.map((v, index) => (
+                            <label key={v} className="checkbox-row">
+                                <input type="checkbox" className="styled-checkbox" checked={temp[key].includes(v)} onChange={() => toggle(key, v)}/>
+                                {display[index]}
+                            </label>
+                        ))}
+                    </div>
+                )}
+            </div>
+        );
+    };
 
     return (
         <div className={`filters-overlay ${isOpen ? "open" : ""}`} onClick={onClose}>
@@ -116,36 +116,29 @@ export default function FiltersPanel({
 
                 {block("category", "Категорија", filterOptions.categories)}
                 {block("subcategory", "Поткатегорија", filterOptions.subcategories)}
-                {block("brand", "Бренд", filterOptions.brands)}
+                {block("brand", "Бренд", filterOptions.brands, formattedFilterOptions.brands)}
                 {block("age", "Возраст", filterOptions.ages)}
                 {block("gender", "Пол", filterOptions.genders)}
-                {block("color", "Боја", filterOptions.colors)}
+                {block("color", "Боја", filterOptions.colors, formattedFilterOptions.colors)}
 
                 <div className="filters-section">
-                    <h4 onClick={() => setOpenSection(openSection === "price" ? null : "price")}>
+                    <h4>
                         Цена
-                        <span className="arrow">{openSection === "price" ? "❮" : "❯"}</span>
+                        <span className="arrow"></span>
                     </h4>
-
-                    {openSection === "price" && (
                         <div className="price-slider">
                             <input type="range" min="0" max="20000" step="500" value={temp.price[0]} onChange={min} />
                             <input type="range" min="0" max="20000" step="500" value={temp.price[1]} onChange={max} />
 
                             <div
                                 className="slider-track-active"
-                                style={{
-                                    left: `${(temp.price[0] / 20000) * 100}%`,
-                                    right: `${100 - (temp.price[1] / 20000) * 100}%`,
-                                }}
-                            />
+                                style={{left: `${(temp.price[0] / 20000) * 100}%`, right: `${100 - (temp.price[1] / 20000) * 100}%`}}/>
 
                             <div className="range-values">
                                 <span>{temp.price[0]} ден</span>
                                 <span>{temp.price[1]} ден</span>
                             </div>
                         </div>
-                    )}
                 </div>
 
                 <div className="filters-actions">

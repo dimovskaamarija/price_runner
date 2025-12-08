@@ -16,33 +16,47 @@ if (Test-Path $envFilePath) {
 Write-Host "Creating .env file..." -ForegroundColor Green
 Write-Host ""
 
-# Ask user for MongoDB setup type
-Write-Host "Choose MongoDB setup:" -ForegroundColor Cyan
-Write-Host "1. Local MongoDB (mongodb://localhost:27017)"
-Write-Host "2. MongoDB Atlas (cloud)"
-$choice = Read-Host "Enter choice (1 or 2)"
+# Ask user for PostgreSQL configuration
+Write-Host "PostgreSQL Configuration" -ForegroundColor Cyan
+Write-Host ""
 
-if ($choice -eq "1") {
-    # Local MongoDB
-    $mongodbUri = "mongodb://localhost:27017/price_runner"
-    Write-Host "Using local MongoDB: $mongodbUri" -ForegroundColor Green
-} else {
-    # MongoDB Atlas
-    Write-Host ""
-    Write-Host "Please provide your MongoDB Atlas connection string:" -ForegroundColor Cyan
-    Write-Host "Format: mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/price_runner?retryWrites=true&w=majority" -ForegroundColor Gray
-    $mongodbUri = Read-Host "Connection string"
-    
-    if ([string]::IsNullOrWhiteSpace($mongodbUri)) {
-        Write-Host "No connection string provided. Using local MongoDB as fallback." -ForegroundColor Yellow
-        $mongodbUri = "mongodb://localhost:27017/price_runner"
-    }
+$dbHost = Read-Host "Database host (default: localhost)"
+if ([string]::IsNullOrWhiteSpace($dbHost)) {
+    $dbHost = "localhost"
+}
+
+$dbPort = Read-Host "Database port (default: 5432)"
+if ([string]::IsNullOrWhiteSpace($dbPort)) {
+    $dbPort = "5432"
+}
+
+$dbUsername = Read-Host "Database username (default: postgres)"
+if ([string]::IsNullOrWhiteSpace($dbUsername)) {
+    $dbUsername = "postgres"
+}
+
+$dbPassword = Read-Host "Database password" -AsSecureString
+$dbPasswordPlain = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($dbPassword))
+
+$dbDatabase = Read-Host "Database name (default: price_runner)"
+if ([string]::IsNullOrWhiteSpace($dbDatabase)) {
+    $dbDatabase = "price_runner"
 }
 
 # Create .env content
 $envContent = @"
-MONGODB_URI=$mongodbUri
+# PostgreSQL Configuration
+DB_HOST=$dbHost
+DB_PORT=$dbPort
+DB_USERNAME=$dbUsername
+DB_PASSWORD=$dbPasswordPlain
+DB_DATABASE=$dbDatabase
+
+# Server Port
 PORT=3000
+
+# Environment
+NODE_ENV=development
 "@
 
 # Write to file
@@ -52,7 +66,7 @@ try {
     Write-Host "✅ .env file created successfully at: $envFilePath" -ForegroundColor Green
     Write-Host ""
     Write-Host "Next steps:" -ForegroundColor Cyan
-    Write-Host "1. Test connection: cd backend && node setup-database.js" -ForegroundColor Yellow
+    Write-Host "1. Setup database: cd backend && node setup-postgres.js" -ForegroundColor Yellow
     Write-Host "2. Start backend: cd backend && npm run start:dev" -ForegroundColor Yellow
 } catch {
     Write-Host ""
@@ -60,6 +74,5 @@ try {
     Write-Host ""
     Write-Host "Please create .env manually:" -ForegroundColor Yellow
     Write-Host "1. Create file: backend/.env" -ForegroundColor Gray
-    Write-Host "2. Add: MONGODB_URI=$mongodbUri" -ForegroundColor Gray
+    Write-Host "2. Add PostgreSQL configuration" -ForegroundColor Gray
 }
-

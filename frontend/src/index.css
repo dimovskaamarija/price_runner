@@ -3,9 +3,9 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color-scheme: light;
+  color: #213547;
+  background-color: #ffffff;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -24,9 +24,19 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
+  min-height: 100vh;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: #ffffff !important;
+  color: #213547 !important;
+}
+
+#root {
+  width: 100%;
+  overflow-x: hidden;
+  background-color: #ffffff;
   min-height: 100vh;
 }
 
@@ -52,6 +62,20 @@ button:hover {
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color: #213547 !important;
+    background-color: #ffffff !important;
+  }
+  body {
+    background-color: #ffffff !important;
+    color: #213547 !important;
+  }
+  #root {
+    background-color: #ffffff !important;
+  }
 }
 
 @media (prefers-color-scheme: light) {
