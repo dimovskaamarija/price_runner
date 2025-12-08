@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PriceHistory } from '../postgres/entities/price-history.entity';
-import { PriceHistoryService } from '../services/price-history.service';
-import { PriceHistoryController } from '../controllers/price-history.controller';
+import { PriceHistory } from '../../database/entities/price-history.entity';
+import { PriceHistoryService } from './price-history.service';
+import { PriceHistoryController } from './price-history.controller';
 
 @Module({
     imports: [TypeOrmModule.forFeature([PriceHistory])],

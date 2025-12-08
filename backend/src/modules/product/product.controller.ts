@@ -1,6 +1,6 @@
 import { Controller, Get, Query, Param, HttpException, HttpStatus } from "@nestjs/common";
-import { ProductsService } from "../services/product.service";
-import { PostgresService } from "../postgres/postgres.service";
+import { ProductsService } from "./product.service";
+import { PostgresService } from "../../database/postgres.service";
 
 @Controller("products")
 export class ProductController {
@@ -84,12 +84,24 @@ export class ProductController {
         sports: [],
     };
 
-    const topBrandCounter: Record<string, number> = {};
     const allBrands: Record<string, string[]> = {};
 
     const push = (arr: string[], v: string) => {
         if (v && !arr.includes(v)) arr.push(v);
     };
+
+    const capitalizeBrand = (brand: string): string => {
+        if (!brand) return brand;
+        return brand
+            .split(' ')
+            .map((word) => {
+                if (!word) return word;
+                return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+            })
+            .join(' ');
+    };
+
+    const brandMap = new Map<string, { normalized: string; count: number }>();
 
     for (const p of all) {
         const sub = (p.subcategory || "").trim();
@@ -97,12 +109,13 @@ export class ProductController {
         const brand = (p.brand || "").trim();
 
         if (brand) {
-            topBrandCounter[brand] = (topBrandCounter[brand] || 0) + 1;
-
-            const letter = brand[0].toUpperCase();
-            if (!allBrands[letter]) allBrands[letter] = [];
-            if (!allBrands[letter].includes(brand)) {
-                allBrands[letter].push(brand);
+            const normalized = capitalizeBrand(brand);
+            const lowerKey = brand.toLowerCase();
+            
+            if (brandMap.has(lowerKey)) {
+                brandMap.get(lowerKey)!.count++;
+            } else {
+                brandMap.set(lowerKey, { normalized, count: 1 });
             }
         }
 
@@ -112,14 +125,22 @@ export class ProductController {
         }
     }
 
+    for (const [lowerKey, { normalized }] of brandMap) {
+        const letter = normalized[0].toUpperCase();
+        if (!allBrands[letter]) allBrands[letter] = [];
+        if (!allBrands[letter].includes(normalized)) {
+            allBrands[letter].push(normalized);
+        }
+    }
+
     for (const key of Object.keys(allBrands)) {
         allBrands[key].sort((a, b) => a.localeCompare(b));
     }
 
-    const topBrands = Object.entries(topBrandCounter)
-        .sort((a, b) => b[1] - a[1])
+    const topBrands = Array.from(brandMap.values())
+        .sort((a, b) => b.count - a.count)
         .slice(0, 10)
-        .map(([name, count]) => ({ name, count }));
+        .map(({ normalized, count }) => ({ name: normalized, count }));
 
     return {
         menu: {

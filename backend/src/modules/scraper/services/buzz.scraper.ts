@@ -3,31 +3,34 @@ import * as cheerio from 'cheerio';
 import pLimit from 'p-limit';
 import dayjs from 'dayjs';
 import { Injectable, Logger } from '@nestjs/common';
-import { PostgresService } from '../postgres/postgres.service';
-import { createId } from '../common/hashing';
-import { normalizeGender, normalizeAge, normalizeColor, normalizeSubcategory } from '../utils/normalize_data';
+import { PostgresService } from '../../../database/postgres.service';
+import { createId } from '../../../common/hashing';
+import { normalizeGender, normalizeAge, normalizeColor, normalizeSubcategory, capitalizeFirstLetter } from '../utils/normalize_data';
 
-const STORE = 'Sport Reality MK';
-const PDP_RE = /\/mk\/(obuvki|tekstil|oprema)\/\d+-[a-z0-9-]+$/;
+const STORE = 'Buzz Sneakers MK';
 
 @Injectable()
-export class SportRealityScraper {
-    private readonly log = new Logger(SportRealityScraper.name);
+export class BuzzScraper {
+    private readonly log = new Logger(BuzzScraper.name);
     private readonly limit = pLimit(4);
 
     constructor(private readonly db: PostgresService) {}
 
     async scrapeCategory(baseUrl: string, topCategory: string) {
-        for (let page = 1; page <= 30; page++) {
+        for (let page = 1; page <= 21; page++) {
             const url = page === 1 ? baseUrl : `${baseUrl}/page-${page}`;
             const html = await this.fetch(url);
             if (!html) break;
 
             const $ = cheerio.load(html);
             const pdps = new Set<string>();
+
             $('a[href]').each((_, a) => {
                 const href = $(a).attr('href')!;
-                if (PDP_RE.test(href)) pdps.add(new URL(href, baseUrl).toString());
+                if (href.includes('/mk/') && href.match(/\/\d{6,}-[a-z0-9-]+$/i)) {
+                    const absoluteUrl = new URL(href, baseUrl).toString();
+                    pdps.add(absoluteUrl);
+                }
             });
 
             if (pdps.size === 0) {
@@ -49,7 +52,11 @@ export class SportRealityScraper {
         if (!html) return;
 
         const $ = cheerio.load(html);
-        const name = ($('h1').first().text() || '').trim();
+        var name = ($('h1').first().text() || '').trim();
+        const breadcrumbItems = $('.block.breadcrumbs a');
+        const category = breadcrumbItems.eq(2).text().trim();
+        const subcategory = normalizeSubcategory(breadcrumbItems.eq(3).text().trim());
+        const code = $('.code span').first().text().trim();
         let image: string | null = null;
         $('img').each((_, img) => {
             const src =
@@ -59,17 +66,10 @@ export class SportRealityScraper {
             if (
                 src &&
                 !image &&
-                src.includes('/files/thumbs/') &&
-                !src.endsWith('.svg') &&
-                !src.includes('icon-')
+                src.includes('/slike-proizvoda/') &&
+                src.includes('/thumbs_900/')
             ) {
-                if (src.startsWith('http')) {
-                    image = src;
-                } else if (src.startsWith('/files/')) {
-                    image = `https://www.sportreality.mk${src}`;
-                } else {
-                    image = new URL(src, productUrl).toString();
-                }
+                image = src.startsWith('http') ? src : new URL(src, productUrl).toString();
             }
         });
         const specs: Record<string, string> = {};
@@ -79,22 +79,29 @@ export class SportRealityScraper {
             if (key && val) specs[key] = val;
         });
 
-        const subcategory = normalizeSubcategory(specs['Категорија'] || topCategory);
         const gender = normalizeGender(specs['Пол'] || 'Unknown');
         const age = normalizeAge(specs['Возраст'] || 'Unknown');
-        const brand = specs['Бренд'] || guessBrandFromPage($);
-        const color = normalizeColor(specs['Боја'] || 'Unknown');
+        const rawBrand = specs['Бренд'] || guessBrandFromPage($);
+        const brand = capitalizeFirstLetter(rawBrand);
+        const rawColor = normalizeColor(specs['Боја'] || 'Unknown');
+        const color = capitalizeFirstLetter(rawColor);
         const priceMKD = extractPrice($);
-        const uniqueKey = `${name.toLowerCase()}::${brand.toLowerCase()}::${subcategory.toLowerCase()}::${gender.toLowerCase()}::${age.toLowerCase()}::${color.toLowerCase()}`;
-        const id = createId(uniqueKey);
 
+        const uniqueKey = `${code.toLowerCase()}::${brand.toLowerCase()}::${subcategory.toLowerCase()}::${gender.toLowerCase()}::${age.toLowerCase()}::${color.toLowerCase()}`;
+        const id = createId(uniqueKey);
         const now = dayjs();
+        const latinOnlyName = name
+            .replace(/[^\x00-\x7F]+/g, ' ') 
+            .replace(/\s+/g, ' ')         
+            .trim();
+
+        name = latinOnlyName;
 
         const product = {
             id,
             name,
             brand,
-            category: topCategory,
+            category,
             subcategory,
             gender,
             age,
@@ -107,7 +114,9 @@ export class SportRealityScraper {
             createdAt: now.toDate(),
             updatedAt: now.toDate(),
         };
-        await this.db.upsertProduct(product, STORE, priceMKD, now.toDate());
+
+        await this.db.upsertProduct(product);
+        await this.db.addPriceHistory(id, STORE, priceMKD, now.toDate());
     }
 
     private async fetch(url: string): Promise<string | null> {
@@ -117,7 +126,7 @@ export class SportRealityScraper {
                     'User-Agent': 'Mozilla/5.0 (compatible; PriceRunnerBot/1.0)',
                     'Accept-Language': 'mk,en;q=0.8',
                 },
-                timeout: 25000,
+                timeout: 20000,
             });
             return res.data as string;
         } catch (e) {

@@ -1,6 +1,7 @@
-﻿import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import "../styles/FiltersPanel.css";
 import { IoMdArrowDropright, IoMdArrowDropdown } from "react-icons/io";
+import { capitalizeBrand, capitalizeFirstLetter } from "../utils/formatting";
 
 export type Filters = {
     category: string[];
@@ -30,6 +31,12 @@ interface Props {
 export default function FiltersPanel({ isOpen, onClose, filters, setFilters, filterOptions}: Props) {
     const [temp, setTemp] = useState(filters);
     const [openSection, setOpenSection] = useState<string | null>(null);
+
+    const formattedFilterOptions = useMemo(() => ({
+        ...filterOptions,
+        brands: filterOptions.brands.map(b => capitalizeBrand(b)),
+        colors: filterOptions.colors.map(c => capitalizeFirstLetter(c)),
+    }), [filterOptions]);
 
     useEffect(() => {
         if (isOpen) setTemp(filters);
@@ -76,25 +83,28 @@ export default function FiltersPanel({ isOpen, onClose, filters, setFilters, fil
         onClose();
     };
 
-    const block = (key: Keys, title: string, values: string[]) => (
-        <div className="filters-section">
-            <h4 onClick={() => setOpenSection(openSection === key ? null : key)}>
-                {title}
-                <span className="arrow">{openSection === key ? <IoMdArrowDropdown/> : <IoMdArrowDropright/>}</span>
-            </h4>
+    const block = (key: Keys, title: string, values: string[], displayValues?: string[]) => {
+        const display = displayValues || values;
+        return (
+            <div className="filters-section">
+                <h4 onClick={() => setOpenSection(openSection === key ? null : key)}>
+                    {title}
+                    <span className="arrow">{openSection === key ? <IoMdArrowDropdown/> : <IoMdArrowDropright/>}</span>
+                </h4>
 
-            {openSection === key && (
-                <div className="filter-items">
-                    {values.map((v) => (
-                        <label key={v} className="checkbox-row">
-                            <input type="checkbox" className="styled-checkbox" checked={temp[key].includes(v)} onChange={() => toggle(key, v)}/>
-                            {v}
-                        </label>
-                    ))}
-                </div>
-            )}
-        </div>
-    );
+                {openSection === key && (
+                    <div className="filter-items">
+                        {values.map((v, index) => (
+                            <label key={v} className="checkbox-row">
+                                <input type="checkbox" className="styled-checkbox" checked={temp[key].includes(v)} onChange={() => toggle(key, v)}/>
+                                {display[index]}
+                            </label>
+                        ))}
+                    </div>
+                )}
+            </div>
+        );
+    };
 
     return (
         <div className={`filters-overlay ${isOpen ? "open" : ""}`} onClick={onClose}>
@@ -106,10 +116,10 @@ export default function FiltersPanel({ isOpen, onClose, filters, setFilters, fil
 
                 {block("category", "Категорија", filterOptions.categories)}
                 {block("subcategory", "Поткатегорија", filterOptions.subcategories)}
-                {block("brand", "Бренд", filterOptions.brands)}
+                {block("brand", "Бренд", filterOptions.brands, formattedFilterOptions.brands)}
                 {block("age", "Возраст", filterOptions.ages)}
                 {block("gender", "Пол", filterOptions.genders)}
-                {block("color", "Боја", filterOptions.colors)}
+                {block("color", "Боја", filterOptions.colors, formattedFilterOptions.colors)}
 
                 <div className="filters-section">
                     <h4>

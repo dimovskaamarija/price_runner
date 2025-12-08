@@ -3,9 +3,9 @@ import * as cheerio from 'cheerio';
 import pLimit from 'p-limit';
 import dayjs from 'dayjs';
 import { Injectable, Logger } from '@nestjs/common';
-import { PostgresService } from '../postgres/postgres.service';
-import { createId } from '../common/hashing';
-import { normalizeGender, normalizeAge, normalizeColor, normalizeSubcategory } from '../utils/normalize_data';
+import { PostgresService } from '../../../database/postgres.service';
+import { createId } from '../../../common/hashing';
+import { normalizeGender, normalizeAge, normalizeColor, normalizeSubcategory, capitalizeFirstLetter } from '../utils/normalize_data';
 
 type Gender = 'Машки' | 'Женски' | 'Унисекс' | 'Kids';
 
@@ -38,7 +38,7 @@ export class DSportScraper {
     }
 
     async scrapeCategory(baseUrl: string, category: string, gender: Gender) {
-        for (let page = 1; page <= 10; page++) {
+        for (let page = 1; page <= 7; page++) {
             const pageUrl = page === 1 ? baseUrl : `${baseUrl}?p=${page}`;
             this.log.log(`[DSport] ${category}/${gender} – fetching page ${page}`);
             const html = await this.fetch(pageUrl);
@@ -90,24 +90,29 @@ if (!name) {
     .trim() || 'Unknown';
 }
             const specs = this.parseSpecs($);
-            const brand =
+            const rawBrand =
                 (specs['Бренд'] || '').trim() ||
                 $('div.product-info-main a[href*="/brands"], a[href*="/brand"]').first().text().trim() ||
                 this.guessBrandFromName(name);
-
+            const brand = capitalizeFirstLetter(rawBrand);
+            const code =
+                $('div.product.attribute.sku .value').first().text().trim() ||
+                specs['Шифра на производ'] ||
+                'Unknown';
             const category = categoryIn;
             const subcategory = normalizeSubcategory(specs['Производ']);
             const gender = normalizeGender((specs['Пол'] || '').trim());
             const age = normalizeAge(genderIn === 'Kids' ? 'За деца' : 'За возрасни');
             const rawColor = (specs['Боја'] || '').trim() || this.extractColorFromName(name) || 'Unknown';
-            const color = normalizeColor(rawColor.toLowerCase());
+            var color = normalizeColor(rawColor.toLowerCase());
+            color = capitalizeFirstLetter(color);
             const image = this.extractDsportImage($);
             const price = this.extractPriceFromPdp($);
             if (price == null) {
                 this.log.warn(`[DSport] Skipping (no price): ${productUrl}`);
                 return;
             }
-            const uniqueKey = `${name.toLowerCase()}::${brand.toLowerCase()}::${subcategory.toLowerCase()}::${gender.toLowerCase()}::${age.toLowerCase()}::${color.toLowerCase()}`;
+            const uniqueKey = `${code.toLowerCase()}::${brand.toLowerCase()}::${subcategory.toLowerCase()}::${gender.toLowerCase()}::${age.toLowerCase()}::${color.toLowerCase()}`;
             const id = createId(uniqueKey);
             const now = dayjs();
 

@@ -24,7 +24,7 @@ export default function SortBar({ value, onChange }: Props) {
                 <option value="price-asc">Цена: од ниска кон висока</option>
                 <option value="price-desc">Цена: од висока кон ниска</option>
                 <option value="newest">Најнови</option>
-                <option value="popular">Најбарани</option>
+                <option value="available-desc">Најдостапни</option>
                 <option value="name-asc">Име: растечки</option>
                 <option value="name-desc">Име: опаѓачки</option>
             </select>

@@ -3,9 +3,9 @@ import * as cheerio from 'cheerio';
 import pLimit from 'p-limit';
 import dayjs from 'dayjs';
 import { Injectable, Logger } from '@nestjs/common';
-import { PostgresService } from '../postgres/postgres.service';
-import { createId } from '../common/hashing';
-import { normalizeGender, normalizeAge, normalizeColor, normalizeSubcategory } from '../utils/normalize_data';
+import { PostgresService } from '../../../database/postgres.service';
+import { createId } from '../../../common/hashing';
+import { normalizeGender, normalizeAge, normalizeColor, normalizeSubcategory, capitalizeFirstLetter } from '../utils/normalize_data';
 
 const STORE = 'Sport Vision MK';
 const PDP_RE = /\/mk\/(obuvki|tekstil|oprema)\/\d+-[a-z0-9-]+$/;
@@ -18,7 +18,7 @@ export class SportVisionScraper {
     constructor(private readonly db: PostgresService) {}
 
     async scrapeCategory(baseUrl: string, topCategory: string) {
-        for (let page = 1; page <= 30; page++) {
+        for (let page = 1; page <= 21; page++) {
             const url = page === 1 ? baseUrl : `${baseUrl}/page-${page}`;
             const html = await this.fetch(url);
             if (!html) break;
@@ -83,10 +83,17 @@ export class SportVisionScraper {
         const subcategory = normalizeSubcategory(specs['Категорија'] || topCategory);
         const gender = normalizeGender(specs['Пол'] || 'Unknown');
         const age = normalizeAge(specs['Возраст'] || 'Unknown');
-        const brand = specs['Бренд'] || guessBrandFromPage($);
-        const color = normalizeColor(specs['Боја'] || 'Unknown');
+        const rawBrand = specs['Бренд'] || guessBrandFromPage($);
+        const brand = capitalizeFirstLetter(rawBrand);
+        const rawColor = normalizeColor(specs['Боја'] || 'Unknown');
+        const color = capitalizeFirstLetter(rawColor);
         const priceMKD = extractPrice($);
-        const uniqueKey = `${name.toLowerCase()}::${brand.toLowerCase()}::${subcategory.toLowerCase()}::${gender.toLowerCase()}::${age.toLowerCase()}::${color.toLowerCase()}`;
+        const code =
+            $('div.code span').first().text().trim() ||
+            $('div.code.1 span').first().text().trim() || 
+            specs['Код на производ'] ||
+            'Unknown';
+        const uniqueKey = `${code.toLowerCase()}::${brand.toLowerCase()}::${subcategory.toLowerCase()}::${gender.toLowerCase()}::${age.toLowerCase()}::${color.toLowerCase()}`;
         const id = createId(uniqueKey);
 
         const now = dayjs();

@@ -1,20 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Line } from "react-chartjs-2";
 import {Chart as ChartJS, CategoryScale, LinearScale, LineElement, PointElement, Tooltip, Legend} from "chart.js";
+import { usePriceHistory } from "../hooks/usePriceHistory";
+import type { Store } from "../hooks/useStores";
 
 ChartJS.register(CategoryScale, LinearScale, LineElement, PointElement, Tooltip, Legend);
-
-interface PriceHistory {
-    store: string;
-    price: number;
-    date: string;
-}
-
-interface Store {
-    id: string;
-    name: string;
-    logo_url?: string;
-}
 
 interface Props {
     productId: string;
@@ -22,23 +12,15 @@ interface Props {
 }
 
 export default function PriceHistoryChart({ productId, storesMap }: Props) {
-    const [history, setHistory] = useState<PriceHistory[]>([]);
+    const { data: history = [] } = usePriceHistory(productId);
     const [selectedStores, setSelectedStores] = useState<string[]>([]);
 
     useEffect(() => {
-        if (!productId) return;
-
-        const load = async () => {
-            const res = await fetch(`http://localhost:3000/products/${productId}/history`);
-            const data: PriceHistory[] = await res.json();
-            setHistory(data);
-
-            const uniqueStores = [...new Set(data.map((i) => i.store))];
+        if (history.length > 0) {
+            const uniqueStores = [...new Set(history.map((i) => i.store))];
             setSelectedStores(uniqueStores);
-        };
-
-        load();
-    }, [productId]);
+        }
+    }, [history]);
 
     if (history.length === 0) return null;
 

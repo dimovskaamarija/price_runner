@@ -1,12 +1,14 @@
-import { useNavData } from "../context/NavDataContext";
+import { useNavData } from "../hooks/useNavData";
 import { useNavigate } from "react-router-dom";
+import Spinner from "../components/Spinner";
+import { capitalizeBrand } from "../utils/formatting";
 import "../styles/BrandsPage.css";
 
 export default function BrandsPage() {
-    const { navData, loading } = useNavData();
+    const { data: navData, isLoading: loading } = useNavData();
     const navigate = useNavigate();
 
-    if (loading || !navData) return null;
+    if (loading || !navData) return <Spinner />;
 
     const allKeys = Object.keys(navData.brands.all);
     const letterKeys = allKeys.filter(key => /^[A-Za-zА-Яа-я]$/.test(key));
@@ -53,7 +55,7 @@ export default function BrandsPage() {
                                     className="brand-item"
                                     onClick={() => goToBrand(b)}
                                 >
-                                    {b}
+                                    {capitalizeBrand(b)}
                                 </div>
                             ))}
                         </div>
@@ -70,7 +72,7 @@ export default function BrandsPage() {
                                     className="brand-item"
                                     onClick={() => goToBrand(b)}
                                 >
-                                    {b}
+                                    {capitalizeBrand(b)}
                                 </div>
                             ))}
                         </div>

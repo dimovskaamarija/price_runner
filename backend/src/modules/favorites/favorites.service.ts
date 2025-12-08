@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
-import { Favorite } from '../postgres/entities/favorite.entity';
-import { Product } from '../postgres/entities/product.entity';
+import { Favorite } from '../../database/entities/favorite.entity';
+import { Product } from '../../database/entities/product.entity';
 
 @Injectable()
 export class FavoritesService {
