@@ -53,10 +53,19 @@ app.get("/", (req, res) => {
     }
 });
 
-app.listen(port, "0.0.0.0", () => {
+const server = app.listen(port, "0.0.0.0", () => {
     console.log(`Auth server running on http://0.0.0.0:${port}`);
     console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
     console.log(`Database URL configured: ${process.env.DATABASE_URL ? "Yes" : "No"}`);
+    console.log(`Server listening on port: ${port}`);
+});
+
+// Handle server errors
+server.on("error", (error: any) => {
+    console.error("Server error:", error);
+    if (error.code === "EADDRINUSE") {
+        console.error(`Port ${port} is already in use`);
+    }
 });
 
 // Handle uncaught errors
