@@ -1,6 +1,16 @@
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 export const AUTH_API_BASE_URL = import.meta.env.VITE_AUTH_API_URL || 'http://localhost:4000';
 
+// Debug logging to verify environment variables
+if (typeof window !== 'undefined') {
+    console.log('🔍 API Configuration:', {
+        VITE_API_URL: import.meta.env.VITE_API_URL,
+        VITE_AUTH_API_URL: import.meta.env.VITE_AUTH_API_URL,
+        API_BASE_URL,
+        AUTH_API_BASE_URL,
+    });
+}
+
 export const api = {
     get: async <T>(endpoint: string, options?: RequestInit): Promise<T> => {
         const response = await fetch(`${API_BASE_URL}${endpoint}`, {
