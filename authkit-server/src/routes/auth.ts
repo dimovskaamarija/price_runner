@@ -12,7 +12,7 @@ router.get("/login", (req, res) => {
 
         const authorizationUrl = workos.userManagement.getAuthorizationUrl({
             provider: "authkit",
-            redirectUri: process.env.WORKOS_REDIRECT_URI || "http://localhost:4000/auth/callback",
+            redirectUri: (process.env.WORKOS_REDIRECT_URI || "http://localhost:4000/auth/callback").replace(/\/$/, ''),
             clientId: process.env.WORKOS_CLIENT_ID,
         });
 
@@ -67,11 +67,15 @@ router.get("/callback", async (req, res) => {
         });
 
         const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-        return res.redirect(`${frontendUrl}/?auth=success`);
+        // Ensure frontendUrl doesn't have trailing slash and is a valid URL
+        const cleanFrontendUrl = frontendUrl.replace(/\/$/, '');
+        return res.redirect(`${cleanFrontendUrl}/?auth=success`);
     } catch (err) {
         console.error("Auth callback error:", err);
         const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-        return res.redirect(`${frontendUrl}/?auth=error`);
+        // Ensure frontendUrl doesn't have trailing slash and is a valid URL
+        const cleanFrontendUrl = frontendUrl.replace(/\/$/, '');
+        return res.redirect(`${cleanFrontendUrl}/?auth=error`);
     }
 });
 
@@ -145,7 +149,9 @@ router.get("/logout", async (req, res) => {
         });
 
         const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-        res.redirect(frontendUrl);
+        // Ensure frontendUrl doesn't have trailing slash and is a valid URL
+        const cleanFrontendUrl = frontendUrl.replace(/\/$/, '');
+        res.redirect(cleanFrontendUrl);
     }
 });
 
