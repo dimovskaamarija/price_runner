@@ -10,6 +10,7 @@ app.use(cookieParser());
 // CORS configuration - allow localhost for dev and production URL from env
 const allowedOrigins = [
     "http://localhost:5173",
+    "https://sporediikupi.up.railway.app",
     process.env.FRONTEND_URL || '',
 ].filter(Boolean);
 

@@ -1,4 +1,4 @@
-﻿import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { SportVisionScraper } from './sportvision.scraper';
 import { SportRealityScraper } from './sportreality.scraper';
@@ -22,8 +22,36 @@ export class ScraperService {
         private readonly db: PostgresService,
     ) {}
 
-    @Cron('0 16 * * *')
+    @Cron('0 3 * * *') // 3:00 AM UTC = ~5:00 AM Europe/Skopje time (accounts for DST)
     async runAll() {
+        const startTime = new Date();
+        this.log.log('=== SCRAPER CRON JOB STARTED ===');
+        this.log.log(`Start Time: ${startTime.toISOString()}`);
+        this.log.log(`Server Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}`);
+        this.log.log(`NODE_ENV: ${process.env.NODE_ENV || 'not set'}`);
+        
+        try {
+            // Check if cron is explicitly disabled
+            if (process.env.ENABLE_SCRAPER_CRON === 'false') {
+                this.log.log('Cron disabled via ENABLE_SCRAPER_CRON=false');
+                return;
+            }
+
+            await this.executeScraping();
+
+            const endTime = new Date();
+            const duration = Math.round((endTime.getTime() - startTime.getTime()) / 1000);
+            this.log.log(`=== SCRAPER CRON JOB COMPLETED SUCCESSFULLY ===`);
+            this.log.log(`Duration: ${duration} seconds`);
+        } catch (error) {
+            this.log.error('=== SCRAPER CRON JOB FAILED ===');
+            this.log.error(`Error: ${error.message}`);
+            this.log.error(error.stack);
+            throw error; // Re-throw so caller knows it failed
+        }
+    }
+
+    async executeScraping() {
         this.log.log('Starting SportVision scrape…');
         await this.sportvision.scrapeCategory('https://www.sportvision.mk/mk/obuvki', 'Обувки');
         await this.sportvision.scrapeCategory('https://www.sportvision.mk/mk/tekstil', 'Текстил');
@@ -67,6 +95,5 @@ export class ScraperService {
         await this.dsport.scrapeCategory('https://www.dsport.mk/muskarci/oprema', 'Опрема', 'Машки');
         await this.dsport.scrapeCategory('https://www.dsport.mk/zene/oprema', 'Опрема', 'Женски');
         await this.dsport.scrapeCategory('https://www.dsport.mk/deca/oprema', 'Опрема', 'Унисекс');
-
     }
 }

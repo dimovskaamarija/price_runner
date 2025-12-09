@@ -55,8 +55,8 @@ export function useProducts(filters: ProductFilters) {
             
             return api.get<ProductsResponse>(`/products?${params.toString()}`);
         },
-        staleTime: 1000 * 60 * 5, // 5 minutes
-        gcTime: 1000 * 60 * 30, // 30 minutes (formerly cacheTime)
+        staleTime: 1000 * 60 * 1, // 1 minute - reduced to show new data faster
+        gcTime: 1000 * 60 * 10, // 10 minutes (formerly cacheTime)
     });
 }
 
@@ -68,8 +68,8 @@ export function useProduct(id: string | undefined) {
             return api.get<Product>(`/products/${id}`);
         },
         enabled: !!id,
-        staleTime: 1000 * 60 * 5, // 5 minutes
-        gcTime: 1000 * 60 * 30, // 30 minutes
+        staleTime: 1000 * 60 * 1, // 1 minute - reduced to show new data faster
+        gcTime: 1000 * 60 * 10, // 10 minutes
     });
 }
 
