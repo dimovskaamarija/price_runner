@@ -66,6 +66,7 @@ router.get("/callback", async (req, res) => {
             httpOnly: true,
             secure: isProduction, // Required for sameSite: "none"
             sameSite: isProduction ? "none" : "lax", // "none" allows cross-domain cookies
+            maxAge: 60 * 60 * 24 * 7, // 7 days - ensures cookie persists
         });
 
         const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
@@ -83,20 +84,29 @@ router.get("/callback", async (req, res) => {
 
 router.get("/me", async (req, res) => {
     try {
+        // Check if cookie exists
+        const cookieValue = req.cookies["wos-session"];
+        if (!cookieValue) {
+            console.log("No wos-session cookie found");
+            return res.json(null);
+        }
+
         const session = workos.userManagement.loadSealedSession({
-            sessionData: req.cookies["wos-session"],
+            sessionData: cookieValue,
             cookiePassword: process.env.WORKOS_COOKIE_PASSWORD!,
         });
 
         const authResult = await session.authenticate();
 
         if (!authResult.authenticated) {
+            console.log("Session not authenticated");
             return res.json(null);
         }
 
         const user = "user" in authResult ? authResult.user : null;
         
         if (!user) {
+            console.log("No user in auth result");
             return res.json(null);
         }
 
@@ -125,15 +135,18 @@ router.get("/me", async (req, res) => {
 });
 
 router.get("/logout", async (req, res) => {
+    const isProduction = process.env.NODE_ENV === "production";
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    const cleanFrontendUrl = frontendUrl.replace(/\/$/, '');
+
     try {
+        // Try to get WorkOS logout URL, but don't rely on it
         const session = workos.userManagement.loadSealedSession({
             sessionData: req.cookies["wos-session"],
             cookiePassword: process.env.WORKOS_COOKIE_PASSWORD!,
         });
 
-        const url = await session.getLogoutUrl();
-
-        const isProduction = process.env.NODE_ENV === "production";
+        // Clear the cookie first with the same attributes used to set it
         res.clearCookie("wos-session", {
             path: "/",
             httpOnly: true,
@@ -141,10 +154,12 @@ router.get("/logout", async (req, res) => {
             sameSite: isProduction ? "none" : "lax",
         });
 
-        res.redirect(url);
+        // Redirect directly to frontend to avoid SSL/certificate issues
+        // Don't use WorkOS logout URL as it might redirect to www or cause SSL errors
+        res.redirect(cleanFrontendUrl);
     } catch (err) {
         console.error("Logout error:", err);
-        const isProduction = process.env.NODE_ENV === "production";
+        // Even if there's an error, clear the cookie and redirect to frontend
         res.clearCookie("wos-session", {
             path: "/",
             httpOnly: true,
@@ -152,9 +167,6 @@ router.get("/logout", async (req, res) => {
             sameSite: isProduction ? "none" : "lax",
         });
 
-        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-        // Ensure frontendUrl doesn't have trailing slash and is a valid URL
-        const cleanFrontendUrl = frontendUrl.replace(/\/$/, '');
         res.redirect(cleanFrontendUrl);
     }
 });
