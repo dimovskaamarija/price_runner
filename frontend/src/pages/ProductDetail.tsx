@@ -52,13 +52,21 @@ export default function ProductDetail() {
 
     const toggleFavoriteMutation = useMutation({
         mutationFn: async () => {
-            if (!id) return;
+            if (!id) {
+                console.error('No product ID available');
+                throw new Error('No product ID');
+            }
             
             if (user) {
-                if (isFavorite) {
-                    return api.delete(`/favorites/${id}`);
-                } else {
-                    return api.post('/favorites', { productId: id });
+                try {
+                    if (isFavorite) {
+                        await api.delete(`/favorites/${id}`);
+                    } else {
+                        await api.post('/favorites', { productId: id });
+                    }
+                } catch (error: any) {
+                    console.error('Error toggling favorite:', error);
+                    throw error;
                 }
             } else {
                 const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
@@ -66,15 +74,20 @@ export default function ProductDetail() {
                     const updated = favorites.filter((favId: string) => favId !== id);
                     localStorage.setItem('favorites', JSON.stringify(updated));
                 } else {
-                    favorites.push(id);
-                    localStorage.setItem('favorites', JSON.stringify(favorites));
+                    if (!favorites.includes(id)) {
+                        favorites.push(id);
+                        localStorage.setItem('favorites', JSON.stringify(favorites));
+                    }
                 }
-                return { success: true };
             }
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['favorite-status', id] });
             queryClient.invalidateQueries({ queryKey: ['favorites'] });
+        },
+        onError: (error) => {
+            console.error('Failed to toggle favorite:', error);
+            // Optionally show a toast/notification to the user
         },
     });
 
@@ -179,22 +192,30 @@ export default function ProductDetail() {
                 </div>
 
                 <div className="right-column">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '10px', position: 'relative' }}>
                         <h1 className="product-title" style={{ margin: 0, flex: 1 }}>{product.name}</h1>
                         <button
-                            onClick={toggleFavorite}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                toggleFavorite();
+                            }}
+                            disabled={toggleFavoriteMutation.isPending}
                             style={{
                                 background: 'none',
                                 border: 'none',
-                                cursor: 'pointer',
+                                cursor: toggleFavoriteMutation.isPending ? 'wait' : 'pointer',
                                 padding: '8px',
-                                marginRight: '150px',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 fontSize: '24px',
                                 color: isFavorite ? '#e91e63' : '#666',
                                 transition: 'color 0.2s',
+                                position: 'relative',
+                                zIndex: 10,
+                                minWidth: '40px',
+                                minHeight: '40px',
                             }}
                             title={isFavorite ? 'Отстрани од омилени' : 'Додај во омилени'}>
                             {isFavorite ? <FaHeart /> : <FaRegHeart />}
