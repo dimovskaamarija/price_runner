@@ -40,7 +40,7 @@ export class SportMScraper {
     }
 
     async scrapeCategory(baseUrl: string, category: string, gender: string) {
-        for (let page = 1; page <= 7; page++) {
+        for (let page = 1; page <= 12; page++) {
             const pageUrl = `${baseUrl}&Page=${page}`;
             this.log.log(`Scraping URL: ${pageUrl}`);
             this.log.log(`Fetching ${category} - Page ${page}`);

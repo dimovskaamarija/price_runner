@@ -18,7 +18,7 @@ export class SportRealityScraper {
     constructor(private readonly db: PostgresService) {}
 
     async scrapeCategory(baseUrl: string, topCategory: string) {
-        for (let page = 1; page <= 21; page++) {
+        for (let page = 1; page <= 26; page++) {
             const url = page === 1 ? baseUrl : `${baseUrl}/page-${page}`;
             const html = await this.fetch(url);
             if (!html) break;
