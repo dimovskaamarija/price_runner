@@ -59,11 +59,13 @@ router.get("/callback", async (req, res) => {
             );
         }
 
+        // In production, use 'none' for cross-domain cookies, 'lax' for same-domain
+        const isProduction = process.env.NODE_ENV === "production";
         res.cookie("wos-session", sealedSession, {
             path: "/",
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
+            secure: isProduction, // Required for sameSite: "none"
+            sameSite: isProduction ? "none" : "lax", // "none" allows cross-domain cookies
         });
 
         const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
@@ -131,21 +133,23 @@ router.get("/logout", async (req, res) => {
 
         const url = await session.getLogoutUrl();
 
+        const isProduction = process.env.NODE_ENV === "production";
         res.clearCookie("wos-session", {
             path: "/",
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
+            secure: isProduction,
+            sameSite: isProduction ? "none" : "lax",
         });
 
         res.redirect(url);
     } catch (err) {
         console.error("Logout error:", err);
+        const isProduction = process.env.NODE_ENV === "production";
         res.clearCookie("wos-session", {
             path: "/",
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
+            secure: isProduction,
+            sameSite: isProduction ? "none" : "lax",
         });
 
         const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";

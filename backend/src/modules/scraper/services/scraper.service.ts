@@ -22,7 +22,7 @@ export class ScraperService {
         private readonly db: PostgresService,
     ) {}
 
-    @Cron('0 3 * * *') // 3:00 AM UTC = ~5:00 AM Europe/Skopje time (accounts for DST)
+    @Cron('0 9 * * *') 
     async runAll() {
         const startTime = new Date();
         this.log.log('=== SCRAPER CRON JOB STARTED ===');
@@ -31,7 +31,6 @@ export class ScraperService {
         this.log.log(`NODE_ENV: ${process.env.NODE_ENV || 'not set'}`);
         
         try {
-            // Check if cron is explicitly disabled
             if (process.env.ENABLE_SCRAPER_CRON === 'false') {
                 this.log.log('Cron disabled via ENABLE_SCRAPER_CRON=false');
                 return;
