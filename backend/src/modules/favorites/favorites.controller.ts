@@ -16,6 +16,7 @@ export class FavoritesController {
             throw new HttpException('productId is required', HttpStatus.BAD_REQUEST);
         }
 
+        // Try to get cookies from both parsed cookies and headers
         const cookies = req.headers.cookie || '';
         const user = await this.authService.getCurrentUser(cookies);
 

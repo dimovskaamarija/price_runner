@@ -14,9 +14,19 @@ export class AuthService {
 
         try {
             // Extract the wos-session cookie if present
-            const cookieHeader = cookies.includes('wos-session') 
-                ? cookies 
-                : cookies.split(';').find(c => c.trim().startsWith('wos-session=')) || cookies;
+            let cookieHeader = cookies;
+            if (cookies.includes('wos-session')) {
+                // If full cookie string contains wos-session, use it
+                cookieHeader = cookies;
+            } else {
+                // Try to extract just the wos-session cookie
+                const wosSession = cookies.split(';').find(c => c.trim().startsWith('wos-session='));
+                if (wosSession) {
+                    cookieHeader = wosSession.trim();
+                }
+            }
+
+            this.log.debug(`Calling authkit at ${this.authkitUrl}/auth/me with cookies: ${cookieHeader.substring(0, 50)}...`);
 
             const response = await axios.get(`${this.authkitUrl}/auth/me`, {
                 headers: {

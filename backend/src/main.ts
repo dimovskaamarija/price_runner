@@ -1,10 +1,14 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
     try {
         console.log('Starting NestJS application...');
         const app = await NestFactory.create(AppModule);
+
+        // Enable cookie parser middleware
+        app.use(cookieParser());
 
     // CORS configuration - allow localhost for dev and production URL from env
     const frontendUrl = process.env.FRONTEND_URL || 'https://sporediikupi.up.railway.app';
