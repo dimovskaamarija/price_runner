@@ -76,10 +76,17 @@ export default function ProductDetail() {
             queryClient.invalidateQueries({ queryKey: ['favorite-status', id, user?.id] });
             queryClient.invalidateQueries({ queryKey: ['favorites', user?.id] });
         },
+        onError: (error: any) => {
+            console.error('Failed to toggle favorite:', error);
+            const errorMessage = error?.message || 'Неуспешно додавање/отстранување од омилени. Обидете се повторно.';
+            alert(errorMessage);
+        },
     });
 
-    const toggleFavorite = () => {
-        if (!id || !product) return;
+    const toggleFavorite = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!id || !product || toggleFavoriteMutation.isPending) return;
         toggleFavoriteMutation.mutate();
     };
 
@@ -183,10 +190,11 @@ export default function ProductDetail() {
                         <h1 className="product-title" style={{ margin: 0, flex: 1 }}>{product.name}</h1>
                         <button
                             onClick={toggleFavorite}
+                            disabled={toggleFavoriteMutation.isPending}
                             style={{
                                 background: 'none',
                                 border: 'none',
-                                cursor: 'pointer',
+                                cursor: toggleFavoriteMutation.isPending ? 'wait' : 'pointer',
                                 padding: '8px',
                                 marginLeft: 'auto',
                                 display: 'flex',
@@ -195,6 +203,7 @@ export default function ProductDetail() {
                                 fontSize: '24px',
                                 color: isFavorite ? '#e91e63' : '#666',
                                 transition: 'color 0.2s',
+                                opacity: toggleFavoriteMutation.isPending ? 0.6 : 1,
                             }}
                             title={isFavorite ? 'Отстрани од омилени' : 'Додај во омилени'}>
                             {isFavorite ? <FaHeart /> : <FaRegHeart />}
