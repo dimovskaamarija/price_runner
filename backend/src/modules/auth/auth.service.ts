@@ -4,7 +4,7 @@ import axios from 'axios';
 @Injectable()
 export class AuthService {
     private readonly log = new Logger(AuthService.name);
-    private readonly authkitUrl = process.env.AUTHKIT_URL || process.env.VITE_AUTH_API_URL || 'http://localhost:4000';
+    private readonly authkitUrl = process.env.AUTHKIT_URL || process.env.AUTH_API_URL || 'http://localhost:4000';
 
     async getCurrentUser(cookies: string): Promise<{ id: number; authkit_id: string } | null> {
         if (!cookies || cookies.trim() === '') {

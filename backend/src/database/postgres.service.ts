@@ -213,6 +213,10 @@ export class PostgresService {
             const products = await this.productRepository.find();
             const productIds = products.map((p) => p.id);
 
+            // Get today's date in YYYY-MM-DD format (UTC)
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+
             const allPriceHistory = productIds.length
                 ? await this.priceHistoryRepository.find({
                     where: { productId: In(productIds) },
@@ -221,32 +225,70 @@ export class PostgresService {
                 : [];
 
             const priceHistoryMap = new Map<string, Record<string, Record<string, number>>>();
+            // Map of productId -> Set of stores that have today's date
+            const todayStoresMap = new Map<string, Set<string>>();
+
             for (const h of allPriceHistory) {
                 if (!priceHistoryMap.has(h.productId)) priceHistoryMap.set(h.productId, {});
                 const perStore = priceHistoryMap.get(h.productId)!;
                 if (!perStore[h.store]) perStore[h.store] = {};
                 const d = h.date.toISOString().split('T')[0];
                 perStore[h.store][d] = Number(h.price);
+
+                // Track stores that have today's date
+                if (d === todayStr) {
+                    if (!todayStoresMap.has(h.productId)) {
+                        todayStoresMap.set(h.productId, new Set());
+                    }
+                    todayStoresMap.get(h.productId)!.add(h.store);
+                }
             }
 
-            return products.map((p) => ({
-                id: p.id,
-                name: p.name,
-                brand: p.brand,
-                category: p.category,
-                subcategory: p.subcategory,
-                gender: p.gender,
-                age: p.age,
-                color: p.color,
-                image: p.image,
-                priceMap: p.priceMap || {},
-                storeLinks: p.storeLinks || {},
-                priceHistory: priceHistoryMap.get(p.id) || {},
-                productUrl: p.productUrl,
-                currency: p.currency,
-                createdAt: p.createdAt,
-                updatedAt: p.updatedAt,
-            })) as ProductType[];
+            // Filter products and stores
+            return products
+                .map((p) => {
+                    const todayStores = todayStoresMap.get(p.id);
+                    
+                    // Skip products that don't have any store with today's date
+                    if (!todayStores || todayStores.size === 0) {
+                        return null;
+                    }
+
+                    // Filter priceMap and storeLinks to only include stores with today's date
+                    const filteredPriceMap: Record<string, number | null> = {};
+                    const filteredStoreLinks: Record<string, string> = {};
+                    const originalPriceMap = p.priceMap || {};
+                    const originalStoreLinks = p.storeLinks || {};
+
+                    for (const store of todayStores) {
+                        if (originalPriceMap[store] !== undefined) {
+                            filteredPriceMap[store] = originalPriceMap[store];
+                        }
+                        if (originalStoreLinks[store]) {
+                            filteredStoreLinks[store] = originalStoreLinks[store];
+                        }
+                    }
+
+                    return {
+                        id: p.id,
+                        name: p.name,
+                        brand: p.brand,
+                        category: p.category,
+                        subcategory: p.subcategory,
+                        gender: p.gender,
+                        age: p.age,
+                        color: p.color,
+                        image: p.image,
+                        priceMap: filteredPriceMap,
+                        storeLinks: filteredStoreLinks,
+                        priceHistory: priceHistoryMap.get(p.id) || {},
+                        productUrl: p.productUrl,
+                        currency: p.currency,
+                        createdAt: p.createdAt,
+                        updatedAt: p.updatedAt,
+                    } as ProductType;
+                })
+                .filter((p): p is ProductType => p !== null);
         } catch (error: any) {
             this.log.error(`Error finding all products:`, error.message);
             throw error;
