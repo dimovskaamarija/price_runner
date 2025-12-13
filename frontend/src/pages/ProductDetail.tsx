@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+﻿import { useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { FaExternalLinkAlt, FaHeart, FaRegHeart } from 'react-icons/fa';
 import '../styles/ProductDetail.css';
@@ -78,7 +78,20 @@ export default function ProductDetail() {
         },
         onError: (error: any) => {
             console.error('Failed to toggle favorite:', error);
-            const errorMessage = error?.message || 'Неуспешно додавање/отстранување од омилени. Обидете се повторно.';
+            let errorMessage = 'Неуспешно додавање/отстранување од омилени. Обидете се повторно.';
+            
+            if (error?.message) {
+                errorMessage = error.message;
+                // Translate common error messages
+                if (error.message.includes('User not authenticated') || error.message.includes('401')) {
+                    errorMessage = 'Не сте најавени. Ве молиме најавете се за да додадете во омилени.';
+                } else if (error.message.includes('403') || error.message.includes('Forbidden')) {
+                    errorMessage = 'Немате дозвола за оваа акција.';
+                } else if (error.message.includes('500') || error.message.includes('Internal Server Error')) {
+                    errorMessage = 'Серверска грешка. Ве молиме обидете се подоцна.';
+                }
+            }
+            
             alert(errorMessage);
         },
     });

@@ -22,6 +22,39 @@ if (typeof window !== 'undefined') {
     }
 }
 
+async function handleErrorResponse(response: Response): Promise<never> {
+    let errorMessage = response.statusText || 'Unknown error';
+    let errorDetails = '';
+    
+    try {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const errorData = await response.json();
+            if (errorData.message) {
+                errorMessage = errorData.message;
+            } else if (errorData.error) {
+                errorMessage = typeof errorData.error === 'string' ? errorData.error : errorData.error.message || errorData.error;
+            }
+            if (errorData.details) {
+                errorDetails = ` Details: ${JSON.stringify(errorData.details)}`;
+            }
+        } else {
+            const text = await response.text();
+            if (text) {
+                errorDetails = ` Response: ${text.substring(0, 200)}`;
+            }
+        }
+    } catch (parseError) {
+        // If we can't parse the error, use the status text
+        console.error('Failed to parse error response:', parseError);
+    }
+    
+    const fullError = new Error(`API error (${response.status}): ${errorMessage}${errorDetails}`);
+    (fullError as any).status = response.status;
+    (fullError as any).statusText = response.statusText;
+    throw fullError;
+}
+
 export const api = {
     get: async <T>(endpoint: string, options?: RequestInit): Promise<T> => {
         const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -29,7 +62,7 @@ export const api = {
             credentials: 'include',
         });
         if (!response.ok) {
-            throw new Error(`API error: ${response.statusText}`);
+            await handleErrorResponse(response);
         }
         return response.json();
     },
@@ -46,7 +79,7 @@ export const api = {
             ...options,
         });
         if (!response.ok) {
-            throw new Error(`API error: ${response.statusText}`);
+            await handleErrorResponse(response);
         }
         return response.json();
     },
@@ -58,7 +91,7 @@ export const api = {
             ...options,
         });
         if (!response.ok) {
-            throw new Error(`API error: ${response.statusText}`);
+            await handleErrorResponse(response);
         }
         return response.json();
     },
