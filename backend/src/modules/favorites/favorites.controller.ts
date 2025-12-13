@@ -3,10 +3,10 @@ import { Request } from 'express';
 import { FavoritesService } from './favorites.service';
 import { AuthService } from '../auth/auth.service';
 
-// Extend Request to include cookies from cookie-parser
-interface RequestWithCookies extends Request {
+// Type for Request with optional cookies from cookie-parser
+type RequestWithCookies = Request & {
     cookies?: { [key: string]: string };
-}
+};
 
 @Controller('favorites')
 export class FavoritesController {
