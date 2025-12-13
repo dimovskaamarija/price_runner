@@ -22,7 +22,7 @@ export class ScraperService {
         private readonly db: PostgresService,
     ) {}
 
-    @Cron('0 9 * * *') 
+    @Cron('0 3 * * *') 
     async runAll() {
         const startTime = new Date();
         this.log.log('=== SCRAPER CRON JOB STARTED ===');

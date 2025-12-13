@@ -73,8 +73,8 @@ export default function ProductDetail() {
             }
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['favorite-status', id] });
-            queryClient.invalidateQueries({ queryKey: ['favorites'] });
+            queryClient.invalidateQueries({ queryKey: ['favorite-status', id, user?.id] });
+            queryClient.invalidateQueries({ queryKey: ['favorites', user?.id] });
         },
     });
 
@@ -188,7 +188,7 @@ export default function ProductDetail() {
                                 border: 'none',
                                 cursor: 'pointer',
                                 padding: '8px',
-                                marginRight: '150px',
+                                marginLeft: 'auto',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
