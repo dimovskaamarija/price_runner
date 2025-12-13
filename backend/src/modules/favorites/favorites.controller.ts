@@ -3,6 +3,11 @@ import { Request } from 'express';
 import { FavoritesService } from './favorites.service';
 import { AuthService } from '../auth/auth.service';
 
+// Extend Request to include cookies from cookie-parser
+interface RequestWithCookies extends Request {
+    cookies?: { [key: string]: string };
+}
+
 @Controller('favorites')
 export class FavoritesController {
     constructor(
@@ -11,13 +16,20 @@ export class FavoritesController {
     ) {}
 
     @Post()
-    async addFavorite(@Req() req: Request, @Body() body: { productId: string }) {
+    async addFavorite(@Req() req: RequestWithCookies, @Body() body: { productId: string }) {
         if (!body.productId) {
             throw new HttpException('productId is required', HttpStatus.BAD_REQUEST);
         }
 
-        // Try to get cookies from both parsed cookies and headers
-        const cookies = req.headers.cookie || '';
+        // Try to get cookies from both parsed cookies (cookie-parser) and headers
+        const cookieHeader = req.headers.cookie || '';
+        const parsedCookies = req.cookies || {};
+        
+        // Prefer parsed cookie if available, otherwise use header
+        const cookies = parsedCookies['wos-session'] 
+            ? `wos-session=${parsedCookies['wos-session']}` 
+            : cookieHeader;
+            
         const user = await this.authService.getCurrentUser(cookies);
 
         if (!user) {
@@ -35,8 +47,12 @@ export class FavoritesController {
     }
 
     @Get()
-    async getUserFavorites(@Req() req: Request) {
-        const cookies = req.headers.cookie || '';
+    async getUserFavorites(@Req() req: RequestWithCookies) {
+        const cookieHeader = req.headers.cookie || '';
+        const parsedCookies = req.cookies || {};
+        const cookies = parsedCookies['wos-session'] 
+            ? `wos-session=${parsedCookies['wos-session']}` 
+            : cookieHeader;
         const user = await this.authService.getCurrentUser(cookies);
 
         if (!user) {
@@ -71,8 +87,12 @@ export class FavoritesController {
     }
 
     @Get(':productId')
-    async isFavorite(@Req() req: Request, @Param('productId') productId: string) {
-        const cookies = req.headers.cookie || '';
+    async isFavorite(@Req() req: RequestWithCookies, @Param('productId') productId: string) {
+        const cookieHeader = req.headers.cookie || '';
+        const parsedCookies = req.cookies || {};
+        const cookies = parsedCookies['wos-session'] 
+            ? `wos-session=${parsedCookies['wos-session']}` 
+            : cookieHeader;
         const user = await this.authService.getCurrentUser(cookies);
 
         if (!user) {
@@ -91,8 +111,12 @@ export class FavoritesController {
     }
 
     @Delete(':productId')
-    async removeFavorite(@Req() req: Request, @Param('productId') productId: string) {
-        const cookies = req.headers.cookie || '';
+    async removeFavorite(@Req() req: RequestWithCookies, @Param('productId') productId: string) {
+        const cookieHeader = req.headers.cookie || '';
+        const parsedCookies = req.cookies || {};
+        const cookies = parsedCookies['wos-session'] 
+            ? `wos-session=${parsedCookies['wos-session']}` 
+            : cookieHeader;
         const user = await this.authService.getCurrentUser(cookies);
 
         if (!user) {
