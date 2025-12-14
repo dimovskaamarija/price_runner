@@ -61,39 +61,15 @@ router.get("/callback", async (req, res) => {
 
         // In production, use 'none' for cross-domain cookies, 'lax' for same-domain
         const isProduction = process.env.NODE_ENV === "production";
-        
-        // Extract domain from frontend URL for cookie sharing
-        let cookieDomain = undefined;
         const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-        try {
-            const url = new URL(frontendUrl);
-            // Only set domain if it's a production URL (not localhost)
-            if (isProduction && !url.hostname.includes('localhost') && !url.hostname.includes('127.0.0.1')) {
-                // Extract root domain (e.g., .railway.app from app.railway.app)
-                const hostParts = url.hostname.split('.');
-                if (hostParts.length >= 2) {
-                    // Use root domain so cookie works across subdomains
-                    cookieDomain = '.' + hostParts.slice(-2).join('.');
-                    console.log(`[Auth] Setting cookie domain to: ${cookieDomain} for frontend: ${url.hostname}`);
-                }
-            }
-        } catch (e) {
-            console.warn('[Auth] Could not parse frontend URL for cookie domain:', e);
-        }
         
-        const cookieOptions: any = {
+        res.cookie("wos-session", sealedSession, {
             path: "/",
             httpOnly: true,
             secure: isProduction, // Required for sameSite: "none"
             sameSite: isProduction ? "none" : "lax", // "none" allows cross-domain cookies
             maxAge: 60 * 60 * 24 * 7, // 7 days - ensures cookie persists
-        };
-        
-        if (cookieDomain) {
-            cookieOptions.domain = cookieDomain;
-        }
-        
-        res.cookie("wos-session", sealedSession, cookieOptions);
+        });
 
         // Ensure frontendUrl doesn't have trailing slash and is a valid URL
         const cleanFrontendUrl = frontendUrl.replace(/\/$/, '');
@@ -164,20 +140,6 @@ router.get("/logout", async (req, res) => {
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
     const cleanFrontendUrl = frontendUrl.replace(/\/$/, '');
 
-    // Get the same cookie domain used when setting the cookie
-    let cookieDomain = undefined;
-    try {
-        const url = new URL(frontendUrl);
-        if (isProduction && !url.hostname.includes('localhost') && !url.hostname.includes('127.0.0.1')) {
-            const hostParts = url.hostname.split('.');
-            if (hostParts.length >= 2) {
-                cookieDomain = '.' + hostParts.slice(-2).join('.');
-            }
-        }
-    } catch (e) {
-        // Ignore
-    }
-
     try {
         // Try to get WorkOS logout URL, but don't rely on it
         const session = workos.userManagement.loadSealedSession({
@@ -186,16 +148,12 @@ router.get("/logout", async (req, res) => {
         });
 
         // Clear the cookie first with the same attributes used to set it
-        const clearCookieOptions: any = {
+        res.clearCookie("wos-session", {
             path: "/",
             httpOnly: true,
             secure: isProduction,
             sameSite: isProduction ? "none" : "lax",
-        };
-        if (cookieDomain) {
-            clearCookieOptions.domain = cookieDomain;
-        }
-        res.clearCookie("wos-session", clearCookieOptions);
+        });
 
         // Redirect directly to frontend to avoid SSL/certificate issues
         // Don't use WorkOS logout URL as it might redirect to www or cause SSL errors
@@ -203,16 +161,12 @@ router.get("/logout", async (req, res) => {
     } catch (err) {
         console.error("Logout error:", err);
         // Even if there's an error, clear the cookie and redirect to frontend
-        const clearCookieOptions: any = {
+        res.clearCookie("wos-session", {
             path: "/",
             httpOnly: true,
             secure: isProduction,
             sameSite: isProduction ? "none" : "lax",
-        };
-        if (cookieDomain) {
-            clearCookieOptions.domain = cookieDomain;
-        }
-        res.clearCookie("wos-session", clearCookieOptions);
+        });
 
         res.redirect(cleanFrontendUrl);
     }
