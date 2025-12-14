@@ -61,6 +61,8 @@ router.get("/callback", async (req, res) => {
 
         // In production, use 'none' for cross-domain cookies, 'lax' for same-domain
         const isProduction = process.env.NODE_ENV === "production";
+        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+        
         res.cookie("wos-session", sealedSession, {
             path: "/",
             httpOnly: true,
@@ -69,7 +71,6 @@ router.get("/callback", async (req, res) => {
             maxAge: 60 * 60 * 24 * 7, // 7 days - ensures cookie persists
         });
 
-        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
         // Ensure frontendUrl doesn't have trailing slash and is a valid URL
         const cleanFrontendUrl = frontendUrl.replace(/\/$/, '');
         return res.redirect(`${cleanFrontendUrl}/?auth=success`);
