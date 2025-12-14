@@ -17,7 +17,20 @@ export class FavoritesController {
         }
 
         // Try to get cookies from both parsed cookies and headers
-        const cookies = req.headers.cookie || '';
+        const cookieHeader = req.headers.cookie || '';
+        const parsedCookies = (req as any).cookies || {};
+        
+        // Log cookie information for debugging
+        console.log(`[Favorites] POST - Cookie header: ${cookieHeader ? cookieHeader.substring(0, 100) + '...' : 'EMPTY'}`);
+        console.log(`[Favorites] POST - Parsed cookies:`, Object.keys(parsedCookies));
+        console.log(`[Favorites] POST - Request origin: ${req.headers.origin || 'N/A'}`);
+        console.log(`[Favorites] POST - Request referer: ${req.headers.referer || 'N/A'}`);
+        
+        // Use parsed cookies if available, otherwise fall back to header string
+        const cookies = parsedCookies['wos-session'] 
+            ? `wos-session=${parsedCookies['wos-session']}` 
+            : cookieHeader;
+            
         const user = await this.authService.getCurrentUser(cookies);
 
         if (!user) {
@@ -40,7 +53,15 @@ export class FavoritesController {
 
     @Get()
     async getUserFavorites(@Req() req: Request) {
-        const cookies = req.headers.cookie || '';
+        // Try to get cookies from both parsed cookies and headers
+        const cookieHeader = req.headers.cookie || '';
+        const parsedCookies = (req as any).cookies || {};
+        
+        // Use parsed cookies if available, otherwise fall back to header string
+        const cookies = parsedCookies['wos-session'] 
+            ? `wos-session=${parsedCookies['wos-session']}` 
+            : cookieHeader;
+            
         const user = await this.authService.getCurrentUser(cookies);
 
         if (!user) {
@@ -76,7 +97,15 @@ export class FavoritesController {
 
     @Get(':productId')
     async isFavorite(@Req() req: Request, @Param('productId') productId: string) {
-        const cookies = req.headers.cookie || '';
+        // Try to get cookies from both parsed cookies and headers
+        const cookieHeader = req.headers.cookie || '';
+        const parsedCookies = (req as any).cookies || {};
+        
+        // Use parsed cookies if available, otherwise fall back to header string
+        const cookies = parsedCookies['wos-session'] 
+            ? `wos-session=${parsedCookies['wos-session']}` 
+            : cookieHeader;
+            
         const user = await this.authService.getCurrentUser(cookies);
 
         if (!user) {
@@ -96,7 +125,20 @@ export class FavoritesController {
 
     @Delete(':productId')
     async removeFavorite(@Req() req: Request, @Param('productId') productId: string) {
-        const cookies = req.headers.cookie || '';
+        // Try to get cookies from both parsed cookies and headers
+        const cookieHeader = req.headers.cookie || '';
+        const parsedCookies = (req as any).cookies || {};
+        
+        // Log cookie information for debugging
+        console.log(`[Favorites] DELETE - Cookie header: ${cookieHeader ? cookieHeader.substring(0, 100) + '...' : 'EMPTY'}`);
+        console.log(`[Favorites] DELETE - Parsed cookies:`, Object.keys(parsedCookies));
+        console.log(`[Favorites] DELETE - Request origin: ${req.headers.origin || 'N/A'}`);
+        
+        // Use parsed cookies if available, otherwise fall back to header string
+        const cookies = parsedCookies['wos-session'] 
+            ? `wos-session=${parsedCookies['wos-session']}` 
+            : cookieHeader;
+            
         const user = await this.authService.getCurrentUser(cookies);
 
         if (!user) {
