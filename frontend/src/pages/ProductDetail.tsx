@@ -10,7 +10,7 @@ import { useProduct } from '../hooks/useProducts';
 import { useStores, type Store } from '../hooks/useStores';
 import { useFavoriteStatus } from '../hooks/useFavorites';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '../utils/api';
+import { api, API_BASE_URL } from '../utils/api';
 import { capitalizeBrand } from '../utils/formatting';
 
 export default function ProductDetail() {
@@ -56,8 +56,12 @@ export default function ProductDetail() {
             
             if (user) {
                 if (isFavorite) {
+                    const url = `${API_BASE_URL}/favorites/${id}`;
+                    console.log(`[Favorites] DELETE request to: ${url} (authenticated user: ${user.id})`);
                     return api.delete(`/favorites/${id}`);
                 } else {
+                    const url = `${API_BASE_URL}/favorites`;
+                    console.log(`[Favorites] POST request to: ${url} (authenticated user: ${user.id}, productId: ${id})`);
                     return api.post('/favorites', { productId: id });
                 }
             } else {

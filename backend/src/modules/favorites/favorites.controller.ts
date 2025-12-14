@@ -24,6 +24,10 @@ export class FavoritesController {
             throw new HttpException('User not authenticated', HttpStatus.UNAUTHORIZED);
         }
 
+        // Log the request URL for production debugging
+        const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+        console.log(`[Favorites] POST request received at: ${fullUrl} (user: ${user.id}, productId: ${body.productId})`);
+
         try {
             return await this.favoritesService.addFavorite(user.id, body.productId);
         } catch (error: any) {
@@ -98,6 +102,10 @@ export class FavoritesController {
         if (!user) {
             throw new HttpException('User not authenticated', HttpStatus.UNAUTHORIZED);
         }
+
+        // Log the request URL for production debugging
+        const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+        console.log(`[Favorites] DELETE request received at: ${fullUrl} (user: ${user.id}, productId: ${productId})`);
 
         try {
             const success = await this.favoritesService.removeFavorite(user.id, productId);

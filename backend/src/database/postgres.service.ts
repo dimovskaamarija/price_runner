@@ -216,6 +216,11 @@ export class PostgresService {
             // Get today's date in YYYY-MM-DD format (UTC)
             const today = new Date();
             const todayStr = today.toISOString().split('T')[0];
+            
+            // Calculate yesterday's date as fallback
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
 
             const allPriceHistory = productIds.length
                 ? await this.priceHistoryRepository.find({
@@ -227,6 +232,8 @@ export class PostgresService {
             const priceHistoryMap = new Map<string, Record<string, Record<string, number>>>();
             // Map of productId -> Set of stores that have today's date
             const todayStoresMap = new Map<string, Set<string>>();
+            // Map of productId -> Set of stores that have yesterday's date
+            const yesterdayStoresMap = new Map<string, Set<string>>();
 
             for (const h of allPriceHistory) {
                 if (!priceHistoryMap.has(h.productId)) priceHistoryMap.set(h.productId, {});
@@ -242,28 +249,50 @@ export class PostgresService {
                     }
                     todayStoresMap.get(h.productId)!.add(h.store);
                 }
+                
+                // Track stores that have yesterday's date (for fallback)
+                if (d === yesterdayStr) {
+                    if (!yesterdayStoresMap.has(h.productId)) {
+                        yesterdayStoresMap.set(h.productId, new Set());
+                    }
+                    yesterdayStoresMap.get(h.productId)!.add(h.store);
+                }
             }
+
+            // Determine which date to use: if today has no records, use yesterday
+            const hasTodayRecords = todayStoresMap.size > 0;
+            const targetDateStr = hasTodayRecords ? todayStr : yesterdayStr;
+            const targetStoresMap = hasTodayRecords ? todayStoresMap : yesterdayStoresMap;
 
             // Filter products and stores
             return products
                 .map((p) => {
-                    const todayStores = todayStoresMap.get(p.id);
+                    const targetStores = targetStoresMap.get(p.id);
                     
-                    // Skip products that don't have any store with today's date
-                    if (!todayStores || todayStores.size === 0) {
+                    // Skip products that don't have any store with the target date (today or yesterday)
+                    if (!targetStores || targetStores.size === 0) {
                         return null;
                     }
 
-                    // Filter priceMap and storeLinks to only include stores with today's date
+                    // Filter priceMap and storeLinks to only include stores with the target date
                     const filteredPriceMap: Record<string, number | null> = {};
                     const filteredStoreLinks: Record<string, string> = {};
                     const originalPriceMap = p.priceMap || {};
                     const originalStoreLinks = p.storeLinks || {};
 
-                    for (const store of todayStores) {
-                        if (originalPriceMap[store] !== undefined) {
+                    // Get the price from price history for the target date
+                    const productPriceHistory = priceHistoryMap.get(p.id) || {};
+                    for (const store of targetStores) {
+                        // Use the price from price history for the target date
+                        const storePriceHistory = productPriceHistory[store] || {};
+                        const priceForDate = storePriceHistory[targetDateStr];
+                        
+                        if (priceForDate !== undefined) {
+                            filteredPriceMap[store] = priceForDate;
+                        } else if (originalPriceMap[store] !== undefined) {
                             filteredPriceMap[store] = originalPriceMap[store];
                         }
+                        
                         if (originalStoreLinks[store]) {
                             filteredStoreLinks[store] = originalStoreLinks[store];
                         }
