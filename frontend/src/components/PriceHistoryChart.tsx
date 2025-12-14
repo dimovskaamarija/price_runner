@@ -81,6 +81,7 @@ export default function PriceHistoryChart({ productId, storesMap }: Props) {
             pointBackgroundColor: color,
             pointBorderColor: "#fff",
             pointBorderWidth: 2,
+            spanGaps: true, // Connect dots even when there are missing dates
         };
     });
 
@@ -119,7 +120,22 @@ export default function PriceHistoryChart({ productId, storesMap }: Props) {
                 })}
             </div>
 
-            <Line data={{ labels, datasets }} height={80} />
+            <Line 
+                data={{ labels, datasets }} 
+                height={80}
+                options={{
+                    plugins: {
+                        legend: {
+                            display: true,
+                        },
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                        },
+                    },
+                }}
+            />
         </div>
     );
 }
