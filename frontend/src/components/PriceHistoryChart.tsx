@@ -134,15 +134,6 @@ export default function PriceHistoryChart({ productId, storesMap }: Props) {
                             beginAtZero: false,
                         },
                     },
-                    elements: {
-                        line: {
-                            spanGaps: true, // Connect points across null values
-                        },
-                    },
-                    interaction: {
-                        intersect: false,
-                        mode: 'index',
-                    },
                 }}
             />
         </div>

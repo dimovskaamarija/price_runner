@@ -3,11 +3,6 @@ import { Request } from 'express';
 import { FavoritesService } from './favorites.service';
 import { AuthService } from '../auth/auth.service';
 
-// Type for Request with optional cookies from cookie-parser
-type RequestWithCookies = Request & {
-    cookies?: { [key: string]: string };
-};
-
 @Controller('favorites')
 export class FavoritesController {
     constructor(
@@ -16,16 +11,22 @@ export class FavoritesController {
     ) {}
 
     @Post()
-    async addFavorite(@Req() req: RequestWithCookies, @Body() body: { productId: string }) {
+    async addFavorite(@Req() req: Request, @Body() body: { productId: string }) {
         if (!body.productId) {
             throw new HttpException('productId is required', HttpStatus.BAD_REQUEST);
         }
 
-        // Try to get cookies from both parsed cookies (cookie-parser) and headers
+        // Try to get cookies from both parsed cookies and headers
         const cookieHeader = req.headers.cookie || '';
-        const parsedCookies = req.cookies || {};
+        const parsedCookies = (req as any).cookies || {};
         
-        // Prefer parsed cookie if available, otherwise use header
+        // Log cookie information for debugging
+        console.log(`[Favorites] POST - Cookie header: ${cookieHeader ? cookieHeader.substring(0, 100) + '...' : 'EMPTY'}`);
+        console.log(`[Favorites] POST - Parsed cookies:`, Object.keys(parsedCookies));
+        console.log(`[Favorites] POST - Request origin: ${req.headers.origin || 'N/A'}`);
+        console.log(`[Favorites] POST - Request referer: ${req.headers.referer || 'N/A'}`);
+        
+        // Use parsed cookies if available, otherwise fall back to header string
         const cookies = parsedCookies['wos-session'] 
             ? `wos-session=${parsedCookies['wos-session']}` 
             : cookieHeader;
@@ -35,6 +36,10 @@ export class FavoritesController {
         if (!user) {
             throw new HttpException('User not authenticated', HttpStatus.UNAUTHORIZED);
         }
+
+        // Log the request URL for production debugging
+        const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+        console.log(`[Favorites] POST request received at: ${fullUrl} (user: ${user.id}, productId: ${body.productId})`);
 
         try {
             return await this.favoritesService.addFavorite(user.id, body.productId);
@@ -47,12 +52,16 @@ export class FavoritesController {
     }
 
     @Get()
-    async getUserFavorites(@Req() req: RequestWithCookies) {
+    async getUserFavorites(@Req() req: Request) {
+        // Try to get cookies from both parsed cookies and headers
         const cookieHeader = req.headers.cookie || '';
-        const parsedCookies = req.cookies || {};
+        const parsedCookies = (req as any).cookies || {};
+        
+        // Use parsed cookies if available, otherwise fall back to header string
         const cookies = parsedCookies['wos-session'] 
             ? `wos-session=${parsedCookies['wos-session']}` 
             : cookieHeader;
+            
         const user = await this.authService.getCurrentUser(cookies);
 
         if (!user) {
@@ -87,12 +96,16 @@ export class FavoritesController {
     }
 
     @Get(':productId')
-    async isFavorite(@Req() req: RequestWithCookies, @Param('productId') productId: string) {
+    async isFavorite(@Req() req: Request, @Param('productId') productId: string) {
+        // Try to get cookies from both parsed cookies and headers
         const cookieHeader = req.headers.cookie || '';
-        const parsedCookies = req.cookies || {};
+        const parsedCookies = (req as any).cookies || {};
+        
+        // Use parsed cookies if available, otherwise fall back to header string
         const cookies = parsedCookies['wos-session'] 
             ? `wos-session=${parsedCookies['wos-session']}` 
             : cookieHeader;
+            
         const user = await this.authService.getCurrentUser(cookies);
 
         if (!user) {
@@ -111,17 +124,30 @@ export class FavoritesController {
     }
 
     @Delete(':productId')
-    async removeFavorite(@Req() req: RequestWithCookies, @Param('productId') productId: string) {
+    async removeFavorite(@Req() req: Request, @Param('productId') productId: string) {
+        // Try to get cookies from both parsed cookies and headers
         const cookieHeader = req.headers.cookie || '';
-        const parsedCookies = req.cookies || {};
+        const parsedCookies = (req as any).cookies || {};
+        
+        // Log cookie information for debugging
+        console.log(`[Favorites] DELETE - Cookie header: ${cookieHeader ? cookieHeader.substring(0, 100) + '...' : 'EMPTY'}`);
+        console.log(`[Favorites] DELETE - Parsed cookies:`, Object.keys(parsedCookies));
+        console.log(`[Favorites] DELETE - Request origin: ${req.headers.origin || 'N/A'}`);
+        
+        // Use parsed cookies if available, otherwise fall back to header string
         const cookies = parsedCookies['wos-session'] 
             ? `wos-session=${parsedCookies['wos-session']}` 
             : cookieHeader;
+            
         const user = await this.authService.getCurrentUser(cookies);
 
         if (!user) {
             throw new HttpException('User not authenticated', HttpStatus.UNAUTHORIZED);
         }
+
+        // Log the request URL for production debugging
+        const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+        console.log(`[Favorites] DELETE request received at: ${fullUrl} (user: ${user.id}, productId: ${productId})`);
 
         try {
             const success = await this.favoritesService.removeFavorite(user.id, productId);
