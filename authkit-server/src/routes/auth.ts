@@ -61,10 +61,6 @@ router.get("/callback", async (req, res) => {
         const authenticateResponse = await workos.userManagement.authenticateWithCode({
             clientId: process.env.WORKOS_CLIENT_ID!,
             code,
-            session: {
-                sealSession: true,
-                cookiePassword: process.env.WORKOS_COOKIE_PASSWORD!,
-            },
         });
 
         const { user, sealedSession } = authenticateResponse;
