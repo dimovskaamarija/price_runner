@@ -16,9 +16,13 @@ export class AuthService {
             // Ensure token starts with "Bearer " prefix
             const bearerToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
 
-            this.log.debug(`Calling authkit at ${this.authkitUrl}/auth/me with Bearer token`);
+            // Ensure authkitUrl doesn't have trailing slash
+            const cleanAuthkitUrl = this.authkitUrl.replace(/\/+$/, '');
+            const authMeUrl = `${cleanAuthkitUrl}/auth/me`;
+            
+            this.log.debug(`Calling authkit at ${authMeUrl} with Bearer token`);
 
-            const response = await axios.get(`${this.authkitUrl}/auth/me`, {
+            const response = await axios.get(authMeUrl, {
                 headers: {
                     Authorization: bearerToken,
                 },
