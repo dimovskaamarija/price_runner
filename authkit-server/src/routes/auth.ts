@@ -8,6 +8,16 @@ const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 
+function normalizeUrl(input: string) {
+    // Collapse accidental double slashes in the path (but keep https:// intact)
+    return input.replace(/([^:]\/)\/+/g, "$1").replace(/\/$/, "");
+}
+
+function getRedirectUri() {
+    const raw = process.env.WORKOS_REDIRECT_URI || "http://localhost:4000/auth/callback";
+    return normalizeUrl(raw);
+}
+
 router.get("/login", (req, res) => {
     try {
         if (!process.env.WORKOS_CLIENT_ID) {
@@ -16,7 +26,7 @@ router.get("/login", (req, res) => {
 
         const authorizationUrl = workos.userManagement.getAuthorizationUrl({
             provider: "authkit",
-            redirectUri: (process.env.WORKOS_REDIRECT_URI || "http://localhost:4000/auth/callback").replace(/\/$/, ''),
+            redirectUri: getRedirectUri(),
             clientId: process.env.WORKOS_CLIENT_ID,
             // Show the sign-in screen explicitly
             screenHint: "sign-in",
@@ -38,7 +48,7 @@ router.get("/sign-up", (req, res) => {
 
         const authorizationUrl = workos.userManagement.getAuthorizationUrl({
             provider: "authkit",
-            redirectUri: (process.env.WORKOS_REDIRECT_URI || "http://localhost:4000/auth/callback").replace(/\/$/, ''),
+            redirectUri: getRedirectUri(),
             clientId: process.env.WORKOS_CLIENT_ID,
             screenHint: "sign-up",
         });
