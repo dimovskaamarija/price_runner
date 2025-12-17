@@ -1,6 +1,24 @@
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 export const AUTH_API_BASE_URL = import.meta.env.VITE_AUTH_API_URL || 'http://localhost:4000';
 
+// Token management functions
+const TOKEN_KEY = 'auth_token';
+
+export const tokenManager = {
+    get: (): string | null => {
+        if (typeof window === 'undefined') return null;
+        return localStorage.getItem(TOKEN_KEY);
+    },
+    set: (token: string): void => {
+        if (typeof window === 'undefined') return;
+        localStorage.setItem(TOKEN_KEY, token);
+    },
+    remove: (): void => {
+        if (typeof window === 'undefined') return;
+        localStorage.removeItem(TOKEN_KEY);
+    },
+};
+
 // Debug logging to verify environment variables
 if (typeof window !== 'undefined') {
     const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
@@ -55,11 +73,25 @@ async function handleErrorResponse(response: Response): Promise<never> {
     throw fullError;
 }
 
+// Helper function to get headers with Bearer token
+const getHeaders = (customHeaders?: HeadersInit): HeadersInit => {
+    const token = tokenManager.get();
+    const headers: HeadersInit = {
+        ...customHeaders,
+    };
+    
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    return headers;
+};
+
 export const api = {
     get: async <T>(endpoint: string, options?: RequestInit): Promise<T> => {
         const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             ...options,
-            credentials: 'include',
+            headers: getHeaders(options?.headers),
         });
         if (!response.ok) {
             await handleErrorResponse(response);
@@ -70,11 +102,10 @@ export const api = {
     post: async <T>(endpoint: string, data?: any, options?: RequestInit): Promise<T> => {
         const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             method: 'POST',
-            headers: {
+            headers: getHeaders({
                 'Content-Type': 'application/json',
                 ...options?.headers,
-            },
-            credentials: 'include',
+            }),
             body: data ? JSON.stringify(data) : undefined,
             ...options,
         });
@@ -87,7 +118,7 @@ export const api = {
     delete: async <T>(endpoint: string, options?: RequestInit): Promise<T> => {
         const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             method: 'DELETE',
-            credentials: 'include',
+            headers: getHeaders(options?.headers),
             ...options,
         });
         if (!response.ok) {
@@ -100,7 +131,7 @@ export const api = {
         get: async <T>(endpoint: string, options?: RequestInit): Promise<T> => {
             const response = await fetch(`${AUTH_API_BASE_URL}${endpoint}`, {
                 ...options,
-                credentials: 'include',
+                headers: getHeaders(options?.headers),
             });
             if (!response.ok) {
                 throw new Error(`Auth API error: ${response.statusText}`);

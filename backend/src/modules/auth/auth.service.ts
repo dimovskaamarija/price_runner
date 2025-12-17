@@ -6,33 +6,22 @@ export class AuthService {
     private readonly log = new Logger(AuthService.name);
     private readonly authkitUrl = process.env.AUTHKIT_URL || process.env.AUTH_API_URL || 'http://localhost:4000';
 
-    async getCurrentUser(cookies: string): Promise<{ id: number; authkit_id: string } | null> {
-        if (!cookies || cookies.trim() === '') {
-            this.log.debug('No cookies provided');
+    async getCurrentUser(token: string | null): Promise<{ id: number; authkit_id: string } | null> {
+        if (!token || token.trim() === '') {
+            this.log.debug('No token provided');
             return null;
         }
 
         try {
-            // Extract the wos-session cookie if present
-            let cookieHeader = cookies;
-            if (cookies.includes('wos-session')) {
-                // If full cookie string contains wos-session, use it
-                cookieHeader = cookies;
-            } else {
-                // Try to extract just the wos-session cookie
-                const wosSession = cookies.split(';').find(c => c.trim().startsWith('wos-session='));
-                if (wosSession) {
-                    cookieHeader = wosSession.trim();
-                }
-            }
+            // Ensure token starts with "Bearer " prefix
+            const bearerToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
 
-            this.log.debug(`Calling authkit at ${this.authkitUrl}/auth/me with cookies: ${cookieHeader.substring(0, 50)}...`);
+            this.log.debug(`Calling authkit at ${this.authkitUrl}/auth/me with Bearer token`);
 
             const response = await axios.get(`${this.authkitUrl}/auth/me`, {
                 headers: {
-                    Cookie: cookieHeader,
+                    Authorization: bearerToken,
                 },
-                withCredentials: true,
                 validateStatus: (status) => status < 500, // Don't throw on 4xx
             });
 

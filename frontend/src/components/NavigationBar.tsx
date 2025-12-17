@@ -6,7 +6,7 @@ import { FaSearch, FaHeart } from "react-icons/fa";
 import type { User } from "../types/user";
 import { useNavData } from "../hooks/useNavData";
 import { capitalizeBrand } from "../utils/formatting";
-import { AUTH_API_BASE_URL } from "../utils/api";
+import { AUTH_API_BASE_URL, tokenManager } from "../utils/api";
 
 interface Props {
     user: User | null;
@@ -91,7 +91,10 @@ export default function NavigationBar({ user }: Props) {
 
                            <button className="nav-logout"
                             onClick={() => {
-                            window.location.href = `${AUTH_API_BASE_URL}/auth/logout`;
+                            // Remove token from localStorage
+                            tokenManager.remove();
+                            // Reload page to clear user state
+                            window.location.href = '/';
                             }}>Одјава</button>
 
                         </>
