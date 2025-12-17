@@ -99,6 +99,15 @@ const getHeaders = (customHeaders?: HeadersInit): Record<string, string> => {
     
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
+        // Debug logging in development
+        if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+            console.log('🔑 Adding Bearer token to request');
+        }
+    } else {
+        // Debug logging in development
+        if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+            console.warn('⚠️ No token found in localStorage');
+        }
     }
     
     return headers;

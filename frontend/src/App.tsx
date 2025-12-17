@@ -1,4 +1,4 @@
-import { Routes, Route, useSearchParams, useNavigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { useEffect, lazy, Suspense } from "react";
 import NavigationBar from "./components/NavigationBar";
 import { useUser } from "./hooks/useUser";
@@ -11,19 +11,7 @@ const Brands = lazy(() => import("./pages/Brands"));
 const Favorites = lazy(() => import("./pages/Favorites"));
 
 function App() {
-    const { user, refreshUser } = useUser();
-    const [searchParams] = useSearchParams();
-    const navigate = useNavigate();
-
-    useEffect(() => {
-        const authStatus = searchParams.get("auth");
-        if (authStatus === "success") {
-            refreshUser();
-            navigate("/products", { replace: true });
-        } else if (authStatus === "error") {
-            navigate("/", { replace: true });
-        }
-    }, [searchParams, navigate, refreshUser]);
+    const { user } = useUser();
 
     return (
         <div style={{ backgroundColor: '#ffffff', minHeight: '100vh' }}>

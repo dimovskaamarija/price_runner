@@ -77,14 +77,14 @@ router.get("/callback", async (req, res) => {
         const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
         const cleanFrontendUrl = frontendUrl.replace(/\/$/, '');
         
-        // Redirect with token in URL (frontend will extract and store it)
-        return res.redirect(`${cleanFrontendUrl}/?auth=success&token=${encodeURIComponent(token)}`);
+        // Redirect to /callback route with token in URL (frontend will extract and store it)
+        return res.redirect(`${cleanFrontendUrl}/callback?auth=success&token=${encodeURIComponent(token)}`);
     } catch (err) {
         console.error("Auth callback error:", err);
         const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
         // Ensure frontendUrl doesn't have trailing slash and is a valid URL
         const cleanFrontendUrl = frontendUrl.replace(/\/$/, '');
-        return res.redirect(`${cleanFrontendUrl}/?auth=error`);
+        return res.redirect(`${cleanFrontendUrl}/callback?auth=error`);
     }
 });
 
