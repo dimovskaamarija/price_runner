@@ -74,11 +74,28 @@ async function handleErrorResponse(response: Response): Promise<never> {
 }
 
 // Helper function to get headers with Bearer token
-const getHeaders = (customHeaders?: HeadersInit): HeadersInit => {
+const getHeaders = (customHeaders?: HeadersInit): Record<string, string> => {
     const token = tokenManager.get();
-    const headers: HeadersInit = {
-        ...customHeaders,
-    };
+    
+    // Convert HeadersInit to a plain object
+    let headers: Record<string, string> = {};
+    
+    if (customHeaders) {
+        if (customHeaders instanceof Headers) {
+            // If it's a Headers object, convert to plain object
+            customHeaders.forEach((value, key) => {
+                headers[key] = value;
+            });
+        } else if (Array.isArray(customHeaders)) {
+            // If it's an array of tuples, convert to object
+            customHeaders.forEach(([key, value]) => {
+                headers[key] = value;
+            });
+        } else {
+            // If it's already a Record, use it directly
+            headers = { ...customHeaders };
+        }
+    }
     
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
