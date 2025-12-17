@@ -214,6 +214,7 @@ export default function ProductDetail() {
                                 cursor: toggleFavoriteMutation.isPending ? 'wait' : 'pointer',
                                 padding: '8px',
                                 marginLeft: 'auto',
+                                marginRight: '40px',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
