@@ -48,6 +48,7 @@ export default function NavigationBar({ user }: Props) {
     };
 
     const LOGIN_URL = `${AUTH_API_BASE_URL}/auth/login`;
+    const SIGNUP_URL = `${AUTH_API_BASE_URL}/auth/sign-up`;
 
     return (
         <div className="nav-container">
@@ -79,7 +80,7 @@ export default function NavigationBar({ user }: Props) {
                                 Најава
                             </button>
 
-                            <button className="nav-register" onClick={() => (window.location.href = LOGIN_URL)}>
+                            <button className="nav-register" onClick={() => (window.location.href = SIGNUP_URL)}>
                                 Регистрација
                             </button>
                         </>

@@ -17,7 +17,7 @@ export class SizeerScraper {
     constructor(private readonly db: PostgresService) {}
 
     async scrapeCategory(baseUrl: string, topCategory: string) {
-        for (let page = 1; page <= 12; page++) {
+        for (let page = 1; page <= 100; page++) {
             const url = `${baseUrl}&PageNumber=${page}`;
             const html = await this.fetch(url);
             if (!html) break;

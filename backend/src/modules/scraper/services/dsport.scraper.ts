@@ -38,7 +38,7 @@ export class DSportScraper {
     }
 
     async scrapeCategory(baseUrl: string, category: string, gender: Gender) {
-        for (let page = 1; page <= 12; page++) {
+        for (let page = 1; page <= 50; page++) {
             const pageUrl = page === 1 ? baseUrl : `${baseUrl}?p=${page}`;
             this.log.log(`[DSport] ${category}/${gender} – fetching page ${page}`);
             const html = await this.fetch(pageUrl);

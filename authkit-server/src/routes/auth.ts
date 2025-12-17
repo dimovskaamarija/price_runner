@@ -18,6 +18,8 @@ router.get("/login", (req, res) => {
             provider: "authkit",
             redirectUri: (process.env.WORKOS_REDIRECT_URI || "http://localhost:4000/auth/callback").replace(/\/$/, ''),
             clientId: process.env.WORKOS_CLIENT_ID,
+            // Show the sign-in screen explicitly
+            screenHint: "sign-in",
         });
 
         res.redirect(authorizationUrl);
@@ -27,7 +29,7 @@ router.get("/login", (req, res) => {
     }
 });
 
-// Alias for clients that hit /auth/sign-up (treat same as login)
+// Sign-up should open the AuthKit sign-up screen
 router.get("/sign-up", (req, res) => {
     try {
         if (!process.env.WORKOS_CLIENT_ID) {
@@ -38,6 +40,7 @@ router.get("/sign-up", (req, res) => {
             provider: "authkit",
             redirectUri: (process.env.WORKOS_REDIRECT_URI || "http://localhost:4000/auth/callback").replace(/\/$/, ''),
             clientId: process.env.WORKOS_CLIENT_ID,
+            screenHint: "sign-up",
         });
 
         res.redirect(authorizationUrl);
