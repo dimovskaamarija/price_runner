@@ -17,7 +17,7 @@ async function bootstrap() {
       'http://localhost:3000',
       'http://localhost:4000',
       frontendUrl,
-    
+      // Also allow www version (if Railway supports it)
       frontendUrl.includes('www.') ? frontendUrl.replace('www.', '') : frontendUrl.replace(/^https?:\/\//, 'https://www.'),
     ].filter(Boolean);
 
