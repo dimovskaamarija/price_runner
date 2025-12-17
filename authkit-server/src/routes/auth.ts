@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { pool } from "../services/db";
 import { workos } from "../workos";
-import jwt from "jsonwebtoken";
 
 const router = Router();
 
@@ -60,24 +59,21 @@ router.get("/callback", async (req, res) => {
             );
         }
 
-        const dbUser = result.rows[0];
-        
-        // Generate JWT token
-        const tokenSecret = process.env.JWT_SECRET || process.env.WORKOS_COOKIE_PASSWORD || 'default-secret-change-in-production';
-        const token = jwt.sign(
-            {
-                userId: dbUser.id,
-                authkitId: user.id,
-                email: user.email,
-            },
-            tokenSecret,
-            { expiresIn: '7d' }
-        );
-
+        // In production, use 'none' for cross-domain cookies, 'lax' for same-domain
+        const isProduction = process.env.NODE_ENV === "production";
         const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+        
+        res.cookie("wos-session", sealedSession, {
+            path: "/",
+            httpOnly: true,
+            secure: isProduction, // Required for sameSite: "none"
+            sameSite: isProduction ? "none" : "lax", // "none" allows cross-domain cookies
+            maxAge: 60 * 60 * 24 * 7, // 7 days - ensures cookie persists
+        });
+
         // Ensure frontendUrl doesn't have trailing slash and is a valid URL
         const cleanFrontendUrl = frontendUrl.replace(/\/$/, '');
-        return res.redirect(`${cleanFrontendUrl}/?auth=success&token=${encodeURIComponent(token)}`);
+        return res.redirect(`${cleanFrontendUrl}/?auth=success`);
     } catch (err) {
         console.error("Auth callback error:", err);
         const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
@@ -87,70 +83,12 @@ router.get("/callback", async (req, res) => {
     }
 });
 
-// Verify token endpoint
-router.get("/verify", async (req, res) => {
-    try {
-        const token = req.headers.authorization?.replace('Bearer ', '') || req.query.token as string;
-        
-        if (!token) {
-            return res.status(401).json({ error: 'No token provided' });
-        }
-
-        const tokenSecret = process.env.JWT_SECRET || process.env.WORKOS_COOKIE_PASSWORD || 'default-secret-change-in-production';
-        
-        try {
-            const decoded = jwt.verify(token, tokenSecret) as any;
-            
-            // Get user from database
-            const result = await pool.query(
-                "SELECT * FROM users WHERE id = $1",
-                [decoded.userId]
-            );
-
-            if (result.rows.length === 0) {
-                return res.status(401).json({ error: 'User not found' });
-            }
-
-            return res.json({ 
-                user: result.rows[0],
-                userId: decoded.userId,
-                authkitId: decoded.authkitId 
-            });
-        } catch (err) {
-            console.error("Token verification error:", err);
-            return res.status(401).json({ error: 'Invalid token' });
-        }
-    } catch (err) {
-        console.error("Verify error:", err);
-        return res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
 router.get("/me", async (req, res) => {
     try {
-        // Try token first
-        const token = req.headers.authorization?.replace('Bearer ', '');
-        
-        if (token) {
-            const tokenSecret = process.env.JWT_SECRET || process.env.WORKOS_COOKIE_PASSWORD || 'default-secret-change-in-production';
-            try {
-                const decoded = jwt.verify(token, tokenSecret) as any;
-                const result = await pool.query(
-                    "SELECT * FROM users WHERE id = $1",
-                    [decoded.userId]
-                );
-
-                if (result.rows.length > 0) {
-                    return res.json(result.rows[0]);
-                }
-            } catch (err) {
-                // Token invalid, fall through to cookie check
-            }
-        }
-
-        // Fallback to cookie-based auth for backward compatibility
+        // Check if cookie exists
         const cookieValue = req.cookies["wos-session"];
         if (!cookieValue) {
+            console.log("No wos-session cookie found");
             return res.json(null);
         }
 
@@ -162,12 +100,14 @@ router.get("/me", async (req, res) => {
         const authResult = await session.authenticate();
 
         if (!authResult.authenticated) {
+            console.log("Session not authenticated");
             return res.json(null);
         }
 
         const user = "user" in authResult ? authResult.user : null;
         
         if (!user) {
+            console.log("No user in auth result");
             return res.json(null);
         }
 

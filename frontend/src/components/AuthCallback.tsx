@@ -7,16 +7,8 @@ export default function AuthCallback() {
 
     useEffect(() => {
         const authStatus = searchParams.get("auth");
-        const token = searchParams.get("token");
         
-        if (authStatus === "success" && token) {
-            // Store token in localStorage
-            localStorage.setItem("auth_token", token);
-            // Remove token from URL for security
-            navigate("/products", { replace: true });
-            window.location.reload();
-        } else if (authStatus === "success") {
-            // Fallback if no token (for backward compatibility)
+        if (authStatus === "success") {
             navigate("/products", { replace: true });
             window.location.reload();
         } else if (authStatus === "error") {

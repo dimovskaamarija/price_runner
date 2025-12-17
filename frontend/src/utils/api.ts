@@ -22,22 +22,6 @@ if (typeof window !== 'undefined') {
     }
 }
 
-// Helper function to get auth token from localStorage
-function getAuthToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem('auth_token');
-}
-
-// Helper function to get headers with auth token
-function getAuthHeaders(): Record<string, string> {
-    const token = getAuthToken();
-    const headers: Record<string, string> = {};
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-    }
-    return headers;
-}
-
 async function handleErrorResponse(response: Response): Promise<never> {
     let errorMessage = response.statusText || 'Unknown error';
     let errorDetails = '';
@@ -73,10 +57,8 @@ async function handleErrorResponse(response: Response): Promise<never> {
 
 export const api = {
     get: async <T>(endpoint: string, options?: RequestInit): Promise<T> => {
-        const headers = { ...getAuthHeaders(), ...options?.headers };
         const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             ...options,
-            headers,
             credentials: 'include',
         });
         if (!response.ok) {
@@ -86,14 +68,12 @@ export const api = {
     },
     
     post: async <T>(endpoint: string, data?: any, options?: RequestInit): Promise<T> => {
-        const headers = { 
-            'Content-Type': 'application/json',
-            ...getAuthHeaders(),
-            ...options?.headers,
-        };
         const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             method: 'POST',
-            headers,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options?.headers,
+            },
             credentials: 'include',
             body: data ? JSON.stringify(data) : undefined,
             ...options,
@@ -105,10 +85,8 @@ export const api = {
     },
     
     delete: async <T>(endpoint: string, options?: RequestInit): Promise<T> => {
-        const headers = { ...getAuthHeaders(), ...options?.headers };
         const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             method: 'DELETE',
-            headers,
             credentials: 'include',
             ...options,
         });
@@ -120,10 +98,8 @@ export const api = {
     
     auth: {
         get: async <T>(endpoint: string, options?: RequestInit): Promise<T> => {
-            const headers = { ...getAuthHeaders(), ...options?.headers };
             const response = await fetch(`${AUTH_API_BASE_URL}${endpoint}`, {
                 ...options,
-                headers,
                 credentials: 'include',
             });
             if (!response.ok) {

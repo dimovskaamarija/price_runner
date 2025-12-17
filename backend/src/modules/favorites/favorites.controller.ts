@@ -10,31 +10,28 @@ export class FavoritesController {
         private readonly authService: AuthService,
     ) {}
 
-    private extractAuthFromRequest(req: Request): { token?: string; cookies?: string } {
-        // Extract token from Authorization header
-        const authHeader = req.headers.authorization;
-        const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined;
-        
-        // Fallback: try to get cookies for backward compatibility
-        const cookieHeader = req.headers.cookie || '';
-        const parsedCookies = (req as any).cookies || {};
-        const cookies = parsedCookies['wos-session'] 
-            ? `wos-session=${parsedCookies['wos-session']}` 
-            : cookieHeader;
-        
-        return { token, cookies };
-    }
-
     @Post()
     async addFavorite(@Req() req: Request, @Body() body: { productId: string }) {
         if (!body.productId) {
             throw new HttpException('productId is required', HttpStatus.BAD_REQUEST);
         }
 
-        const { token, cookies } = this.extractAuthFromRequest(req);
-        console.log(`[Favorites] POST - Token present: ${!!token}`);
+        // Try to get cookies from both parsed cookies and headers
+        const cookieHeader = req.headers.cookie || '';
+        const parsedCookies = (req as any).cookies || {};
+        
+        // Log cookie information for debugging
+        console.log(`[Favorites] POST - Cookie header: ${cookieHeader ? cookieHeader.substring(0, 100) + '...' : 'EMPTY'}`);
+        console.log(`[Favorites] POST - Parsed cookies:`, Object.keys(parsedCookies));
+        console.log(`[Favorites] POST - Request origin: ${req.headers.origin || 'N/A'}`);
+        console.log(`[Favorites] POST - Request referer: ${req.headers.referer || 'N/A'}`);
+        
+        // Use parsed cookies if available, otherwise fall back to header string
+        const cookies = parsedCookies['wos-session'] 
+            ? `wos-session=${parsedCookies['wos-session']}` 
+            : cookieHeader;
             
-        const user = await this.authService.getCurrentUser(token, cookies);
+        const user = await this.authService.getCurrentUser(cookies);
 
         if (!user) {
             throw new HttpException('User not authenticated', HttpStatus.UNAUTHORIZED);
@@ -56,8 +53,16 @@ export class FavoritesController {
 
     @Get()
     async getUserFavorites(@Req() req: Request) {
-        const { token, cookies } = this.extractAuthFromRequest(req);
-        const user = await this.authService.getCurrentUser(token, cookies);
+        // Try to get cookies from both parsed cookies and headers
+        const cookieHeader = req.headers.cookie || '';
+        const parsedCookies = (req as any).cookies || {};
+        
+        // Use parsed cookies if available, otherwise fall back to header string
+        const cookies = parsedCookies['wos-session'] 
+            ? `wos-session=${parsedCookies['wos-session']}` 
+            : cookieHeader;
+            
+        const user = await this.authService.getCurrentUser(cookies);
 
         if (!user) {
             return [];
@@ -92,8 +97,16 @@ export class FavoritesController {
 
     @Get(':productId')
     async isFavorite(@Req() req: Request, @Param('productId') productId: string) {
-        const { token, cookies } = this.extractAuthFromRequest(req);
-        const user = await this.authService.getCurrentUser(token, cookies);
+        // Try to get cookies from both parsed cookies and headers
+        const cookieHeader = req.headers.cookie || '';
+        const parsedCookies = (req as any).cookies || {};
+        
+        // Use parsed cookies if available, otherwise fall back to header string
+        const cookies = parsedCookies['wos-session'] 
+            ? `wos-session=${parsedCookies['wos-session']}` 
+            : cookieHeader;
+            
+        const user = await this.authService.getCurrentUser(cookies);
 
         if (!user) {
             return { isFavorite: false };
@@ -112,9 +125,21 @@ export class FavoritesController {
 
     @Delete(':productId')
     async removeFavorite(@Req() req: Request, @Param('productId') productId: string) {
-        const { token, cookies } = this.extractAuthFromRequest(req);
-        console.log(`[Favorites] DELETE - Token present: ${!!token}`);
-        const user = await this.authService.getCurrentUser(token, cookies);
+        // Try to get cookies from both parsed cookies and headers
+        const cookieHeader = req.headers.cookie || '';
+        const parsedCookies = (req as any).cookies || {};
+        
+        // Log cookie information for debugging
+        console.log(`[Favorites] DELETE - Cookie header: ${cookieHeader ? cookieHeader.substring(0, 100) + '...' : 'EMPTY'}`);
+        console.log(`[Favorites] DELETE - Parsed cookies:`, Object.keys(parsedCookies));
+        console.log(`[Favorites] DELETE - Request origin: ${req.headers.origin || 'N/A'}`);
+        
+        // Use parsed cookies if available, otherwise fall back to header string
+        const cookies = parsedCookies['wos-session'] 
+            ? `wos-session=${parsedCookies['wos-session']}` 
+            : cookieHeader;
+            
+        const user = await this.authService.getCurrentUser(cookies);
 
         if (!user) {
             throw new HttpException('User not authenticated', HttpStatus.UNAUTHORIZED);

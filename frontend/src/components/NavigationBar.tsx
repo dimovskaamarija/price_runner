@@ -91,8 +91,6 @@ export default function NavigationBar({ user }: Props) {
 
                            <button className="nav-logout"
                             onClick={() => {
-                            // Clear token from localStorage
-                            localStorage.removeItem('auth_token');
                             window.location.href = `${AUTH_API_BASE_URL}/auth/logout`;
                             }}>Одјава</button>
 
