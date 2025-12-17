@@ -27,6 +27,26 @@ router.get("/login", (req, res) => {
     }
 });
 
+// Alias for clients that hit /auth/sign-up (treat same as login)
+router.get("/sign-up", (req, res) => {
+    try {
+        if (!process.env.WORKOS_CLIENT_ID) {
+            return res.status(500).json({ error: "WORKOS_CLIENT_ID is not configured" });
+        }
+
+        const authorizationUrl = workos.userManagement.getAuthorizationUrl({
+            provider: "authkit",
+            redirectUri: (process.env.WORKOS_REDIRECT_URI || "http://localhost:4000/auth/callback").replace(/\/$/, ''),
+            clientId: process.env.WORKOS_CLIENT_ID,
+        });
+
+        res.redirect(authorizationUrl);
+    } catch (error) {
+        console.error("Sign-up endpoint error:", error);
+        res.status(500).json({ error: "Failed to generate authorization URL" });
+    }
+});
+
 router.get("/callback", async (req, res) => {
     try {
         const code = req.query.code as string;
