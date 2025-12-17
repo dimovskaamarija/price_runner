@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import { useEffect, lazy, Suspense } from "react";
+import { lazy, Suspense } from "react";
 import NavigationBar from "./components/NavigationBar";
 import { useUser } from "./hooks/useUser";
 import AuthCallback from "./components/AuthCallback";
