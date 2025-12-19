@@ -8,6 +8,33 @@ const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 
+// Simple in-memory tracking to prevent redirect loops
+const recentSignUpRequests = new Map<string, number>();
+const LOOP_DETECTION_WINDOW = 5000; // 5 seconds
+
+function checkForLoop(ip: string): boolean {
+    const now = Date.now();
+    const lastRequest = recentSignUpRequests.get(ip);
+    
+    if (lastRequest && (now - lastRequest) < LOOP_DETECTION_WINDOW) {
+        return true; // Loop detected
+    }
+    
+    recentSignUpRequests.set(ip, now);
+    
+    // Clean up old entries (keep map from growing indefinitely)
+    if (recentSignUpRequests.size > 1000) {
+        const cutoff = now - LOOP_DETECTION_WINDOW * 2;
+        for (const [key, value] of recentSignUpRequests.entries()) {
+            if (value < cutoff) {
+                recentSignUpRequests.delete(key);
+            }
+        }
+    }
+    
+    return false;
+}
+
 function normalizeUrl(input: string) {
     // Collapse accidental double slashes in the path (but keep https:// intact)
     return input.replace(/([^:]\/)\/+/g, "$1").replace(/\/$/, "");
@@ -60,6 +87,27 @@ router.get("/sign-up", (req, res) => {
     console.log("Request method:", req.method);
     console.log("Request headers:", JSON.stringify(req.headers, null, 2));
     console.log("Query params:", JSON.stringify(req.query));
+    
+    // Get client IP for loop detection
+    const clientIp = req.headers['x-forwarded-for']?.toString().split(',')[0] || 
+                     req.headers['x-real-ip']?.toString() || 
+                     req.socket.remoteAddress || 
+                     'unknown';
+    
+    // Check for redirect loop (same IP hitting /sign-up multiple times quickly)
+    if (checkForLoop(clientIp)) {
+        console.error("❌ REDIRECT LOOP DETECTED!");
+        console.error("Client IP:", clientIp);
+        console.error("This means WorkOS is NOT redirecting to /auth/callback");
+        console.error("Expected redirect URI:", getRedirectUri());
+        console.error("ACTION REQUIRED: Add this URI to WorkOS Dashboard → Redirect URIs");
+        return res.status(500).json({ 
+            error: "Redirect loop detected. WorkOS is not redirecting to the callback URL.",
+            message: "Please add the redirect URI to your WorkOS dashboard.",
+            expectedRedirectUri: getRedirectUri(),
+            instructions: "Go to WorkOS Dashboard → Your App → Redirect URIs → Add the URI above"
+        });
+    }
     
     // Check if this is a redirect back from WorkOS (shouldn't happen, but prevent loop)
     const referer = req.headers.referer || '';
