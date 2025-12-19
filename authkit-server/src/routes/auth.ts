@@ -61,6 +61,18 @@ router.get("/sign-up", (req, res) => {
     console.log("Request headers:", JSON.stringify(req.headers, null, 2));
     console.log("Query params:", JSON.stringify(req.query));
     
+    // Check if this is a redirect back from WorkOS (shouldn't happen, but prevent loop)
+    const referer = req.headers.referer || '';
+    if (referer.includes('workos.com') || referer.includes('authkit.app')) {
+        console.warn("⚠️ Possible redirect loop detected - referer is from WorkOS:", referer);
+        console.warn("⚠️ This suggests WorkOS is redirecting back to /sign-up instead of /auth/callback");
+        console.warn("⚠️ Check WorkOS dashboard - redirect URI must be:", getRedirectUri());
+        return res.status(500).json({ 
+            error: "Redirect loop detected. Please check WorkOS redirect URI configuration.",
+            expectedRedirectUri: getRedirectUri()
+        });
+    }
+    
     try {
         if (!process.env.WORKOS_CLIENT_ID) {
             console.error("❌ WORKOS_CLIENT_ID is not configured");
@@ -71,6 +83,8 @@ router.get("/sign-up", (req, res) => {
         console.log("🔗 Redirect URI:", redirectUri);
         console.log("🔑 Client ID:", process.env.WORKOS_CLIENT_ID);
         console.log("📝 Screen hint: sign-up");
+        console.log("🌐 Frontend URL:", process.env.FRONTEND_URL);
+        console.log("🔧 WORKOS_REDIRECT_URI env var:", process.env.WORKOS_REDIRECT_URI);
 
         const authorizationUrl = workos.userManagement.getAuthorizationUrl({
             provider: "authkit",
@@ -81,6 +95,7 @@ router.get("/sign-up", (req, res) => {
 
         console.log("✅ Generated authorization URL:", authorizationUrl);
         console.log("🔄 Redirecting to WorkOS sign-up...");
+        console.log("📋 IMPORTANT: WorkOS must redirect back to:", redirectUri);
         res.redirect(authorizationUrl);
     } catch (error: any) {
         console.error("❌ Sign-up endpoint error:", error);
