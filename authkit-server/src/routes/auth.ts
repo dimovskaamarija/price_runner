@@ -98,26 +98,31 @@ router.get("/sign-up", (req, res) => {
     if (checkForLoop(clientIp)) {
         console.error("❌ REDIRECT LOOP DETECTED!");
         console.error("Client IP:", clientIp);
-        console.error("This means WorkOS is NOT redirecting to /auth/callback");
-        console.error("Expected redirect URI:", getRedirectUri());
-        console.error("ACTION REQUIRED: Add this URI to WorkOS Dashboard → Redirect URIs");
+        console.error("This means WorkOS 'Sign up URL' is set to /auth/sign-up, causing a loop");
+        console.error("Callback redirect URI (correct):", getRedirectUri());
+        console.error("ACTION REQUIRED: Clear or change 'Sign up URL' in WorkOS Dashboard");
         return res.status(500).json({ 
-            error: "Redirect loop detected. WorkOS is not redirecting to the callback URL.",
-            message: "Please add the redirect URI to your WorkOS dashboard.",
-            expectedRedirectUri: getRedirectUri(),
-            instructions: "Go to WorkOS Dashboard → Your App → Redirect URIs → Add the URI above"
+            error: "Redirect loop detected. The 'Sign up URL' in WorkOS Dashboard is causing a loop.",
+            message: "The 'Sign up URL' setting in WorkOS is redirecting back to /auth/sign-up, creating an infinite loop.",
+            callbackRedirectUri: getRedirectUri(),
+            instructions: "Go to WorkOS Dashboard → Your App → Settings → Find 'Sign up URL' → Clear it (leave empty) OR set it to your frontend URL (not /auth/sign-up)",
+            note: "The 'Redirect URIs' setting is correct. The issue is the separate 'Sign up URL' setting."
         });
     }
     
-    // Check if this is a redirect back from WorkOS (shouldn't happen, but prevent loop)
+    // Check if this is a redirect back from WorkOS (this happens when "Sign up URL" is set incorrectly)
     const referer = req.headers.referer || '';
     if (referer.includes('workos.com') || referer.includes('authkit.app')) {
-        console.warn("⚠️ Possible redirect loop detected - referer is from WorkOS:", referer);
-        console.warn("⚠️ This suggests WorkOS is redirecting back to /sign-up instead of /auth/callback");
-        console.warn("⚠️ Check WorkOS dashboard - redirect URI must be:", getRedirectUri());
+        console.error("❌ REDIRECT LOOP: WorkOS redirected back to /sign-up");
+        console.error("Referer from WorkOS:", referer);
+        console.error("This means 'Sign up URL' in WorkOS Dashboard is set to:", req.url);
+        console.error("Callback redirect URI (correct):", getRedirectUri());
         return res.status(500).json({ 
-            error: "Redirect loop detected. Please check WorkOS redirect URI configuration.",
-            expectedRedirectUri: getRedirectUri()
+            error: "Redirect loop detected. WorkOS 'Sign up URL' is incorrectly configured.",
+            message: "WorkOS is redirecting back to /auth/sign-up because the 'Sign up URL' setting points here.",
+            callbackRedirectUri: getRedirectUri(),
+            instructions: "Go to WorkOS Dashboard → Settings → 'Sign up URL' → Clear it (leave empty) OR change to your frontend URL",
+            note: "The 'Redirect URIs' setting is correct. Fix the 'Sign up URL' setting instead."
         });
     }
     
