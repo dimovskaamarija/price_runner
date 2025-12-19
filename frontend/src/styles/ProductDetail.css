@@ -49,9 +49,9 @@
     border: 1px solid #d7defa;
     padding: 16px;
     border-radius: 10px;
-    width: fit-content;
+    width: 150px;
     margin-bottom: 25px;
-    min-width: 60px;
+    min-width: 80px;
     min-height:30px;
 }
 
