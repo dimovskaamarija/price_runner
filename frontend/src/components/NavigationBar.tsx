@@ -28,7 +28,7 @@ export default function NavigationBar({ user }: Props) {
     const go = (params: Record<string, string>) => {
         const q = new URLSearchParams();
         q.set("page", "1");
-        q.set("sort", "price-asc");
+        q.set("sort", "available-desc");
         Object.entries(params).forEach(([k, v]) => q.set(k, v));
         return `/products?${q.toString()}`;
     };

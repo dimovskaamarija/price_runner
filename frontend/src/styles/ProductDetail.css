@@ -237,6 +237,138 @@
     .right-column {
         flex: 1;
         width: 100%;
+        min-width: 0;
+    }
+    
+    .right-column {
+        margin-right: 0;
+    }
+    
+    .spec-box {
+        margin-right: 0;
+        width: 100%;
+    }
+}
+
+@media (max-width: 600px) {
+    .page-container {
+        padding: 16px;
+        margin: 20px auto;
+        min-width: 0;
+    }
+    
+    .product-detail-layout {
+        padding: 0;
+    }
+    
+    .product-detail-wrapper {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .product-left,
+    .product-right {
+        max-width: 100%;
+        min-width: 0;
+    }
+    
+    .product-image-big {
+        height: 400px;
+        min-height: 300px;
+        border-radius: 8px;
+    }
+    
+    .product-title {
+        font-size: 20px;
+        margin-top: 20px;
+        margin-bottom: 16px;
+        line-height: 1.3;
+    }
+    
+    .product-price-box {
+        padding: 12px;
+        margin-bottom: 20px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .product-price {
+        font-size: 22px;
+    }
+    
+    .price-label {
+        font-size: 12px;
+    }
+    
+    .spec-box,
+    .seller-card {
+        padding: 14px;
+        margin-bottom: 20px;
+        min-width: 0;
+    }
+    
+    .spec-box h2,
+    .seller-card h2 {
+        font-size: 18px;
+        margin-bottom: 12px;
+    }
+    
+    .spec-row {
+        font-size: 14px;
+        padding: 6px 0;
+    }
+    
+    .store-table {
+        font-size: 13px;
+        min-width: 100%;
+    }
+    
+    .store-table th,
+    .store-table td {
+        padding: 8px 6px;
+        font-size: 12px;
+    }
+    
+    .store-logo {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+    }
+    
+    .back-button {
+        padding: 8px 12px;
+        font-size: 12px;
+        margin: 8px;
+        min-height: 36px;
+    }
+    
+    .white-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+        min-height: 32px;
+    }
+    
+    .history-box {
+        margin-right: 0;
+        margin-top: 20px;
+        padding: 16px;
+    }
+    
+    .store-buttons {
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+    
+    .store-toggle {
+        padding: 6px 12px;
+        font-size: 12px;
+        min-height: 32px;
+    }
+    
+    .store-logo-small {
+        width: 18px;
+        height: 18px;
+        min-width: 18px;
     }
 }
 

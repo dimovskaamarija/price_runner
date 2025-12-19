@@ -82,12 +82,82 @@
 }
 
 @media (max-width: 768px) {
+    .brands-wrapper {
+        padding: 20px 30px;
+    }
+    
+    .brands-az-bar {
+        gap: 12px;
+        padding: 12px 15px;
+    }
+    
+    .brands-az-letter {
+        font-size: 14px;
+        min-width: 28px;
+        text-align: center;
+    }
+    
     .brands-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 10px 20px;
     }
 
     .brands-letter-title {
         font-size: 48px;
+        width: 80px;
+    }
+    
+    .brand-item {
+        font-size: 16px;
+    }
+    
+    .brands-title {
+        font-size: 26px;
+        margin: 30px 0 20px;
+    }
+}
+
+@media (max-width: 600px) {
+    .brands-wrapper {
+        padding: 16px;
+        margin: 20px auto;
+    }
+    
+    .brands-az-bar {
+        gap: 8px;
+        padding: 10px 12px;
+        margin-bottom: 24px;
+    }
+    
+    .brands-az-letter {
+        font-size: 13px;
+        min-width: 26px;
+        padding: 4px;
+    }
+    
+    .brands-section {
+        gap: 20px;
+        padding: 16px 0;
+    }
+    
+    .brands-letter-title {
+        font-size: 36px;
+        width: 60px;
+        min-width: 60px;
+    }
+    
+    .brands-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px 16px;
+    }
+    
+    .brand-item {
+        font-size: 14px;
+    }
+    
+    .brands-title {
+        font-size: 22px;
+        margin: 24px 0 16px;
     }
 }
 

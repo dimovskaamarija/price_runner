@@ -301,6 +301,7 @@
         flex-wrap: wrap;
         height: auto;
         padding: 12px 20px;
+        min-height: 60px;
     }
     
     .nav-search-form {
@@ -308,6 +309,7 @@
         width: 100%;
         max-width: 100%;
         margin: 10px 0 0 0;
+        min-width: 0;
     }
     
     .nav-elements {
@@ -315,6 +317,8 @@
         font-size: 14px;
         padding: 12px 20px;
         overflow-x: auto;
+        padding-left: 20px;
+        -webkit-overflow-scrolling: touch;
     }
     
     .submenu-columns,
@@ -333,5 +337,110 @@
     .nav-logout {
         font-size: 12px;
         padding: 6px 12px;
+        min-width: 60px;
+    }
+}
+
+@media (max-width: 600px) {
+    .nav-wrapper {
+        padding: 10px 15px;
+        min-height: auto;
+    }
+    
+    .nav-logo {
+        height: 100px;
+        min-height: 80px;
+        margin-top: 5px;
+    }
+    
+    .nav-search-form {
+        margin: 8px 0 0 0;
+        min-width: 0;
+    }
+    
+    .nav-search-form input {
+        padding: 8px 12px 8px 35px;
+        font-size: 14px;
+        min-width: 0;
+    }
+    
+    .nav-search-icon {
+        left: 10px;
+        font-size: 13px;
+    }
+    
+    .nav-right {
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .nav-favorites {
+        font-size: 18px;
+        padding: 6px;
+        min-width: 36px;
+    }
+    
+    .nav-login,
+    .nav-register,
+    .nav-logout {
+        font-size: 11px;
+        padding: 6px 10px;
+        min-width: 55px;
+        white-space: nowrap;
+    }
+    
+    .nav-username {
+        font-size: 12px;
+        display: none;
+    }
+    
+    .nav-elements {
+        gap: 20px;
+        font-size: 13px;
+        padding: 10px 15px;
+        padding-left: 15px;
+    }
+    
+    .nav-elements a,
+    .nav-elements span {
+        padding: 4px;
+        white-space: nowrap;
+        min-width: fit-content;
+    }
+    
+    .nav-submenu {
+        padding: 15px 0;
+    }
+    
+    .submenu-columns,
+    .submenu-columns-brands {
+        gap: 20px;
+        padding: 0 15px;
+    }
+    
+    .submenu-col {
+        min-width: 0;
+    }
+    
+    .submenu-title {
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+    
+    .submenu-item {
+        font-size: 13px;
+        padding: 3px 0;
+    }
+    
+    .brands-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+        max-width: 100%;
+    }
+    
+    .brand-btn {
+        font-size: 11px;
+        padding: 5px 6px;
+        max-width: 100%;
     }
 }

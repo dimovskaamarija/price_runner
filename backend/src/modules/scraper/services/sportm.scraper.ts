@@ -1,4 +1,4 @@
-﻿import axios from 'axios';
+import axios from 'axios';
 import * as cheerio from 'cheerio';
 import pLimit from 'p-limit';
 import dayjs from 'dayjs';
@@ -40,7 +40,7 @@ export class SportMScraper {
     }
 
     async scrapeCategory(baseUrl: string, category: string, gender: string) {
-        for (let page = 1; page <= 50; page++) {
+        for (let page = 1; page <= 100; page++) {
             const pageUrl = `${baseUrl}&Page=${page}`;
             this.log.log(`Scraping URL: ${pageUrl}`);
             this.log.log(`Fetching ${category} - Page ${page}`);

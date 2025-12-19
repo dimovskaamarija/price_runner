@@ -1,4 +1,4 @@
-﻿import axios from 'axios';
+import axios from 'axios';
 import * as cheerio from 'cheerio';
 import pLimit from 'p-limit';
 import dayjs from 'dayjs';
@@ -38,7 +38,7 @@ export class DSportScraper {
     }
 
     async scrapeCategory(baseUrl: string, category: string, gender: Gender) {
-        for (let page = 1; page <= 50; page++) {
+        for (let page = 1; page <= 100; page++) {
             const pageUrl = page === 1 ? baseUrl : `${baseUrl}?p=${page}`;
             this.log.log(`[DSport] ${category}/${gender} – fetching page ${page}`);
             const html = await this.fetch(pageUrl);

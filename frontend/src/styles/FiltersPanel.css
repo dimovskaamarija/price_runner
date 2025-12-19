@@ -156,4 +156,89 @@
 .apply-btn{
     background-color: black;
     color: white;
+    min-height: 44px;
+}
+
+@media (max-width: 600px) {
+    .filters-panel {
+        width: 85%;
+        max-width: 100%;
+        padding: 16px;
+    }
+    
+    .filters-header {
+        font-size: 16px;
+        margin-bottom: 12px;
+    }
+    
+    .close-btn {
+        font-size: 20px;
+        min-width: 32px;
+        min-height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .filters-section h4 {
+        font-size: 14px;
+        padding: 10px 0;
+    }
+    
+    .arrow {
+        font-size: 14px;
+    }
+    
+    .filter-items {
+        padding-left: 8px;
+    }
+    
+    .checkbox-row {
+        margin: 5px 0;
+        font-size: 14px;
+    }
+    
+    .styled-checkbox {
+        min-width: 18px;
+        min-height: 18px;
+    }
+    
+    .price-slider {
+        padding-top: 16px;
+        padding-bottom: 32px;
+    }
+    
+    .price-slider input[type="range"] {
+        min-height: 44px;
+    }
+    
+    .price-slider input[type="range"]::-webkit-slider-thumb {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .slider-track-active {
+        top: 22px;
+    }
+    
+    .range-values {
+        margin-top: 24px;
+        font-size: 13px;
+    }
+    
+    .filters-actions {
+        margin-top: 16px;
+        gap: 10px;
+    }
+    
+    .same-size {
+        width: 48%;
+        min-height: 44px;
+        font-size: 14px;
+    }
+    
+    .apply-btn {
+        min-height: 44px;
+        font-size: 14px;
+    }
 }

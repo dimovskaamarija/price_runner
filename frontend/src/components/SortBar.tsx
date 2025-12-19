@@ -6,7 +6,8 @@ export type SortOption =
     | "newest"
     | "popular"
     | "name-asc"
-    | "name-desc";
+    | "name-desc"
+    | "available-desc";
 
 interface Props {
     value: SortOption;

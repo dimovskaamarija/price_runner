@@ -36,7 +36,7 @@ export default function ProductList() {
     const params = new URLSearchParams(location.search);
 
     const pageFromUrl = Math.max(parseInt(params.get("page") || "1", 10), 1);
-    const sortFromUrl = (params.get("sort") as SortOption) || "price-asc";
+    const sortFromUrl = (params.get("sort") as SortOption) || "available-desc";
     const searchFromUrl = params.get("search") || "";
     const categoryFromUrl = params.get("category") || "";
     const subcategoryFromUrl = params.get("subcategory") || "";
@@ -204,6 +204,12 @@ export default function ProductList() {
                 );
             case "popular":
                 return c.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+            case "available-desc":
+                return c.sort(
+                    (a, b) =>
+                        Object.values(b.priceMap || {}).filter((p) => p != null).length -
+                        Object.values(a.priceMap || {}).filter((p) => p != null).length
+                );
             default:
                 return c;
         }

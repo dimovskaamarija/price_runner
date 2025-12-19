@@ -155,10 +155,12 @@
 @media (max-width: 768px) {
     .favorites-container {
         padding: 20px;
+        margin: 20px auto;
     }
 
     .favorites-title {
         font-size: 24px;
+        margin-bottom: 20px;
     }
 
     .favorites-grid {
@@ -168,6 +170,78 @@
 
     .favorite-image-container {
         height: 200px;
+    }
+}
+
+@media (max-width: 600px) {
+    .favorites-container {
+        padding: 16px;
+        margin: 16px auto;
+        min-width: 0;
+    }
+
+    .favorites-title {
+        font-size: 20px;
+        margin-bottom: 16px;
+    }
+
+    .favorites-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-top: 16px;
+    }
+    
+    .favorite-card {
+        min-width: 0;
+    }
+
+    .favorite-image-container {
+        height: 160px;
+        min-height: 160px;
+    }
+    
+    .favorite-info {
+        padding: 12px;
+    }
+    
+    .favorite-name {
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+    
+    .favorite-price {
+        font-size: 16px;
+        margin-bottom: 10px;
+    }
+    
+    .remove-favorite-btn {
+        padding: 8px;
+        font-size: 13px;
+        min-height: 40px;
+    }
+    
+    .favorites-empty {
+        padding: 40px 16px;
+    }
+    
+    .empty-heart-icon {
+        font-size: 48px;
+    }
+    
+    .favorites-empty p {
+        font-size: 16px;
+    }
+    
+    .browse-button {
+        padding: 10px 20px;
+        font-size: 14px;
+        min-height: 44px;
+    }
+}
+
+@media (max-width: 400px) {
+    .favorites-grid {
+        grid-template-columns: 1fr;
     }
 }
 
