@@ -134,15 +134,13 @@ router.get("/sign-up", (req, res) => {
         console.log("🌐 Frontend URL:", process.env.FRONTEND_URL);
         console.log("🔧 WORKOS_REDIRECT_URI env var:", process.env.WORKOS_REDIRECT_URI);
 
-        // Try without screenHint first - if login works, maybe sign-up needs different handling
-        // WorkOS might show both sign-in and sign-up options, or sign-up might need to be enabled in dashboard
-        console.log("📝 Attempting sign-up WITHOUT screenHint (WorkOS will show default screen)");
+        // Use screenHint to force WorkOS to show sign-up screen directly
+        // This prevents WorkOS from showing login first
         const authorizationUrl = workos.userManagement.getAuthorizationUrl({
             provider: "authkit",
             redirectUri: redirectUri,
             clientId: process.env.WORKOS_CLIENT_ID,
-            // Removed screenHint: "sign-up" - if this works, we know the issue is with screenHint
-            // If sign-up still doesn't work, check WorkOS dashboard to ensure sign-up is enabled
+            screenHint: "sign-up",
         });
 
         console.log("✅ Generated authorization URL:", authorizationUrl);
