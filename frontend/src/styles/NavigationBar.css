@@ -1,3 +1,17 @@
+/* =========================
+   NAV - FULL RESPONSIVE CSS
+   ========================= */
+
+.nav-container {
+    width: 100%;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Top row wrapper */
 .nav-wrapper {
     max-width: 1400px;
     min-width: 360px;
@@ -13,10 +27,19 @@
     box-sizing: border-box;
 }
 
+/* IMPORTANT: allow flex/grid children to shrink properly */
+.nav-wrapper,
+.nav-left,
+.nav-right,
+.nav-search-form {
+    min-width: 0;
+}
+
 .nav-left {
     display: flex;
     align-items: center;
     gap: 12px;
+    min-width: 0;
 }
 
 .nav-logo {
@@ -25,10 +48,15 @@
     width: auto;
 }
 
+/* Optional: prevent title from pushing layout */
 .nav-title {
     font-size: 18px;
     font-weight: 600;
     color: #2b2b2b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 520px;
 }
 
 .nav-search-form {
@@ -38,14 +66,15 @@
     margin: 0 20px;
 }
 
-.nav-search-form input {
-    width: 100%;
-    padding: 10px 15px 10px 40px;
-    border-radius: 10px;
-    border: 1px solid #ddd;
-    background: #f9f9f9;
-    font-size: 14px;
-}
+    .nav-search-form input {
+        width: 100%;
+        padding: 10px 15px 10px 40px;
+        border-radius: 10px;
+        border: 1px solid #ddd;
+        background: #f9f9f9;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
 
 .nav-search-icon {
     position: absolute;
@@ -60,6 +89,7 @@
     display: flex;
     align-items: center;
     gap: 15px;
+    min-width: 0;
 }
 
 .nav-fav {
@@ -93,22 +123,35 @@
 
 .nav-login {
     background: #eee;
-}   
+}
 
 .nav-register {
     background: #0c0f1d;
     color: white;
 }
 
-.nav-container {
-    width: 100%;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+.nav-username {
+    font-size: 14px;
+    color: #333;
 }
 
+.nav-logout {
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    background: #eee;
+    color: #000;
+}
+
+    .nav-logout:hover {
+        background: #ddd;
+    }
+
+/* =========================
+   SECOND ROW MENU
+   ========================= */
 .nav-wrapper-2 {
     max-width: 1400px;
     width: 100%;
@@ -128,22 +171,26 @@
     font-weight: 500;
     box-sizing: border-box;
     justify-content: flex-start;
+    /* Desktop offset (your original) */
     padding-left: 300px;
 }
 
-.nav-elements a,
-.nav-elements span {
-    cursor: pointer;
-    text-decoration: none;
-    color: #000;
-    padding: 5px;
-}
+    .nav-elements a,
+    .nav-elements span {
+        cursor: pointer;
+        text-decoration: none;
+        color: #000;
+        padding: 5px;
+    }
 
-.nav-elements a:hover,
-.nav-elements span:hover {
-    color: #0077ff;
-}
+        .nav-elements a:hover,
+        .nav-elements span:hover {
+            color: #0077ff;
+        }
 
+/* =========================
+   SUBMENUS (MEGA MENUS)
+   ========================= */
 .nav-submenu-brands {
     position: absolute;
     left: 0;
@@ -152,6 +199,7 @@
     box-shadow: 0 6px 12px rgba(0,0,0,0.1);
     padding: 25px 40px;
     z-index: 50;
+    box-sizing: border-box;
 }
 
 .submenu-columns-brands {
@@ -167,7 +215,7 @@
     width: 100%;
     background: white;
     box-shadow: 0 6px 12px rgba(0,0,0,0.1);
-    padding: 25px 0; 
+    padding: 25px 0;
     z-index: 50;
     display: flex;
     justify-content: center;
@@ -176,8 +224,8 @@
 
 .submenu-columns {
     display: flex;
-    justify-content: center; 
-    gap: 80px; 
+    justify-content: center;
+    gap: 80px;
     max-width: 1400px;
     width: 100%;
     margin: 0 auto;
@@ -204,27 +252,22 @@
     text-decoration: none;
 }
 
-.submenu-item:hover {
-    color: #000;
-}
+    .submenu-item:hover {
+        color: #000;
+    }
 
-.nav-username {
-    font-size: 14px;
-    color: #333;
-}
-
-.nav-logout {
-    padding: 8px 14px;
-    border-radius: 10px;
-    border: none;
-    cursor: pointer;
-    font-size: 13px;
-    background: #eee;
-    color: #000;
-}
-
-.nav-logout:hover {
-    background: #ddd;
+/* =========================
+   BRANDS GRID
+   ========================= */
+.brands-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    width: 100%;
+    padding: 8px 0;
+    justify-items: center;
+    max-width: 500px;
+    margin: 0 auto;
 }
 
 .brand-btn {
@@ -268,119 +311,143 @@
     margin-right: auto;
 }
 
-.all-brands-link:hover {
-    background: #e0e7ff;
-    border-color: #1d4ed8;
-    color: #1d4ed8;
-}
+    .all-brands-link:hover {
+        background: #e0e7ff;
+        border-color: #1d4ed8;
+        color: #1d4ed8;
+    }
 
-.brands-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    width: 100%;
-    padding: 8px 0;
-    justify-items: center;
-    max-width: 500px;
-    margin: 0 auto;
-}
+/* =========================
+   RESPONSIVE
+   ========================= */
 
+/* <= 1200px */
 @media (max-width: 1200px) {
     .nav-elements {
         gap: 40px;
         font-size: 15px;
+        padding-left: 180px; /* soften the desktop offset */
     }
-    
+
     .submenu-columns,
     .submenu-columns-brands {
         gap: 60px;
     }
 }
 
+/* <= 900px (tablet / small laptop) */
 @media (max-width: 900px) {
+    /* Top row can wrap */
     .nav-wrapper {
         flex-wrap: wrap;
         height: auto;
         padding: 12px 20px;
         min-height: 60px;
     }
-    
+
+    /* Search becomes full width on new line */
     .nav-search-form {
         order: 3;
         width: 100%;
         max-width: 100%;
         margin: 10px 0 0 0;
-        min-width: 0;
     }
-    
+
+    /* Second row becomes scrollable and remove big left padding */
     .nav-elements {
         gap: 30px;
         font-size: 14px;
         padding: 12px 20px;
         overflow-x: auto;
-        padding-left: 20px;
+        padding-left: 20px; /* IMPORTANT: remove 300px */
         -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
     }
-    
-    .submenu-columns,
-    .submenu-columns-brands {
-        flex-direction: column;
-        gap: 30px;
-        padding: 0 20px;
+
+    /* Hide mega menus on touch unless you implement a click/accordion */
+    .nav-submenu,
+    .nav-submenu-brands {
+        display: none !important;
     }
-    
+
+    /* Buttons slightly smaller */
     .nav-right {
         gap: 10px;
+        flex-wrap: wrap;
     }
-    
+
     .nav-login,
     .nav-register,
     .nav-logout {
         font-size: 12px;
         padding: 6px 12px;
         min-width: 60px;
+        min-height: 36px; /* tap target */
     }
 }
 
+/* <= 600px (phone) */
 @media (max-width: 600px) {
+
+    /* Change top bar to a clean 2-row grid layout */
     .nav-wrapper {
-        padding: 10px 15px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-areas:
+            "left right"
+            "search search";
+        row-gap: 8px;
+        height: auto;
+        padding: 10px 12px;
         min-height: auto;
     }
-    
-    .nav-logo {
-        height: 100px;
-        min-height: 80px;
-        margin-top: 5px;
+
+    .nav-left {
+        grid-area: left;
     }
-    
+
+    .nav-right {
+        grid-area: right;
+        justify-self: end;
+        gap: 8px;
+    }
+
     .nav-search-form {
-        margin: 8px 0 0 0;
-        min-width: 0;
+        grid-area: search;
+        max-width: 100%;
+        margin: 0;
     }
-    
-    .nav-search-form input {
-        padding: 8px 12px 8px 35px;
+
+    /* Logo must be small on phone */
+    .nav-logo {
+        height: 44px;
+        width: auto;
+        margin-top: 0;
+        min-height: 0;
+    }
+
+    .nav-title {
         font-size: 14px;
-        min-width: 0;
+        max-width: 45vw;
     }
-    
+
+    .nav-search-form input {
+        padding: 9px 12px 9px 36px;
+        font-size: 14px;
+    }
+
     .nav-search-icon {
         left: 10px;
         font-size: 13px;
     }
-    
-    .nav-right {
-        gap: 8px;
-        flex-wrap: wrap;
-    }
-    
+
     .nav-favorites {
         font-size: 18px;
         padding: 6px;
         min-width: 36px;
+        min-height: 36px;
     }
-    
+
     .nav-login,
     .nav-register,
     .nav-logout {
@@ -389,56 +456,43 @@
         min-width: 55px;
         white-space: nowrap;
     }
-    
+
+    /* Hide username on very small screens */
     .nav-username {
         font-size: 12px;
         display: none;
     }
-    
+
+    /* Second row: smooth horizontal tabs */
     .nav-elements {
         gap: 20px;
         font-size: 13px;
-        padding: 10px 15px;
-        padding-left: 15px;
-    }
-    
-    .nav-elements a,
-    .nav-elements span {
-        padding: 4px;
+        padding: 10px 12px;
+        padding-left: 12px;
+        overflow-x: auto;
         white-space: nowrap;
-        min-width: fit-content;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
     }
-    
-    .nav-submenu {
-        padding: 15px 0;
-    }
-    
-    .submenu-columns,
-    .submenu-columns-brands {
-        gap: 20px;
-        padding: 0 15px;
-    }
-    
-    .submenu-col {
-        min-width: 0;
-    }
-    
-    .submenu-title {
-        font-size: 14px;
-        margin-bottom: 8px;
-    }
-    
-    .submenu-item {
-        font-size: 13px;
-        padding: 3px 0;
-    }
-    
+
+        .nav-elements::-webkit-scrollbar {
+            display: none;
+        }
+
+        .nav-elements a,
+        .nav-elements span {
+            padding: 4px 6px;
+            white-space: nowrap;
+            min-width: fit-content;
+        }
+
+    /* Brands grid tighter if ever used in mobile context */
     .brands-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 6px;
         max-width: 100%;
     }
-    
+
     .brand-btn {
         font-size: 11px;
         padding: 5px 6px;
