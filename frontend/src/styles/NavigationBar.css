@@ -1,5 +1,6 @@
 .nav-wrapper {
     max-width: 1400px;
+    min-width: 360px;
     width: 100%;
     margin: 0 auto;
     display: flex;

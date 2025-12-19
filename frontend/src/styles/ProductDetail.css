@@ -51,6 +51,8 @@
     border-radius: 10px;
     width: fit-content;
     margin-bottom: 25px;
+    min-width: 100px;
+    min-height:30px;
 }
 
 .product-price {
