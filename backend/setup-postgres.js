@@ -2,7 +2,7 @@ const { Client } = require('pg');
 require('dotenv').config();
 
 async function setupDatabase() {
-    cconst config = {
+    const config = {
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 };
