@@ -7,7 +7,7 @@ async function setupDatabase() {
         port: parseInt(process.env.DB_PORT || '5432', 10),
         user: process.env.DB_USERNAME || 'postgres',
         password: process.env.DB_PASSWORD || 'postgres',
-        database: 'postgres',
+        database: process.env.POSTGRES_DB || 'postgres',
     };
     
     const client = new Client(config);
