@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "ts-node src/server.ts",
     "build": "tsc",
+    "test": "npm run build && node --test --test-isolation=none src/routes/auth.test.js",
     "start": "node dist/server.js"
   },
   "keywords": [],
