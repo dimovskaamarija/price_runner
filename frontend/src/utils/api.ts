@@ -1,5 +1,4 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-export const AUTH_API_BASE_URL = import.meta.env.VITE_AUTH_API_URL || 'http://localhost:4000';
+import { API_BASE_URL, AUTH_API_BASE_URL } from '../config/env';
 
 // Token management functions
 const TOKEN_KEY = 'auth_token';
