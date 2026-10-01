@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "ts-node src/server.ts",
     "build": "tsc",
+    "test": "npm run build && node --test",
     "start": "node dist/server.js"
   },
   "keywords": [],
