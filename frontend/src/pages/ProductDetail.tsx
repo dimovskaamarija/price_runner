@@ -10,7 +10,8 @@ import { useProduct } from '../hooks/useProducts';
 import { useStores, type Store } from '../hooks/useStores';
 import { useFavoriteStatus } from '../hooks/useFavorites';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { api, API_BASE_URL } from '../utils/api';
+import { API_BASE_URL } from '../config/env';
+import { api } from '../utils/api';
 import { capitalizeBrand } from '../utils/formatting';
 
 export default function ProductDetail() {

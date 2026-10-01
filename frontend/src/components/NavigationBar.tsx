@@ -6,7 +6,8 @@ import { FaSearch, FaHeart } from "react-icons/fa";
 import type { User } from "../types/user";
 import { useNavData } from "../hooks/useNavData";
 import { capitalizeBrand } from "../utils/formatting";
-import { AUTH_API_BASE_URL, tokenManager } from "../utils/api";
+import { AUTH_API_BASE_URL } from "../config/env";
+import { tokenManager } from "../utils/api";
 
 interface Props {
     user: User | null;
