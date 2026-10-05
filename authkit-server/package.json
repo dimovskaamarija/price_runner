@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "ts-node src/server.ts",
     "build": "tsc",
+    "test": "node --require ts-node/register/transpile-only src/routes/auth.test.cjs",
     "start": "node dist/server.js"
   },
   "keywords": [],
