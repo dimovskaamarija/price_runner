@@ -7,6 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "node node_modules/@nestjs/cli/bin/nest.js build",
+    "test": "node -r ts-node/register test/favorites.integration.test.ts",
     "format": "prettier --write \"src/**/*.ts\"",
     "start": "node dist/main",
     "start:dev": "nest start --watch",
