@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "ts-node src/server.ts",
+    "test": "node --test --require ts-node/register test/auth.routes.test.js",
     "build": "tsc",
     "start": "node dist/server.js"
   },
