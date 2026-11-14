@@ -1,20 +1,21 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, Index } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, Index } from 'typeorm';
 
+/**
+ * Price change log. A row is written only when an offer's price differs from
+ * its previous price, so the table grows with price *changes*, not days.
+ */
 @Entity('price_history')
-@Index(['productId', 'store', 'date'])
+@Index(['offerId', 'date'])
 export class PriceHistory {
     @PrimaryGeneratedColumn()
     id: number;
 
     @Column()
-    productId: string;
+    offerId: number;
 
-    @Column()
-    store: string;
-
-    @Column('decimal', { precision: 10, scale: 2 })
+    @Column('int')
     price: number;
 
-    @CreateDateColumn()
+    @Column({ type: 'timestamp' })
     date: Date;
 }

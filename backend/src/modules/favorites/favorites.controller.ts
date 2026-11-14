@@ -53,24 +53,7 @@ export class FavoritesController {
         }
 
         try {
-            const products = await this.favoritesService.getUserFavorites(user.id);
-            return products.map((p) => ({
-                id: p.id,
-                name: p.name,
-                brand: p.brand,
-                category: p.category,
-                subcategory: p.subcategory,
-                gender: p.gender,
-                age: p.age,
-                color: p.color,
-                image: p.image,
-                priceMap: p.priceMap || {},
-                storeLinks: p.storeLinks || {},
-                productUrl: p.productUrl,
-                currency: p.currency,
-                createdAt: p.createdAt,
-                updatedAt: p.updatedAt,
-            }));
+            return await this.favoritesService.getUserFavorites(user.id);
         } catch (error: any) {
             throw new HttpException(
                 error.message || 'Failed to get favorites',

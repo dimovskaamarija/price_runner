@@ -1,23 +1,37 @@
-import { Controller, Get, Query, Param, HttpException, HttpStatus } from "@nestjs/common";
-import { ProductsService } from "./product.service";
-import { PostgresService } from "../../database/postgres.service";
+import { Controller, Get, Header, HttpException, HttpStatus, Param, Query } from '@nestjs/common';
+import { CatalogReadService } from '../catalog/catalog-read.service';
+import { ProductFilters } from '../catalog/product.dto';
 
-@Controller("products")
+const PAGE_SIZE = 24;
+const list = (v?: string) => (v ? v.split(',').map((s) => s.trim()).filter(Boolean) : []);
+
+@Controller('products')
 export class ProductController {
-    constructor(
-        private readonly postgresService: PostgresService,
-        private readonly productsService: ProductsService,
-    ) {}
+    constructor(private readonly catalog: CatalogReadService) {}
 
     @Get('filter-options')
-    async getFilterOptions() {
-        return this.postgresService.getFilterOptions();
+    @Header('Cache-Control', 'public, max-age=300')
+    getFilterOptions() {
+        return this.catalog.getFilterOptions();
+    }
+
+    @Get('nav-data')
+    @Header('Cache-Control', 'public, max-age=300')
+    getNavData() {
+        return this.catalog.getNavData();
+    }
+
+    @Get('stores')
+    @Header('Cache-Control', 'public, max-age=3600')
+    getStores() {
+        return this.catalog.getStores();
     }
 
     @Get()
+    @Header('Cache-Control', 'public, max-age=60')
     async getProducts(
         @Query('page') page = '1',
-        @Query('sort') sort = 'price-asc',
+        @Query('sort') sort = 'available-desc',
         @Query('category') category?: string,
         @Query('subcategory') subcategory?: string,
         @Query('brand') brand?: string,
@@ -28,158 +42,34 @@ export class ProductController {
         @Query('maxPrice') maxPrice = '20000',
         @Query('search') search?: string,
     ) {
-        const filters = {
-            search: search || '',
-            category: category ? category.split(',') : [],
-            subcategory: subcategory ? subcategory.split(',') : [],
-            brand: brand ? brand.split(',') : [],
-            age: age ? age.split(',') : [],
-            gender: gender ? gender.split(',') : [],
-            color: color ? color.split(',') : [],
-            minPrice: parseInt(minPrice, 10),
-            maxPrice: parseInt(maxPrice, 10),
+        const filters: ProductFilters = {
+            search: (search || '').trim(),
+            category: list(category),
+            subcategory: list(subcategory),
+            brand: list(brand),
+            age: list(age),
+            gender: list(gender),
+            color: list(color),
+            minPrice: parseInt(minPrice, 10) || 0,
+            maxPrice: parseInt(maxPrice, 10) || 20000,
         };
-
-        const p = Math.max(parseInt(page, 10) || 1, 1);
-        const PAGE_SIZE = 24;
-
+        const p = Math.min(Math.max(parseInt(page, 10) || 1, 1), 1000);
         try {
-            return this.productsService.getFilteredProducts(p, PAGE_SIZE, sort, filters);
+            return await this.catalog.listProducts(p, PAGE_SIZE, sort, filters);
         } catch {
             throw new HttpException('Failed to fetch products', HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    @Get('nav-data')
-    async getNavData() {
-    const navbar = await this.postgresService.getFilterNavBarOptions();
-
-    const filterOptions = await this.postgresService.getFilterOptions();
-
-    const all = await this.productsService.getAllProducts();
-
-    const DODATOCI = [
-        'Ранец',
-        'Торби и торбички',
-        'Шалови',
-        'Врвки',
-        'Ракавици',
-        'Качкети и капи',
-        'Чорапи',
-        'Бандани',
-    ];
-
-    const OPREMA = [
-        'Топки',
-        'Опрема за пливање',
-        'Опрема за тренинг',
-        'Ролери',
-        'Тротинет',
-        'Шишишта',
-        'Останато',
-    ];
-
-    const equipment = {
-        dodatoci: [],
-        sports: [],
-    };
-
-    const allBrands: Record<string, string[]> = {};
-
-    const push = (arr: string[], v: string) => {
-        if (v && !arr.includes(v)) arr.push(v);
-    };
-
-    const capitalizeBrand = (brand: string): string => {
-        if (!brand) return brand;
-        return brand
-            .split(' ')
-            .map((word) => {
-                if (!word) return word;
-                return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-            })
-            .join(' ');
-    };
-
-    const brandMap = new Map<string, { normalized: string; count: number }>();
-
-    for (const p of all) {
-        const sub = (p.subcategory || "").trim();
-        const category = (p.category || "").trim();
-        const brand = (p.brand || "").trim();
-
-        if (brand) {
-            const normalized = capitalizeBrand(brand);
-            const lowerKey = brand.toLowerCase();
-            
-            if (brandMap.has(lowerKey)) {
-                brandMap.get(lowerKey)!.count++;
-            } else {
-                brandMap.set(lowerKey, { normalized, count: 1 });
-            }
-        }
-
-        if (category === 'Опрема') {
-            if (DODATOCI.includes(sub)) push(equipment.dodatoci, sub);
-            if (OPREMA.includes(sub)) push(equipment.sports, sub);
-        }
-    }
-
-    for (const [lowerKey, { normalized }] of brandMap) {
-        const letter = normalized[0].toUpperCase();
-        if (!allBrands[letter]) allBrands[letter] = [];
-        if (!allBrands[letter].includes(normalized)) {
-            allBrands[letter].push(normalized);
-        }
-    }
-
-    for (const key of Object.keys(allBrands)) {
-        allBrands[key].sort((a, b) => a.localeCompare(b));
-    }
-
-    const topBrands = Array.from(brandMap.values())
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 10)
-        .map(({ normalized, count }) => ({ name: normalized, count }));
-
-    return {
-        menu: {
-            men: {
-                Обувки: navbar.maleShoes,
-                Текстил: navbar.maleClothes,
-                Опрема: navbar.maleEquipment,
-            },
-            women: {
-                Обувки: navbar.femaleShoes,
-                Текстил: navbar.femaleClothes,
-                Опрема: navbar.femaleEquipment,
-            },
-            kids: {
-                Обувки: navbar.kidsShoes,
-                Текстил: navbar.kidsClothes,
-                Опрема: navbar.kidsEquipment,
-            },
-        },
-
-        equipment,
-
-        brands: {
-            top: topBrands,
-            all: allBrands,
-        },
-
-        filters: filterOptions,
-    };
-}
-
-    @Get('stores')
-    async getStores() {
-        return this.postgresService.getAllStores();
+    @Get(':id/history')
+    @Header('Cache-Control', 'public, max-age=600')
+    getHistory(@Param('id') id: string) {
+        return this.catalog.getPriceHistory(id, 30);
     }
 
     @Get(':id')
     async getProductById(@Param('id') id: string) {
-        const p = await this.productsService.getProductById(id);
+        const p = await this.catalog.getProduct(id);
         if (!p) throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
         return p;
     }
