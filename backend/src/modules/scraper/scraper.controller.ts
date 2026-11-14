@@ -1,43 +1,68 @@
-import { Controller, Get, Logger } from '@nestjs/common';
-import { ScraperService } from './services/scraper.service';
+import { Controller, Get, Headers, HttpException, HttpStatus, Post, Query } from '@nestjs/common';
+import { ScraperService } from './scraper.service';
 
+/**
+ * Admin endpoints. If SCRAPER_TOKEN is set, requests must send
+ * `Authorization: Bearer <token>` or `?token=<token>`.
+ */
 @Controller('scraper')
 export class ScraperController {
-    private readonly log = new Logger(ScraperController.name);
+    constructor(private readonly scraper: ScraperService) {}
 
-    constructor(private readonly scraperService: ScraperService) {}
+    private authorize(auth?: string, token?: string) {
+        const expected = process.env.SCRAPER_TOKEN;
+        if (!expected) return;
+        const provided = auth?.replace(/^Bearer\s+/i, '') || token;
+        if (provided !== expected) throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+    }
 
+    /**
+     * Starts a full run in the background and returns immediately.
+     * `?wait=true` keeps the old behaviour of responding when the run finishes.
+     * `?stores=Sport M,Sizeer MK` limits the run to some stores.
+     */
     @Get('run-now')
-    async runNow() {
-        const startTime = new Date();
-        this.log.log('=== MANUAL SCRAPER TRIGGER ===');
-        this.log.log(`Triggered at: ${startTime.toISOString()}`);
-        
+    async runNow(
+        @Headers('authorization') auth?: string,
+        @Query('token') token?: string,
+        @Query('wait') wait?: string,
+        @Query('stores') stores?: string,
+    ) {
+        this.authorize(auth, token);
+        const alreadyRunning = this.scraper.isRunning;
+        const run = this.scraper.run(stores ? stores.split(',').map((s) => s.trim()) : undefined);
+        if (wait === 'true') return { status: 'success', summary: await run };
+        run.catch(() => undefined); // errors are logged and recorded in lastRun
+        return { status: alreadyRunning ? 'already-running' : 'started', statusUrl: '/scraper/status' };
+    }
+
+    @Get('status')
+    status(@Headers('authorization') auth?: string, @Query('token') token?: string) {
+        this.authorize(auth, token);
+        return { running: this.scraper.isRunning, lastRun: this.scraper.lastRun };
+    }
+
+    /** Re-run classification/clustering/maintenance without scraping. `?reclassify=true` re-labels everything. */
+    @Post('process')
+    async process(@Headers('authorization') auth?: string, @Query('token') token?: string, @Query('reclassify') reclassify?: string) {
+        this.authorize(auth, token);
+        if (this.scraper.isRunning) throw new HttpException('A scrape run is in progress', HttpStatus.CONFLICT);
+        return this.scraper.processCatalog({ reclassify: reclassify === 'true' });
+    }
+
+    /** Dry-run a site config: scrapes a few products, saves nothing, shows extracted fields + rule classification. */
+    @Get('preview')
+    async preview(
+        @Headers('authorization') auth?: string,
+        @Query('token') token?: string,
+        @Query('store') store?: string,
+        @Query('limit') limit = '5',
+    ) {
+        this.authorize(auth, token);
         try {
-            await this.scraperService.executeScraping();
-            
-            const endTime = new Date();
-            const duration = Math.round((endTime.getTime() - startTime.getTime()) / 1000);
-            
-            this.log.log(`=== SCRAPING COMPLETED ===`);
-            this.log.log(`Duration: ${duration} seconds`);
-            
-            return { 
-                status: 'success',
-                message: 'Scraping completed successfully',
-                duration: `${duration} seconds`,
-                timestamp: endTime.toISOString()
-            };
-        } catch (error) {
-            this.log.error('=== SCRAPING FAILED ===');
-            this.log.error(error);
-            
-            return {
-                status: 'error',
-                message: 'Scraping failed',
-                error: error.message,
-                timestamp: new Date().toISOString()
-            };
+            return await this.scraper.preview(store || '', Math.min(parseInt(limit, 10) || 5, 50));
+        } catch (e) {
+            throw new HttpException((e as Error).message, HttpStatus.BAD_REQUEST);
         }
     }
 }

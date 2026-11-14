@@ -177,43 +177,8 @@ export default function ProductList() {
         return Array.from({ length: Math.min(max, totalPages) }, (_, i) => s + i);
     }, [currentPage, totalPages]);
 
-    const sortedProducts = useMemo(() => {
-        const c = [...products];
-        switch (sort) {
-            case "price-asc":
-                return c.sort(
-                    (a, b) =>
-                        (getMinPrice(a.priceMap) ?? Infinity) -
-                        (getMinPrice(b.priceMap) ?? Infinity)
-                );
-            case "price-desc":
-                return c.sort(
-                    (a, b) =>
-                        (getMinPrice(b.priceMap) ?? -Infinity) -
-                        (getMinPrice(a.priceMap) ?? -Infinity)
-                );
-            case "name-asc":
-                return c.sort((a, b) => a.name.localeCompare(b.name));
-            case "name-desc":
-                return c.sort((a, b) => b.name.localeCompare(a.name));
-            case "newest":
-                return c.sort(
-                    (a, b) =>
-                        new Date(b.updatedAt || 0).getTime() -
-                        new Date(a.updatedAt || 0).getTime()
-                );
-            case "popular":
-                return c.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
-            case "available-desc":
-                return c.sort(
-                    (a, b) =>
-                        Object.values(b.priceMap || {}).filter((p) => p != null).length -
-                        Object.values(a.priceMap || {}).filter((p) => p != null).length
-                );
-            default:
-                return c;
-        }
-    }, [products, sort]);
+    // Sorting, filtering and pagination happen on the server.
+    const sortedProducts = products;
 
     const hasActiveFilters = useMemo(() => {
         return (

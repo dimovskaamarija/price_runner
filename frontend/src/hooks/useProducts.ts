@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { api } from '../utils/api';
 
 export interface Product {
@@ -6,8 +6,9 @@ export interface Product {
     name: string;
     image?: string;
     priceMap?: Record<string, number | null>;
+    minPrice?: number | null;
+    storeCount?: number;
     updatedAt?: string;
-    popularity?: number;
     brand?: string;
     gender?: string;
     age?: string;
@@ -55,6 +56,7 @@ export function useProducts(filters: ProductFilters) {
             
             return api.get<ProductsResponse>(`/products?${params.toString()}`);
         },
+        placeholderData: keepPreviousData, // keep the current page visible while the next one loads
         staleTime: 1000 * 60 * 1, // 1 minute - reduced to show new data faster
         gcTime: 1000 * 60 * 10, // 10 minutes (formerly cacheTime)
     });
