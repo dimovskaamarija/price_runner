@@ -51,13 +51,55 @@ You don't need to touch the category lists. Labels the rules don't know are clas
 
 Order for each field (`subcategory`, `gender`, `age`, `color`):
 
-1. `category_mappings` (manual overrides + earlier Gemini answers)
-2. Keyword rules from `backend/src/modules/catalog/taxonomy.ts` (Macedonian + English)
-3. Gemini label learning: each **distinct unknown label** is sent once, and the answer is cached forever
-4. Gemini product classification (name + labels + URL) for products still unresolved
+1. **Store labels** (spec tables, breadcrumbs, crawl hints), mapped through `category_mappings` (manual overrides + earlier Gemini answers) or keyword rules from `backend/src/modules/catalog/taxonomy.ts`
+2. **ML model** (`ml-service/`), accepted only if its confidence is ≥ `ML_MIN_CONFIDENCE` (0.8)
+3. Keywords in the product name
+4. **Gemini**: each distinct unknown label is learned once and cached, then products still unresolved are classified
 5. Defaults (`Останато`, `Унисекс`, `За возрасни`)
 
-Gemini output is constrained to the taxonomy enums, so it can never invent a category.
+Each offer stores per-field provenance in `offers.fieldSources` (`rules`, `mapping`, `ml`, `gemini`, `default`). Gemini output is constrained to the taxonomy enums, so it can never invent a category.
+
+### ML service (`ml-service/`, Python + scikit-learn)
+
+**Supervised model.** For each field it trains TF-IDF (word 1–2-grams + character 2–5-grams over name, brand, store labels, breadcrumbs and URL slug) feeding a multinomial logistic regression.
+
+- **Training data:** the catalog labels itself (weak supervision). Only labels from trusted sources are used (`rules`, `mapping`, `gemini`, `manual`), never defaults or the model's own predictions, so errors don't feed back into training.
+- **Self-improving:** every Gemini answer becomes training data, so as the model learns, Gemini is needed less.
+- **Retraining:** the backend triggers `POST /train` after every scraper run.
+- **Evaluation** (`GET /scraper/ml/metrics`):
+  - holdout 80/20 accuracy, macro-F1, and per-class precision/recall
+  - **leave-one-store-out:** train on all stores but one and test on that one. This estimates accuracy on a *new website*.
+  - coverage and accuracy at the confidence threshold, which is what production actually uses
+- **Quality gate:** a field's model is used only if its holdout accuracy at the threshold is ≥ `ML_MIN_PRECISION` (0.9).
+
+Results on the page-1 test sample (about 1,000 listings):
+
+| Field | Accuracy on an unseen store | Accuracy when confidence ≥ 0.8 |
+|---|---|---|
+| subcategory | 0.81 | 1.00 (covering 55% of items) |
+| gender | 0.91 | 0.99 |
+| age | 0.97 | 1.00 |
+
+Expect higher coverage after a full scrape, which provides much more training data.
+
+Model selection (ablation, leave-one-store-out): multinomial beat one-vs-rest on coverage at equal precision. Label-dropout augmentation was tried and rejected: it lowered new-store accuracy from 0.81 to 0.69 and made name-only predictions over-confident.
+
+**Unsupervised clustering** (`GET /scraper/clusters?k=`):
+- **Method:** LSA (TF-IDF → truncated SVD, 100 dimensions) + K-Means, with k chosen by silhouette. It runs on products currently on sale, using only product-type text (no brand, audience words, colors or URL scaffolding).
+- **Output:**
+  - natural product groups with top terms, dominant subcategory and purity
+  - **suggested new categories:** clusters that are ≥ 50% `Останато`, named by Gemini if configured. On test data this found *CROCS JIBBITZ shoe charms*.
+  - **outliers:** products far from every cluster centre, often mis-scraped or mis-labelled
+  - NMI between clusters and the taxonomy (0.70 on test data), which measures how well the taxonomy fits the data
+
+**Deploying.** Create a Railway service from `ml-service/`; it builds from its Dockerfile.
+- On the ML service, set `DATABASE_URL` (same database) and `ML_SERVICE_TOKEN`.
+- Optionally mount a volume at `/data` so the trained model survives redeploys. Without it, the model is retrained from the database on startup in about 30 seconds.
+- On the backend, set `ML_SERVICE_URL` (e.g. `http://ml-service.railway.internal:8000`) and the same `ML_SERVICE_TOKEN`.
+
+Without `ML_SERVICE_URL`, the backend skips step 2.
+
+Run the ML tests locally with `cd ml-service && pip install -r requirements.txt pytest && python -m pytest tests`.
 
 **Correcting a mapping:** insert or update a row with `source = 'manual'`:
 
@@ -95,6 +137,10 @@ Products that later turn out to share a model code are merged. Favorites and off
 | `SCRAPER_MAX_PAGES` | `100` | Listing pages per start URL (lower it for testing) |
 | `ENABLE_SCRAPER_CRON` | – | `false` disables the nightly run |
 | `ACTIVE_WINDOW_HOURS` / `OFFER_RETENTION_DAYS` | `48` / `30` | |
+| `ML_SERVICE_URL` | – | ML service URL. Unset means ML is disabled. |
+| `ML_SERVICE_TOKEN` | – | Shared secret between the backend and the ML service |
+| `ML_MIN_CONFIDENCE` | `0.8` | Minimum model probability to accept a label (set it on both services) |
+| `ML_MIN_PRECISION` | `0.9` | ML service: quality gate for enabling a field's model |
 
 ## Admin endpoints
 
@@ -104,3 +150,5 @@ Products that later turn out to share a model code are merged. Favorites and off
 | `GET /scraper/status` | Running flag and last run summary (per-site counts, price changes, Gemini usage) |
 | `POST /scraper/process` | Classify + cluster + maintain without scraping. `?reclassify=true` re-labels everything. |
 | `GET /scraper/preview?store=X&limit=5` | Dry-run one site |
+| `GET /scraper/ml/metrics` | ML evaluation: holdout, leave-one-store-out, per-class scores, gate status |
+| `GET /scraper/clusters?k=` | Clustering report: groups, suggested new categories, outliers |

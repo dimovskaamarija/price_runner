@@ -40,3 +40,9 @@ backend/serviceAccountKey.json
 # MongoDB (if you're using local data files)
 backend/data/
 
+
+# ML service
+ml-service/models/
+__pycache__/
+.pytest_cache/
+.venv/

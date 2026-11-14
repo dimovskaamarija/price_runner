@@ -6,6 +6,7 @@ import { ClusteringService } from '../catalog/clustering.service';
 import { CatalogMaintenanceService } from '../catalog/maintenance.service';
 import { CatalogReadService } from '../catalog/catalog-read.service';
 import { GeminiService } from '../ai/gemini.service';
+import { MlClient } from '../ai/ml.client';
 import { CrawlStats, SiteScraper } from './core/site-scraper';
 import { IngestService } from './ingest.service';
 import { SITES } from './sites/sites.config';
@@ -37,6 +38,7 @@ export class ScraperService {
         private readonly maintenance: CatalogMaintenanceService,
         private readonly read: CatalogReadService,
         private readonly gemini: GeminiService,
+        private readonly ml: MlClient,
     ) {}
 
     get isRunning() {
@@ -108,7 +110,45 @@ export class ScraperService {
         const clustering = await this.clustering.clusterPending();
         const maintenance = await this.maintenance.runAll();
         this.read.invalidateCache();
-        return { classification, clustering, maintenance, gemini: this.gemini.stats };
+        // Retrain on the newly labelled data (runs in the ML service's background; next run uses it).
+        const mlTraining = this.ml.enabled ? ((await this.ml.train())?.status ?? 'unavailable') : 'disabled';
+        return { classification, clustering, maintenance, gemini: this.gemini.stats, mlTraining };
+    }
+
+    /**
+     * Data-driven category discovery: LSA + K-Means clusters from the ML service.
+     * Clusters dominated by "Останато" are suggested new categories; Gemini names them if configured.
+     */
+    async clusterReport(k?: number) {
+        const report = await this.ml.clusters(k);
+        if (!report) return null;
+        const suggested = report.clusters.filter((c) => report.suggested_new_categories.includes(c.id));
+        if (suggested.length && this.gemini.enabled) {
+            const res = await this.gemini.generateJson<{ names: { id: number; name: string }[] }>(
+                'Give a short Macedonian product-category name (1-3 words, like "Патики" or "Опрема за пливање") ' +
+                    'for each cluster of sports products, based on its top terms and examples.\n' +
+                    JSON.stringify(suggested.map((c) => ({ id: c.id, top_terms: c.top_terms, examples: c.examples }))),
+                {
+                    type: 'OBJECT',
+                    properties: {
+                        names: {
+                            type: 'ARRAY',
+                            items: { type: 'OBJECT', properties: { id: { type: 'INTEGER' }, name: { type: 'STRING' } }, required: ['id', 'name'] },
+                        },
+                    },
+                    required: ['names'],
+                },
+            );
+            for (const n of res?.names || []) {
+                const c = report.clusters.find((x) => x.id === n.id);
+                if (c) c.suggested_name = n.name;
+            }
+        }
+        return report;
+    }
+
+    mlMetrics() {
+        return this.ml.metrics();
     }
 
     /** Scrape a few products of one site without saving — for developing a new site config. */

@@ -71,7 +71,11 @@ export class Offer {
     @Column({ nullable: true })
     color?: string;
 
-    /** rules | mapping | gemini | default | legacy */
+    /** Per-field provenance, e.g. {"subcategory":"ml","gender":"rules"}. ML trains only on trusted sources. */
+    @Column('jsonb', { default: {} })
+    fieldSources: Record<string, string>;
+
+    /** Overall: rules | mapping | ml | gemini | default | legacy */
     @Column({ nullable: true })
     classificationSource?: string;
 

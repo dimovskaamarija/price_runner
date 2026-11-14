@@ -50,6 +50,24 @@ export class ScraperController {
         return this.scraper.processCatalog({ reclassify: reclassify === 'true' });
     }
 
+    /** ML model quality: holdout + leave-one-store-out metrics per field. */
+    @Get('ml/metrics')
+    async mlMetrics(@Headers('authorization') auth?: string, @Query('token') token?: string) {
+        this.authorize(auth, token);
+        const m = await this.scraper.mlMetrics();
+        if (!m) throw new HttpException('ML service not configured or no model trained yet', HttpStatus.SERVICE_UNAVAILABLE);
+        return m;
+    }
+
+    /** Unsupervised clustering report: natural product groups, outliers, suggested new categories. */
+    @Get('clusters')
+    async clusters(@Headers('authorization') auth?: string, @Query('token') token?: string, @Query('k') k?: string) {
+        this.authorize(auth, token);
+        const report = await this.scraper.clusterReport(k ? parseInt(k, 10) : undefined);
+        if (!report) throw new HttpException('ML service not configured or unavailable', HttpStatus.SERVICE_UNAVAILABLE);
+        return report;
+    }
+
     /** Dry-run a site config: scrapes a few products, saves nothing, shows extracted fields + rule classification. */
     @Get('preview')
     async preview(
