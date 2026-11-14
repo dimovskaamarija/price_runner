@@ -4,6 +4,7 @@ import { DataSource, Repository } from 'typeorm';
 import { Offer, RawLabels } from '../../database/entities/offer.entity';
 import { CategoryMapping, MappingKind } from '../../database/entities/category-mapping.entity';
 import { GeminiService, GeminiSchema } from '../ai/gemini.service';
+import { MlClient, MlField } from '../ai/ml.client';
 import {
     AGES, AGE_KEYWORDS, CATEGORIES, CATEGORY_KEYWORDS, COLORS, COLOR_NAMES, GENDERS, GENDER_KEYWORDS,
     OTHER_SUBCATEGORY, SUBCATEGORIES, SUBCATEGORY_NAMES,
@@ -12,7 +13,7 @@ import { containsPhrase, normalizeText } from './text';
 
 type Field = 'category' | 'subcategory' | 'gender' | 'age' | 'color';
 type Classification = Record<Field, string | null>;
-type Source = 'rules' | 'mapping' | 'gemini' | 'default';
+type Source = 'rules' | 'mapping' | 'ml' | 'gemini' | 'default';
 
 interface Result {
     offer: Offer;
@@ -61,16 +62,20 @@ const NONE = 'NONE';
 const FIELDS: Field[] = ['subcategory', 'category', 'gender', 'age', 'color'];
 /** Fields worth an LLM call when rules can't resolve them (color is optional). */
 const AI_FIELDS: Field[] = ['subcategory', 'gender', 'age'];
+const ML_FIELDS: MlField[] = ['subcategory', 'gender', 'age', 'color'];
 
 /**
  * Maps raw store labels to the canonical taxonomy.
  *
  * Resolution order per field:
- *   1. learned mappings (category_mappings: manual overrides + previous Gemini answers)
- *   2. keyword rules from taxonomy.ts
- *   3. Gemini label-learning: each *unknown raw label* is sent once, the answer is cached
- *   4. Gemini product-level classification (name + labels) for what's still unresolved
+ *   1. explicit store labels -> learned mappings (manual overrides, earlier Gemini answers) or keyword rules
+ *   2. ML model (ml-service: TF-IDF + logistic regression trained on this catalog), if confident
+ *   3. keywords in the product name
+ *   4. Gemini: unknown raw labels are learned once and cached; then product-level classification
  *   5. safe defaults
+ *
+ * Every label from steps 1/4 becomes training data for step 2, so the model keeps improving
+ * and Gemini is needed less over time.
  */
 @Injectable()
 export class ClassifierService {
@@ -81,22 +86,23 @@ export class ClassifierService {
         @InjectRepository(Offer) private readonly offers: Repository<Offer>,
         @InjectRepository(CategoryMapping) private readonly mappingRepo: Repository<CategoryMapping>,
         private readonly gemini: GeminiService,
+        private readonly ml: MlClient,
         private readonly dataSource: DataSource,
     ) {}
 
     /** Classify every offer with classifiedAt = NULL (new offers or offers whose labels changed). */
-    async classifyPending(batchSize = 500): Promise<{ classified: number; aiLabels: number; aiProducts: number }> {
+    async classifyPending(batchSize = 500): Promise<{ classified: number; ml: number; aiLabels: number; aiProducts: number }> {
         await this.loadMappings();
 
-        if (this.gemini.enabled) {
-            // A key was added after offers were classified with defaults: give them another chance.
+        if (this.gemini.enabled || this.ml.enabled) {
+            // ML/Gemini became available after offers got defaults: give them another chance.
             await this.dataSource.query(
                 `UPDATE offers SET "classifiedAt" = NULL
                  WHERE id IN (SELECT id FROM offers WHERE "classificationSource" = 'default' LIMIT 3000)`,
             );
         }
 
-        const stats = { classified: 0, aiLabels: 0, aiProducts: 0 };
+        const stats = { classified: 0, ml: 0, aiLabels: 0, aiProducts: 0 };
         let lastId = 0;
         for (;;) {
             const batch = await this.offers
@@ -108,12 +114,17 @@ export class ClassifierService {
             if (!batch.length) break;
             lastId = batch[batch.length - 1].id;
 
-            let results = batch.map((o) => this.classifyWithRules(o));
+            let results = batch.map((o) => this.classifyLabels(o));
+            stats.ml += await this.applyMl(results);
+            for (const r of results) this.applyNameRules(r);
 
             if (this.gemini.enabled) {
                 const learned = await this.learnUnknownLabels(results);
                 stats.aiLabels += learned;
-                if (learned) results = batch.map((o) => this.classifyWithRules(o));
+                if (learned) {
+                    // Re-run with the new mappings, keeping what ML / name rules already found.
+                    results = results.map((prev) => mergeResults(this.classifyLabels(prev.offer), prev));
+                }
                 stats.aiProducts += await this.classifyProductsWithGemini(results);
             }
 
@@ -121,7 +132,9 @@ export class ClassifierService {
             await this.save(results);
             stats.classified += results.length;
         }
-        if (stats.classified) this.log.log(`Classified ${stats.classified} offers (Gemini: ${stats.aiLabels} labels, ${stats.aiProducts} products)`);
+        if (stats.classified) {
+            this.log.log(`Classified ${stats.classified} offers (ML: ${stats.ml}, Gemini: ${stats.aiLabels} labels, ${stats.aiProducts} products)`);
+        }
         return stats;
     }
 
@@ -133,15 +146,22 @@ export class ClassifierService {
 
     // ------------------------------------------------------------------ rules
 
+    /** Rules only (labels + name keywords). Used by the scraper preview endpoint. */
     classifyWithRules(offer: Offer): Result {
+        const r = this.classifyLabels(offer);
+        this.applyNameRules(r);
+        return r;
+    }
+
+    /** Step 1: explicit store labels, breadcrumbs and crawl hints only (high precision). */
+    classifyLabels(offer: Offer): Result {
         const labels: RawLabels = offer.rawLabels || {};
         const hints: RawLabels = offer.hints || {};
         const crumbs = [...(labels.breadcrumbs || [])].reverse(); // most specific first
-        const name = offer.name || '';
         const values: Classification = { category: null, subcategory: null, gender: null, age: null, color: null };
         const sources: Result['sources'] = {};
 
-        const resolve = (field: Field, labelSources: Array<string | undefined>, freeText: Array<string | undefined>) => {
+        const resolve = (field: Field, labelSources: Array<string | undefined>) => {
             for (const raw of labelSources) {
                 const hit = this.lookup(field, raw);
                 if (hit) {
@@ -150,28 +170,67 @@ export class ClassifierService {
                     return;
                 }
             }
-            for (const text of freeText) {
-                const v = this.matchRules(field, text);
-                if (v) {
-                    values[field] = v;
-                    sources[field] = 'rules';
-                    return;
-                }
-            }
         };
 
-        resolve('subcategory', [labels.subcategory, ...crumbs, hints.subcategory], [name]);
-        resolve('gender', [labels.gender, hints.gender, ...crumbs], [name]);
-        resolve('age', [labels.age, hints.age, labels.gender, ...crumbs], [name]);
-        resolve('color', [labels.color], [name]);
-
-        if (values.subcategory && values.subcategory !== OTHER_SUBCATEGORY) {
-            values.category = SUBCATEGORIES[values.subcategory].category;
-            sources.category = sources.subcategory;
-        } else {
-            resolve('category', [labels.category, hints.category, ...crumbs], []);
+        resolve('subcategory', [labels.subcategory, ...crumbs, hints.subcategory]);
+        resolve('gender', [labels.gender, hints.gender, ...crumbs]);
+        resolve('age', [labels.age, hints.age, labels.gender, ...crumbs]);
+        resolve('color', [labels.color]);
+        if (!values.subcategory || values.subcategory === OTHER_SUBCATEGORY) {
+            resolve('category', [labels.category, hints.category, ...crumbs]);
         }
-        return { offer, values, sources };
+        const r = { offer, values, sources };
+        deriveCategory(r);
+        return r;
+    }
+
+    /** Step 2: ML model for fields the labels didn't resolve; accepted only above ML_MIN_CONFIDENCE. */
+    private async applyMl(results: Result[]): Promise<number> {
+        if (!this.ml.enabled) return 0;
+        const pending = results.filter((r) => ML_FIELDS.some((f) => !r.values[f]));
+        if (!pending.length) return 0;
+        const preds = await this.ml.predict(
+            pending.map(({ offer }) => ({
+                id: offer.id,
+                name: offer.name,
+                brand: offer.brand,
+                url: offer.url,
+                store: offer.store,
+                rawLabels: offer.rawLabels as Record<string, unknown>,
+                hints: offer.hints as Record<string, unknown>,
+            })),
+        );
+        if (!preds) return 0;
+        const byId = new Map(pending.map((r) => [r.offer.id, r]));
+        let filled = 0;
+        for (const p of preds) {
+            const r = byId.get(p.id);
+            if (!r) continue;
+            for (const f of ML_FIELDS) {
+                const pred = p.predictions[f];
+                if (!r.values[f] && pred && pred.confidence >= this.ml.minConfidence && ALLOWED[f].includes(pred.value)) {
+                    r.values[f] = pred.value;
+                    r.sources[f] = 'ml';
+                    filled++;
+                }
+            }
+            deriveCategory(r);
+        }
+        return filled;
+    }
+
+    /** Step 3: keyword rules on the product name for anything still unresolved. */
+    applyNameRules(r: Result) {
+        const name = r.offer.name || '';
+        for (const f of ['subcategory', 'gender', 'age', 'color'] as Field[]) {
+            if (r.values[f]) continue;
+            const v = this.matchRules(f, name);
+            if (v) {
+                r.values[f] = v;
+                r.sources[f] = 'rules';
+            }
+        }
+        deriveCategory(r);
     }
 
     private lookup(field: Field, raw?: string): { value: string; source: Source } | null {
@@ -373,18 +432,21 @@ export class ClassifierService {
                 ? 'default'
                 : srcs.includes('gemini') || r.aiTried
                   ? 'gemini'
-                  : srcs.includes('mapping')
+                  : srcs.includes('ml')
+                    ? 'ml'
+                    : srcs.includes('mapping')
                     ? 'mapping'
                     : 'rules';
             const v = r.values;
-            params.push(r.offer.id, v.category, v.subcategory, v.gender, v.age, v.color, source);
+            params.push(r.offer.id, v.category, v.subcategory, v.gender, v.age, v.color, source, JSON.stringify(r.sources));
             const n = params.length;
-            return `($${n - 6}::int, $${n - 5}, $${n - 4}, $${n - 3}, $${n - 2}, $${n - 1}, $${n})`;
+            return `($${n - 7}::int, $${n - 6}, $${n - 5}, $${n - 4}, $${n - 3}, $${n - 2}, $${n - 1}, $${n}::jsonb)`;
         });
         await this.dataSource.query(
             `UPDATE offers o SET category = v.category, subcategory = v.subcategory, gender = v.gender,
-                    age = v.age, color = v.color, "classificationSource" = v.source, "classifiedAt" = now()
-             FROM (VALUES ${tuples.join(',')}) AS v(id, category, subcategory, gender, age, color, source)
+                    age = v.age, color = v.color, "classificationSource" = v.source, "fieldSources" = v.fs,
+                    "classifiedAt" = now()
+             FROM (VALUES ${tuples.join(',')}) AS v(id, category, subcategory, gender, age, color, source, fs)
              WHERE o.id = v.id`,
             params,
         );
@@ -395,3 +457,24 @@ const SYSTEM_PROMPT =
     'You are a product-catalog classifier for a price-comparison site of North Macedonian sports retailers ' +
     '(labels are mostly Macedonian Cyrillic, product names mostly English). ' +
     'Return only values from the allowed enums. Be conservative: prefer NONE over a guess.';
+
+/** Category always follows a concrete subcategory; otherwise keep the label-derived category. */
+function deriveCategory(r: Result) {
+    const sub = r.values.subcategory;
+    if (sub && sub !== OTHER_SUBCATEGORY && SUBCATEGORIES[sub]) {
+        r.values.category = SUBCATEGORIES[sub].category;
+        r.sources.category = r.sources.subcategory;
+    }
+}
+
+/** Fill fields missing in `fresh` (label stage) from `prev` (later stages). */
+function mergeResults(fresh: Result, prev: Result): Result {
+    for (const f of FIELDS) {
+        if (!fresh.values[f] && prev.values[f]) {
+            fresh.values[f] = prev.values[f];
+            fresh.sources[f] = prev.sources[f];
+        }
+    }
+    deriveCategory(fresh);
+    return fresh;
+}
