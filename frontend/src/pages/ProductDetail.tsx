@@ -1,5 +1,4 @@
-﻿import { useMemo } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+﻿import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { FaExternalLinkAlt, FaHeart, FaRegHeart } from 'react-icons/fa';
 import '../styles/ProductDetail.css';
 import { IoArrowBackOutline } from 'react-icons/io5';
@@ -7,7 +6,8 @@ import PriceHistoryChart from '../components/PriceHistoryChart';
 import Spinner from '../components/Spinner';
 import { useUser } from '../hooks/useUser';
 import { useProduct } from '../hooks/useProducts';
-import { useStores, type Store } from '../hooks/useStores';
+import { useStoreLookup } from '../hooks/useStoreLookup';
+import CompareButton from '../components/CompareButton';
 import { useFavoriteStatus } from '../hooks/useFavorites';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, API_BASE_URL } from '../utils/api';
@@ -21,34 +21,11 @@ export default function ProductDetail() {
     const queryClient = useQueryClient();
 
     const { data: product, isLoading: productLoading } = useProduct(id);
-    const { data: stores = [] } = useStores();
     const { data: favoriteStatus } = useFavoriteStatus(id, user);
     const isFavorite = favoriteStatus?.isFavorite || false;
 
-    const storesMap = useMemo(() => {
-        const map: Record<string, Store | undefined> = {};
-        stores.forEach((s) => {
-            map[s.id] = s;
-            map[s.id.toLowerCase()] = s;
-            map[s.name] = s;
-            map[s.name.toLowerCase()] = s;
-        });
-        return map;
-    }, [stores]);
-
-    const getStoreLogo = (storeName: string): string | undefined => {
-        let store = storesMap[storeName] || storesMap[storeName.toLowerCase()];
-
-        if (!store) {
-            store = stores.find(
-                (s) =>
-                    s.name.toLowerCase().includes(storeName.toLowerCase()) ||
-                    storeName.toLowerCase().includes(s.name.toLowerCase())
-            );
-        }
-
-        return store?.logo_url;
-    };
+    const { storesMap, getStore } = useStoreLookup();
+    const getStoreLogo = (storeName: string) => getStore(storeName)?.logo_url;
 
     const toggleFavoriteMutation = useMutation({
         mutationFn: async () => {
@@ -205,6 +182,7 @@ export default function ProductDetail() {
                 <div className="right-column">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '10px' }}>
                         <h1 className="product-title" style={{ margin: 0, flex: 1 }}>{product.name}</h1>
+                        <CompareButton product={{ id: product.id, name: product.name, image: product.image }} variant="detail" />
                         <button
                             onClick={toggleFavorite}
                             disabled={toggleFavoriteMutation.isPending}
