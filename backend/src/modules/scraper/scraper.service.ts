@@ -29,6 +29,9 @@ export interface RunSummary {
 export class ScraperService {
     private readonly log = new Logger(ScraperService.name);
     private running: Promise<RunSummary> | null = null;
+    /** Catalog processing is serialized: interim (during a run) and final passes never overlap. */
+    private processingChain: Promise<unknown> = Promise.resolve();
+    private interimQueued = false;
     lastRun: RunSummary | null = null;
 
     constructor(
@@ -69,6 +72,10 @@ export class ScraperService {
         this.gemini.resetBudget();
         this.log.log('=== Scrape run started ===');
 
+        // Make products visible while the crawl is still running (a full first run takes ~1h).
+        const intervalMs = parseInt(process.env.SCRAPER_PROCESS_INTERVAL_MIN || '10', 10) * 60_000;
+        const timer = setInterval(() => this.processInterim(), intervalMs);
+
         const sites = SITES.filter((s) => s.enabled !== false && (!stores?.length || stores.includes(s.store)));
         const siteLimit = pLimit(parseInt(process.env.SCRAPER_SITE_CONCURRENCY || '3', 10));
 
@@ -82,6 +89,7 @@ export class ScraperService {
                             priceChanges += res.priceChanges;
                         });
                         summary.sites.push({ ...stats, priceChanges });
+                        this.processInterim();
                     } catch (e) {
                         this.log.error(`${site.store} failed: ${(e as Error).message}`, (e as Error).stack);
                         summary.sites.push({ store: site.store, pages: 0, products: 0, failed: 0, durationSec: 0, priceChanges, error: (e as Error).message });
@@ -90,6 +98,7 @@ export class ScraperService {
             ),
         );
 
+        clearInterval(timer);
         try {
             summary.processing = await this.processCatalog();
         } catch (e) {
@@ -103,8 +112,24 @@ export class ScraperService {
         return summary;
     }
 
+    /** Queue a processing pass during a run (at most one waiting at a time). */
+    private processInterim() {
+        if (this.interimQueued) return;
+        this.interimQueued = true;
+        this.processCatalog()
+            .then((r) => this.log.log(`Interim processing: ${JSON.stringify(r.classification)}`))
+            .catch((e) => this.log.error(`Interim processing failed: ${(e as Error).message}`))
+            .finally(() => (this.interimQueued = false));
+    }
+
     /** Classification + clustering + maintenance. Also callable on its own (e.g. after adding a Gemini key). */
-    async processCatalog(opts: { reclassify?: boolean } = {}) {
+    processCatalog(opts: { reclassify?: boolean } = {}) {
+        const next = this.processingChain.then(() => this.processCatalogNow(opts));
+        this.processingChain = next.catch(() => undefined);
+        return next;
+    }
+
+    private async processCatalogNow(opts: { reclassify?: boolean }) {
         if (opts.reclassify) await this.classifier.resetAll();
         const classification = await this.classifier.classifyPending();
         const clustering = await this.clustering.clusterPending();

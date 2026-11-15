@@ -4,7 +4,8 @@ import FiltersPanel from "../components/FiltersPanel";
 import { getMinPrice } from "../utils/pricing";
 import SortBar from "../components/SortBar";
 import type { SortOption } from "../components/SortBar";
-import { FaFilter } from "react-icons/fa";
+import { FaAngleDoubleLeft, FaAngleDoubleRight, FaFilter } from "react-icons/fa";
+import { formatNumber } from "../utils/formatting";
 import Spinner from "../components/Spinner";
 import { useProducts, useFilterOptions } from "../hooks/useProducts";
 import "../styles/ProductList.css";
@@ -177,8 +178,12 @@ export default function ProductList() {
         return Array.from({ length: Math.min(max, totalPages) }, (_, i) => s + i);
     }, [currentPage, totalPages]);
 
-    // Sorting, filtering and pagination happen on the server.
-    const sortedProducts = products;
+    // Sorting, filtering and pagination happen on the server. The server already excludes
+    // products whose image is known to be broken; this catches any that fail in the browser.
+    const [brokenImages, setBrokenImages] = useState<Set<string>>(() => new Set());
+    const markBroken = (id: string) =>
+        setBrokenImages((prev) => (prev.has(id) ? prev : new Set(prev).add(id)));
+    const sortedProducts = products.filter((p) => p.image && !brokenImages.has(p.id));
 
     const hasActiveFilters = useMemo(() => {
         return (
@@ -203,7 +208,7 @@ export default function ProductList() {
                 </button>
 
                 <div className="controls-right">
-                    {!loading && <div className="results-count">{total} производи</div>}
+                    {!loading && <div className="results-count">{formatNumber(total)} производи</div>}
                     <SortBar value={sort} onChange={setSort} />
                 </div>
             </div>
@@ -260,13 +265,14 @@ export default function ProductList() {
                                             alt={p.name}
                                             referrerPolicy="no-referrer"
                                             loading="lazy"
+                                            onError={() => markBroken(p.id)}
                                         />
                                     </div>
 
                                     <div className="product-info">
                                         <h3>{p.name}</h3>
                                         <p className="price">
-                                            Од <span>{mp ? `${mp.toLocaleString()} ден` : "Нема цена"}</span>
+                                            Од <span>{mp ? `${formatNumber(mp)} ден` : "Нема цена"}</span>
                                         </p>
                                         <p className="stores">{sc} продавници</p>
                                     </div>
@@ -279,6 +285,16 @@ export default function ProductList() {
 
             {!loading && sortedProducts.length > 0 && (
                 <div className="pagination">
+                    {currentPage > 1 && (
+                        <button
+                            className="page-btn nav-btn icon-btn"
+                            onClick={() => setCurrentPage(1)}
+                            title="Прва страна"
+                            aria-label="Прва страна">
+                            <FaAngleDoubleLeft />
+                        </button>
+                    )}
+
                     {currentPage > 1 && (
                         <button
                             className="page-btn nav-btn"
@@ -302,6 +318,16 @@ export default function ProductList() {
                             onClick={() => setCurrentPage(currentPage + 1)}
                         >
                             Следна
+                        </button>
+                    )}
+
+                    {currentPage < totalPages && (
+                        <button
+                            className="page-btn nav-btn icon-btn"
+                            onClick={() => setCurrentPage(totalPages)}
+                            title={`Последна страна (${formatNumber(totalPages)})`}
+                            aria-label="Последна страна">
+                            <FaAngleDoubleRight />
                         </button>
                     )}
                 </div>

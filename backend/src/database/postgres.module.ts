@@ -10,6 +10,7 @@ import { Store } from './entities/store.entity';
 import { Favorite } from './entities/favorite.entity';
 import { ProductsOffersV21763100000000 } from './migrations/1763100000000-ProductsOffersV2';
 import { OfferFieldSources1763200000000 } from './migrations/1763200000000-OfferFieldSources';
+import { ProductImageCheck1763300000000 } from './migrations/1763300000000-ProductImageCheck';
 
 /**
  * Schema is managed by migrations (run automatically on startup).
@@ -23,7 +24,7 @@ import { OfferFieldSources1763200000000 } from './migrations/1763200000000-Offer
             url: process.env.DATABASE_URL,
             ssl: process.env.DB_SSL === 'false' ? false : { rejectUnauthorized: false },
             entities: [Product, Offer, PriceHistory, CategoryMapping, User, Store, Favorite],
-            migrations: [ProductsOffersV21763100000000, OfferFieldSources1763200000000],
+            migrations: [ProductsOffersV21763100000000, OfferFieldSources1763200000000, ProductImageCheck1763300000000],
             migrationsRun: true,
             synchronize: process.env.DB_SYNCHRONIZE === 'true',
             extra: {

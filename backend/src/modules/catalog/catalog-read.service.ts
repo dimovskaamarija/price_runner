@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { Product } from '../../database/entities/product.entity';
 import { Store } from '../../database/entities/store.entity';
-import { ACTIVE_OFFER_SQL } from './maintenance.service';
+import { ACTIVE_OFFER_SQL, VISIBLE_PRODUCT_SQL } from './maintenance.service';
 import { ProductDto, ProductFilters } from './product.dto';
 import { GENDERS, SUBCATEGORIES, SUBCATEGORY_NAMES } from './taxonomy';
 
@@ -50,7 +50,7 @@ export class CatalogReadService {
     // ------------------------------------------------------------------ products
 
     async listProducts(page: number, pageSize: number, sort: string, f: ProductFilters) {
-        const qb = this.products.createQueryBuilder('p').where('p.storeCount > 0');
+        const qb = this.products.createQueryBuilder('p').where(VISIBLE_PRODUCT_SQL);
 
         const inFilter = (column: string, values: string[]) => {
             if (values.length) qb.andWhere(`p.${column} IN (:...${column})`, { [column]: values });
@@ -243,7 +243,7 @@ export class CatalogReadService {
     private activeCombos(): Promise<Array<{ category: string | null; subcategory: string | null; gender: string | null; age: string | null }>> {
         return this.cached('combos', () =>
             this.dataSource.query(
-                `SELECT DISTINCT category, subcategory, gender, age FROM products WHERE "storeCount" > 0`,
+                `SELECT DISTINCT category, subcategory, gender, age FROM products p WHERE ${VISIBLE_PRODUCT_SQL}`,
             ),
         );
     }
@@ -251,8 +251,8 @@ export class CatalogReadService {
     private activeBrands(): Promise<Array<{ brand: string; count: number }>> {
         return this.cached('brands', () =>
             this.dataSource.query(
-                `SELECT brand, COUNT(*)::int AS count FROM products
-                 WHERE "storeCount" > 0 AND brand IS NOT NULL AND brand <> ''
+                `SELECT brand, COUNT(*)::int AS count FROM products p
+                 WHERE ${VISIBLE_PRODUCT_SQL} AND brand IS NOT NULL AND brand <> ''
                  GROUP BY brand`,
             ),
         );
@@ -260,7 +260,7 @@ export class CatalogReadService {
 
     private async distinct(column: 'color'): Promise<string[]> {
         const rows = await this.dataSource.query(
-            `SELECT DISTINCT ${column} AS v FROM products WHERE "storeCount" > 0 AND ${column} IS NOT NULL ORDER BY 1`,
+            `SELECT DISTINCT ${column} AS v FROM products p WHERE ${VISIBLE_PRODUCT_SQL} AND ${column} IS NOT NULL ORDER BY 1`,
         );
         return rows.map((r: { v: string }) => r.v);
     }

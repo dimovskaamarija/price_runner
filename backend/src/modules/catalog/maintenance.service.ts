@@ -1,8 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
+import axios from 'axios';
+import pLimit from 'p-limit';
 import { DataSource } from 'typeorm';
 
 export const ACTIVE_WINDOW_HOURS = parseInt(process.env.ACTIVE_WINDOW_HOURS || '48', 10);
 const OFFER_RETENTION_DAYS = parseInt(process.env.OFFER_RETENTION_DAYS || '30', 10);
+const IMAGE_CHECKS_PER_PASS = parseInt(process.env.IMAGE_CHECKS_PER_PASS || '4000', 10);
+
+/** SQL fragment: a product is listed if a store sells it and its image isn't known to be broken. */
+export const VISIBLE_PRODUCT_SQL = `p."storeCount" > 0 AND p.image IS NOT NULL AND p."imageOk" IS NOT FALSE`;
 
 /** SQL fragment: an offer counts as "currently on sale" if it was seen recently and has a price. */
 export const ACTIVE_OFFER_SQL = `o.price IS NOT NULL AND o."lastSeenAt" >= now() - interval '${ACTIVE_WINDOW_HOURS} hours'`;
@@ -19,9 +25,11 @@ export class CatalogMaintenanceService {
     async runAll() {
         const synced = await this.syncProductFields();
         const merged = await this.mergeDuplicateProducts();
+        const imagesChanged = await this.syncImages();
         const aggregates = await this.recomputeAggregates();
+        const images = await this.validateImages();
         const cleanup = await this.cleanup();
-        const result = { synced, merged, aggregates, ...cleanup };
+        const result = { synced, merged, imagesChanged, images, aggregates, ...cleanup };
         this.log.log(`Maintenance: ${JSON.stringify(result)}`);
         return result;
     }
@@ -40,7 +48,6 @@ export class CatalogMaintenanceService {
                 color       = COALESCE(s.color, p.color),
                 brand       = COALESCE(s.brand, p.brand),
                 "modelCode" = COALESCE(p."modelCode", s."modelCode"),
-                image       = COALESCE(p.image, s.image),
                 "updatedAt" = now()
             FROM (
                 SELECT "productId" AS pid,
@@ -50,8 +57,7 @@ export class CatalogMaintenanceService {
                        mode() WITHIN GROUP (ORDER BY age)         AS age,
                        mode() WITHIN GROUP (ORDER BY color)       AS color,
                        mode() WITHIN GROUP (ORDER BY brand)       AS brand,
-                       mode() WITHIN GROUP (ORDER BY "modelCode") AS "modelCode",
-                       max(image)                                 AS image
+                       mode() WITHIN GROUP (ORDER BY "modelCode") AS "modelCode"
                 FROM offers
                 WHERE "productId" IS NOT NULL AND "classifiedAt" IS NOT NULL
                 GROUP BY "productId"
@@ -63,10 +69,58 @@ export class CatalogMaintenanceService {
                 p.age         IS DISTINCT FROM COALESCE(s.age, p.age) OR
                 p.color       IS DISTINCT FROM COALESCE(s.color, p.color) OR
                 p.brand       IS DISTINCT FROM COALESCE(s.brand, p.brand) OR
-                (p."modelCode" IS NULL AND s."modelCode" IS NOT NULL) OR
-                (p.image IS NULL AND s.image IS NOT NULL)
+                (p."modelCode" IS NULL AND s."modelCode" IS NOT NULL)
             )`);
         return n || 0;
+    }
+
+    /**
+     * Keep each product's image if it's still one of its offers' images and not known broken;
+     * otherwise switch to another store's image (and re-check it).
+     */
+    async syncImages(): Promise<number> {
+        const [, n] = await this.dataSource.query(`
+            UPDATE products p SET image = c.new_image, "imageOk" = NULL
+            FROM (
+                SELECT p2.id,
+                       CASE WHEN p2.image = ANY(s.images) AND p2."imageOk" IS NOT FALSE THEN p2.image
+                            ELSE COALESCE((SELECT i FROM unnest(s.images) i WHERE i IS DISTINCT FROM p2.image LIMIT 1), p2.image)
+                       END AS new_image
+                FROM products p2
+                JOIN (
+                    SELECT "productId" AS pid, array_agg(DISTINCT image) FILTER (WHERE image IS NOT NULL) AS images
+                    FROM offers WHERE "productId" IS NOT NULL
+                    GROUP BY "productId"
+                ) s ON s.pid = p2.id
+                WHERE s.images IS NOT NULL
+            ) c
+            WHERE p.id = c.id AND c.new_image IS DISTINCT FROM p.image`);
+        return n || 0;
+    }
+
+    /**
+     * Check image URLs of listed products that haven't been checked yet (fetches only the first
+     * bytes). Broken ones get imageOk = false and disappear from listings until a store provides
+     * a working image. Network errors leave the product unchecked so it's retried next pass.
+     */
+    async validateImages(): Promise<{ checked: number; broken: number }> {
+        const rows: Array<{ id: string; image: string }> = await this.dataSource.query(
+            `SELECT id, image FROM products
+             WHERE image IS NOT NULL AND "imageOk" IS NULL AND "storeCount" > 0
+             LIMIT $1`,
+            [IMAGE_CHECKS_PER_PASS],
+        );
+        if (!rows.length) return { checked: 0, broken: 0 };
+        const limit = pLimit(12);
+        const results = await Promise.all(rows.map((r) => limit(() => checkImage(r.image))));
+        const checked = rows.filter((_, i) => results[i] !== null);
+        if (checked.length) {
+            await this.dataSource.query(
+                `UPDATE products p SET "imageOk" = v.ok FROM unnest($1::varchar[], $2::boolean[]) AS v(id, ok) WHERE p.id = v.id`,
+                [checked.map((r) => r.id), results.filter((r) => r !== null)],
+            );
+        }
+        return { checked: checked.length, broken: results.filter((r) => r === false).length };
     }
 
     /**
@@ -135,5 +189,26 @@ export class CatalogMaintenanceService {
               AND NOT EXISTS (SELECT 1 FROM offers o WHERE o."productId" = p.id)
               AND NOT EXISTS (SELECT 1 FROM favorites f WHERE f."productId" = p.id)`);
         return { staleOffers: staleOffers || 0, orphanProducts: orphanProducts || 0 };
+    }
+}
+
+/** true = loads as an image, false = definitely broken (4xx / not an image), null = couldn't tell. */
+async function checkImage(url: string): Promise<boolean | null> {
+    try {
+        const res = await axios.get(url, {
+            responseType: 'stream',
+            timeout: 10_000,
+            maxRedirects: 5,
+            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PriceRunnerBot/1.0)', Range: 'bytes=0-1023' },
+            validateStatus: () => true,
+        });
+        res.data?.destroy?.();
+        if (res.status === 200 || res.status === 206) {
+            return String(res.headers['content-type'] || '').startsWith('image/');
+        }
+        if (res.status >= 400 && res.status < 500 && res.status !== 429) return false;
+        return null;
+    } catch {
+        return null;
     }
 }
