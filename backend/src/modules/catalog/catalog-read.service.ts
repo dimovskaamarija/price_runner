@@ -149,13 +149,21 @@ export class CatalogReadService {
     // ------------------------------------------------------------------ price history
 
     /**
-     * Daily price series for the last `days` days, forward-filled from the change log
-     * (history only stores rows when a price changes).
+     * Daily price series, forward-filled from the change log (history only stores rows when a
+     * price changes). `days = null` means all time: from the first recorded price (max 3 years).
      */
-    async getPriceHistory(productId: string, days = 30): Promise<Array<{ store: string; price: number; date: string }>> {
+    async getPriceHistory(productId: string, days: number | null = 30): Promise<Array<{ store: string; price: number; date: string }>> {
         const rows: Array<{ store: string; price: number; date: string }> = await this.dataSource.query(
             `WITH o AS (
                  SELECT id, store, "lastSeenAt" FROM offers WHERE "productId" = $1
+             ),
+             start_day AS (
+                 SELECT GREATEST(
+                     current_date - 1095,
+                     CASE WHEN $2::int IS NULL
+                          THEN COALESCE((SELECT min(h.date)::date FROM price_history h JOIN o ON o.id = h."offerId"), current_date)
+                          ELSE current_date - ($2::int - 1) END
+                 ) AS d
              ),
              series AS (
                  SELECT o.store, d::date AS day,
@@ -163,7 +171,7 @@ export class CatalogReadService {
                          WHERE h."offerId" = o.id AND h.date < d + interval '1 day'
                          ORDER BY h.date DESC LIMIT 1) AS price
                  FROM o
-                 CROSS JOIN generate_series(current_date - ($2::int - 1), current_date, interval '1 day') d
+                 CROSS JOIN generate_series((SELECT d FROM start_day), current_date, interval '1 day') d
                  WHERE d::date <= o."lastSeenAt"::date
              )
              SELECT store, MIN(price)::int AS price, to_char(day, 'YYYY-MM-DD') AS date

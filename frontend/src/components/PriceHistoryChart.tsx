@@ -1,10 +1,16 @@
 import { useState, useEffect } from "react";
 import { Line } from "react-chartjs-2";
 import {Chart as ChartJS, CategoryScale, LinearScale, LineElement, PointElement, Tooltip, Legend} from "chart.js";
-import { usePriceHistory } from "../hooks/usePriceHistory";
+import { usePriceHistory, type HistoryRange } from "../hooks/usePriceHistory";
 import type { Store } from "../hooks/useStores";
 
 ChartJS.register(CategoryScale, LinearScale, LineElement, PointElement, Tooltip, Legend);
+
+const RANGES: { value: HistoryRange; label: string }[] = [
+    { value: "1m", label: "Последен месец" },
+    { value: "3m", label: "Последни 3 месеци" },
+    { value: "all", label: "Цело време" },
+];
 
 interface Props {
     productId: string;
@@ -12,7 +18,8 @@ interface Props {
 }
 
 export default function PriceHistoryChart({ productId, storesMap }: Props) {
-    const { data: history = [] } = usePriceHistory(productId);
+    const [range, setRange] = useState<HistoryRange>("1m");
+    const { data: history = [], isFetched } = usePriceHistory(productId, range);
     const [selectedStores, setSelectedStores] = useState<string[]>([]);
 
     useEffect(() => {
@@ -22,7 +29,8 @@ export default function PriceHistoryChart({ productId, storesMap }: Props) {
         }
     }, [history]);
 
-    if (history.length === 0) return null;
+    // Hide the box only for products that have no price history at all.
+    if (isFetched && history.length === 0 && range === "all") return null;
 
     const getStoreData = (storeName: string) => {
         const lower = storeName.toLowerCase();
@@ -51,8 +59,10 @@ export default function PriceHistoryChart({ productId, storesMap }: Props) {
         new Date(date).toLocaleDateString("en-GB", {
             day: "2-digit",
             month: "short",
+            ...(range === "all" ? { year: "2-digit" as const } : {}),
         })
     );
+    const manyPoints = allDates.length > 45;
 
     const priceMap: Record<string, Record<string, number>> = {};
     history.forEach((entry) => {
@@ -76,7 +86,7 @@ export default function PriceHistoryChart({ productId, storesMap }: Props) {
             borderWidth: 2,
             borderColor: color,
             backgroundColor: color + "20",
-            pointRadius: 4,
+            pointRadius: manyPoints ? 0 : 4,
             pointHoverRadius: 6,
             pointBackgroundColor: color,
             pointBorderColor: "#fff",
@@ -87,7 +97,23 @@ export default function PriceHistoryChart({ productId, storesMap }: Props) {
 
     return (
         <div className="history-box">
-            <h3>Историја на цени</h3>
+            <div className="history-header">
+                <h3>Историја на цени</h3>
+                <div className="range-buttons" role="group" aria-label="Период">
+                    {RANGES.map((r) => (
+                        <button
+                            key={r.value}
+                            type="button"
+                            className={`range-toggle ${range === r.value ? "active" : ""}`}
+                            aria-pressed={range === r.value}
+                            onClick={() => setRange(r.value)}>
+                            {r.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {history.length === 0 && <p className="history-empty">Нема промени на цената во овој период.</p>}
 
             <div className="store-buttons">
                 {history.map((h) => h.store).filter((v, i, arr) => arr.indexOf(v) === i).map((store) => {

@@ -61,10 +61,12 @@ export class ProductController {
         }
     }
 
+    /** `?range=1m` (default) | `3m` | `all` */
     @Get(':id/history')
     @Header('Cache-Control', 'public, max-age=600')
-    getHistory(@Param('id') id: string) {
-        return this.catalog.getPriceHistory(id, 30);
+    getHistory(@Param('id') id: string, @Query('range') range = '1m') {
+        const days = range === 'all' ? null : range === '3m' ? 90 : 30;
+        return this.catalog.getPriceHistory(id, days);
     }
 
     @Get(':id')
