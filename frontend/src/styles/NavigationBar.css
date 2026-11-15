@@ -581,12 +581,26 @@
 }
 
 @media (max-width: 600px) {
-    .lang-menu__code,
-    .lang-menu__chevron {
+    .lang-menu .lang-menu__code,
+    .lang-menu .lang-menu__chevron {
         display: none;
     }
 
     .lang-menu__toggle {
         padding: 6px 8px;
     }
+}
+
+/* StableLabel: reserve the width of the longest translation so the nav doesn't shift. */
+.stable-label {
+    display: inline-grid;
+    justify-items: center;
+}
+
+.stable-label > * {
+    grid-area: 1 / 1;
+}
+
+.stable-label__ghost {
+    visibility: hidden;
 }

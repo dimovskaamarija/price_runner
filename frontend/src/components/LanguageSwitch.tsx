@@ -40,7 +40,14 @@ export default function LanguageSwitch() {
                 title={t("nav.language")}
                 onClick={() => setOpen((o) => !o)}>
                 <IoGlobeOutline className="lang-menu__globe" aria-hidden="true" />
-                <span className="lang-menu__code">{OPTIONS[lang].short}</span>
+                {/* Both codes share one cell so the button keeps the same width in every language. */}
+                <span className="lang-menu__code stable-label" aria-hidden="true">
+                    {LANGUAGES.map((l) => (
+                        <span key={l} className={l === lang ? undefined : "stable-label__ghost"}>
+                            {OPTIONS[l].short}
+                        </span>
+                    ))}
+                </span>
                 <IoChevronDown className={`lang-menu__chevron ${open ? "is-open" : ""}`} aria-hidden="true" />
             </button>
 

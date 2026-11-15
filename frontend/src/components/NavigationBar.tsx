@@ -9,6 +9,7 @@ import { capitalizeBrand } from "../utils/formatting";
 import { AUTH_API_BASE_URL, tokenManager } from "../utils/api";
 import { useI18n } from "../i18n";
 import LanguageSwitch from "./LanguageSwitch";
+import StableLabel from "./StableLabel";
 
 interface Props {
     user: User | null;
@@ -82,11 +83,11 @@ export default function NavigationBar({ user }: Props) {
                     {!user && (
                         <>
                             <button className="nav-login" onClick={() => (window.location.href = LOGIN_URL)}>
-                                {t("nav.login")}
+                                <StableLabel k="nav.login" />
                             </button>
 
                             <button className="nav-register" onClick={() => (window.location.href = SIGNUP_URL)}>
-                                {t("nav.register")}
+                                <StableLabel k="nav.register" />
                             </button>
                         </>
                     )}
@@ -101,7 +102,7 @@ export default function NavigationBar({ user }: Props) {
                             tokenManager.remove();
                             // Reload page to clear user state
                             window.location.href = '/';
-                            }}>{t("nav.logout")}</button>
+                            }}><StableLabel k="nav.logout" /></button>
 
                         </>
                     )}
@@ -111,28 +112,28 @@ export default function NavigationBar({ user }: Props) {
             <div className="nav-wrapper-2">
                 <div className="nav-elements">
                     <Link to={go({ sort: "newest" })} onClick={clickClose}>
-                        {t("nav.new")}
+                        <StableLabel k="nav.new" />
                     </Link>
 
                     <span onMouseEnter={() => openMenu("men")} onMouseLeave={closeMenu}>
-                        {t("nav.men")}
+                        <StableLabel k="nav.men" />
                     </span>
 
                     <span onMouseEnter={() => openMenu("women")} onMouseLeave={closeMenu}>
-                        {t("nav.women")}
+                        <StableLabel k="nav.women" />
                     </span>
 
                     <span onMouseEnter={() => openMenu("kids")} onMouseLeave={closeMenu}>
-                        {t("nav.kids")}
+                        <StableLabel k="nav.kids" />
                     </span>
 
                     <span onMouseEnter={() => openMenu("equipment")} onMouseLeave={closeMenu}>
-                        {t("nav.equipment")}
+                        <StableLabel k="nav.equipment" />
                     </span>
 
                     <span onMouseEnter={() => openMenu("brands")} onMouseLeave={closeMenu}>
                         <Link to="/brands" onClick={clickClose}>
-                            {t("nav.brands")}
+                            <StableLabel k="nav.brands" />
                         </Link>
                     </span>
                 </div>
