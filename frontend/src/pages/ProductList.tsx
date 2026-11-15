@@ -4,7 +4,8 @@ import FiltersPanel from "../components/FiltersPanel";
 import { getMinPrice } from "../utils/pricing";
 import SortBar from "../components/SortBar";
 import type { SortOption } from "../components/SortBar";
-import { FaAngleDoubleLeft, FaAngleDoubleRight, FaFilter } from "react-icons/fa";
+import { FaFilter } from "react-icons/fa";
+import { MdFirstPage, MdLastPage } from "react-icons/md";
 import { formatNumber } from "../utils/formatting";
 import Spinner from "../components/Spinner";
 import { useProducts, useFilterOptions } from "../hooks/useProducts";
@@ -291,7 +292,7 @@ export default function ProductList() {
                             onClick={() => setCurrentPage(1)}
                             title="Прва страна"
                             aria-label="Прва страна">
-                            <FaAngleDoubleLeft />
+                            <MdFirstPage size={18} />
                         </button>
                     )}
 
@@ -327,7 +328,7 @@ export default function ProductList() {
                             onClick={() => setCurrentPage(totalPages)}
                             title={`Последна страна (${formatNumber(totalPages)})`}
                             aria-label="Последна страна">
-                            <FaAngleDoubleRight />
+                            <MdLastPage size={18} />
                         </button>
                     )}
                 </div>
