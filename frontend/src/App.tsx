@@ -4,11 +4,13 @@ import NavigationBar from "./components/NavigationBar";
 import { useUser } from "./hooks/useUser";
 import AuthCallback from "./components/AuthCallback";
 import Spinner from "./components/Spinner";
+import CompareTray from "./components/CompareTray";
 
 const ProductList = lazy(() => import("./pages/ProductList"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const Brands = lazy(() => import("./pages/Brands"));
 const Favorites = lazy(() => import("./pages/Favorites"));
+const Compare = lazy(() => import("./pages/Compare"));
 
 function App() {
     const { user } = useUser();
@@ -23,10 +25,13 @@ function App() {
                     <Route path="/products" element={<ProductList />} />
                     <Route path="/brands" element={<Brands />} />
                     <Route path="/favorites" element={<Favorites />} />
+                    <Route path="/compare" element={<Compare />} />
                     <Route path="/callback" element={<AuthCallback />} />
                     <Route path="/product/:id" element={<ProductDetail />} />
                 </Routes>
             </Suspense>
+
+            <CompareTray />
         </div>
     );
 }

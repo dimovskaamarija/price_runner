@@ -3,6 +3,7 @@ import { CatalogReadService } from '../catalog/catalog-read.service';
 import { ProductFilters } from '../catalog/product.dto';
 
 const PAGE_SIZE = 24;
+const MAX_COMPARE = 4;
 const list = (v?: string) => (v ? v.split(',').map((s) => s.trim()).filter(Boolean) : []);
 
 @Controller('products')
@@ -25,6 +26,22 @@ export class ProductController {
     @Header('Cache-Control', 'public, max-age=3600')
     getStores() {
         return this.catalog.getStores();
+    }
+
+    /** Side-by-side comparison: up to 4 products + their lowest-price history (90 days). */
+    @Get('compare')
+    @Header('Cache-Control', 'public, max-age=60')
+    async compare(@Query('ids') ids?: string) {
+        const unique = [...new Set(list(ids))];
+        if (!unique.length) throw new HttpException('ids is required', HttpStatus.BAD_REQUEST);
+        if (unique.length > MAX_COMPARE) {
+            throw new HttpException(`You can compare at most ${MAX_COMPARE} products`, HttpStatus.BAD_REQUEST);
+        }
+        const [products, history] = await Promise.all([
+            this.catalog.getProductsByIds(unique),
+            this.catalog.getLowestPriceSeries(unique, 90),
+        ]);
+        return { products, history };
     }
 
     @Get()

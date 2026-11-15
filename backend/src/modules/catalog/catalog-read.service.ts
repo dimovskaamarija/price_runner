@@ -183,6 +183,30 @@ export class CatalogReadService {
         return rows;
     }
 
+    /** Lowest price across stores per product per day (forward-filled), for comparing products. */
+    async getLowestPriceSeries(productIds: string[], days = 90): Promise<Array<{ productId: string; price: number; date: string }>> {
+        if (!productIds.length) return [];
+        return this.dataSource.query(
+            `WITH o AS (
+                 SELECT id, "productId", "lastSeenAt" FROM offers WHERE "productId" = ANY($1)
+             ),
+             series AS (
+                 SELECT o."productId", d::date AS day,
+                        (SELECT h.price FROM price_history h
+                         WHERE h."offerId" = o.id AND h.date < d + interval '1 day'
+                         ORDER BY h.date DESC LIMIT 1) AS price
+                 FROM o
+                 CROSS JOIN generate_series(current_date - ($2::int - 1), current_date, interval '1 day') d
+                 WHERE d::date <= o."lastSeenAt"::date
+             )
+             SELECT "productId", MIN(price)::int AS price, to_char(day, 'YYYY-MM-DD') AS date
+             FROM series WHERE price IS NOT NULL
+             GROUP BY "productId", day
+             ORDER BY day`,
+            [productIds, days],
+        );
+    }
+
     // ------------------------------------------------------------------ navigation / filters
 
     async getFilterOptions() {
