@@ -99,18 +99,6 @@ export default function PriceHistoryChart({ productId, storesMap }: Props) {
         <div className="history-box">
             <div className="history-header">
                 <h3>Историја на цени</h3>
-                <div className="range-buttons" role="group" aria-label="Период">
-                    {RANGES.map((r) => (
-                        <button
-                            key={r.value}
-                            type="button"
-                            className={`range-toggle ${range === r.value ? "active" : ""}`}
-                            aria-pressed={range === r.value}
-                            onClick={() => setRange(r.value)}>
-                            {r.label}
-                        </button>
-                    ))}
-                </div>
             </div>
 
             {history.length === 0 && <p className="history-empty">Нема промени на цената во овој период.</p>}
@@ -162,6 +150,19 @@ export default function PriceHistoryChart({ productId, storesMap }: Props) {
                     },
                 }}
             />
+
+            <div className="range-buttons" role="group" aria-label="Период">
+                {RANGES.map((r) => (
+                    <button
+                        key={r.value}
+                        type="button"
+                        className={`range-toggle ${range === r.value ? "active" : ""}`}
+                        aria-pressed={range === r.value}
+                        onClick={() => setRange(r.value)}>
+                        {r.label}
+                    </button>
+                ))}
+            </div>
         </div>
     );
 }
