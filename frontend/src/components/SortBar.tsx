@@ -1,4 +1,5 @@
 import "../styles/ProductList.css";
+import { useI18n } from "../i18n";
 
 export type SortOption =
     | "price-asc"
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export default function SortBar({ value, onChange }: Props) {
+    const { t } = useI18n();
     return (
         <label className="sort-wrapper">
             <select
@@ -22,12 +24,12 @@ export default function SortBar({ value, onChange }: Props) {
                 value={value}
                 onChange={(e) => onChange(e.target.value as SortOption)}
             >
-                <option value="price-asc">Цена: од ниска кон висока</option>
-                <option value="price-desc">Цена: од висока кон ниска</option>
-                <option value="newest">Најнови</option>
-                <option value="available-desc">Најдостапни</option>
-                <option value="name-asc">Име: растечки</option>
-                <option value="name-desc">Име: опаѓачки</option>
+                <option value="price-asc">{t("sort.priceAsc")}</option>
+                <option value="price-desc">{t("sort.priceDesc")}</option>
+                <option value="newest">{t("sort.newest")}</option>
+                <option value="available-desc">{t("sort.available")}</option>
+                <option value="name-asc">{t("sort.nameAsc")}</option>
+                <option value="name-desc">{t("sort.nameDesc")}</option>
             </select>
         </label>
     );

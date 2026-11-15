@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import "../styles/FiltersPanel.css";
 import { IoMdArrowDropright, IoMdArrowDropdown } from "react-icons/io";
 import { capitalizeBrand, capitalizeFirstLetter } from "../utils/formatting";
+import { useI18n } from "../i18n";
 
 export type Filters = {
     category: string[];
@@ -31,12 +32,17 @@ interface Props {
 export default function FiltersPanel({ isOpen, onClose, filters, setFilters, filterOptions}: Props) {
     const [temp, setTemp] = useState(filters);
     const [openSection, setOpenSection] = useState<string | null>(null);
+    const { t, tv } = useI18n();
 
+    // Values stay Macedonian (they're API filter values); only the labels are translated.
     const formattedFilterOptions = useMemo(() => ({
-        ...filterOptions,
+        categories: filterOptions.categories.map((v) => tv(v)),
+        subcategories: filterOptions.subcategories.map((v) => tv(v)),
         brands: filterOptions.brands.map(b => capitalizeBrand(b)),
-        colors: filterOptions.colors.map(c => capitalizeFirstLetter(c)),
-    }), [filterOptions]);
+        ages: filterOptions.ages.map((v) => tv(v)),
+        genders: filterOptions.genders.map((v) => tv(v)),
+        colors: filterOptions.colors.map(c => tv(capitalizeFirstLetter(c))),
+    }), [filterOptions, tv]);
 
     useEffect(() => {
         if (isOpen) setTemp(filters);
@@ -110,20 +116,20 @@ export default function FiltersPanel({ isOpen, onClose, filters, setFilters, fil
         <div className={`filters-overlay ${isOpen ? "open" : ""}`} onClick={onClose}>
             <div className="filters-panel" onClick={(e) => e.stopPropagation()}>
                 <div className="filters-header">
-                    <h3>Филтри</h3>
+                    <h3>{t("filters.title")}</h3>
                     <button className="close-btn" onClick={onClose}>✕</button>
                 </div>
 
-                {block("category", "Категорија", filterOptions.categories)}
-                {block("subcategory", "Поткатегорија", filterOptions.subcategories)}
-                {block("brand", "Бренд", filterOptions.brands, formattedFilterOptions.brands)}
-                {block("age", "Возраст", filterOptions.ages)}
-                {block("gender", "Пол", filterOptions.genders)}
-                {block("color", "Боја", filterOptions.colors, formattedFilterOptions.colors)}
+                {block("category", t("specs.category"), filterOptions.categories, formattedFilterOptions.categories)}
+                {block("subcategory", t("specs.subcategory"), filterOptions.subcategories, formattedFilterOptions.subcategories)}
+                {block("brand", t("specs.brand"), filterOptions.brands, formattedFilterOptions.brands)}
+                {block("age", t("specs.age"), filterOptions.ages, formattedFilterOptions.ages)}
+                {block("gender", t("specs.gender"), filterOptions.genders, formattedFilterOptions.genders)}
+                {block("color", t("specs.color"), filterOptions.colors, formattedFilterOptions.colors)}
 
                 <div className="filters-section">
                     <h4>
-                        Цена
+                        {t("filters.price")}
                         <span className="arrow"></span>
                     </h4>
                         <div className="price-slider">
@@ -135,15 +141,15 @@ export default function FiltersPanel({ isOpen, onClose, filters, setFilters, fil
                                 style={{left: `${(temp.price[0] / 20000) * 100}%`, right: `${100 - (temp.price[1] / 20000) * 100}%`}}/>
 
                             <div className="range-values">
-                                <span>{temp.price[0]} ден</span>
-                                <span>{temp.price[1]} ден</span>
+                                <span>{temp.price[0]} {t("common.currency")}</span>
+                                <span>{temp.price[1]} {t("common.currency")}</span>
                             </div>
                         </div>
                 </div>
 
                 <div className="filters-actions">
-                    <button className="reset-btn same-size" onClick={reset}>Ресетирај</button>
-                    <button className="apply-btn same-size" onClick={apply}>Примени</button>
+                    <button className="reset-btn same-size" onClick={reset}>{t("filters.reset")}</button>
+                    <button className="apply-btn same-size" onClick={apply}>{t("filters.apply")}</button>
                 </div>
             </div>
         </div>

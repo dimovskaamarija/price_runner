@@ -499,3 +499,37 @@
         max-width: 100%;
     }
 }
+
+/* Language switch (МК | EN) */
+.lang-switch {
+    display: inline-flex;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.lang-switch__btn {
+    padding: 6px 10px;
+    min-height: 0;
+    border: none;
+    border-radius: 0;
+    background: #fff;
+    color: #555;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.lang-switch__btn + .lang-switch__btn {
+    border-left: 1px solid #ddd;
+}
+
+.lang-switch__btn.is-active {
+    background: #0c0f1d;
+    color: #fff;
+}
+
+.lang-switch__btn:hover:not(.is-active) {
+    background: #f2f2f2;
+}

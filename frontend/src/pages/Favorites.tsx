@@ -4,10 +4,12 @@ import { useUser } from '../hooks/useUser';
 import Spinner from '../components/Spinner';
 import { useFavorites } from '../hooks/useFavorites';
 import '../styles/Favorites.css';
+import { useI18n } from '../i18n';
 
 export default function Favorites() {
     const { user } = useUser();
     const navigate = useNavigate();
+    const { t, price } = useI18n();
     const { data: products = [], isLoading: loading, removeFavorite } = useFavorites(user);
 
     const getMinPrice = (priceMap?: Record<string, number | null>): number | null => {
@@ -23,14 +25,14 @@ export default function Favorites() {
     return (
         <div className="favorites-container">
             <div className="favorites-content">
-                <h1 className="favorites-title">Омилени производи</h1>
+                <h1 className="favorites-title">{t("favorites.title")}</h1>
 
                 {products.length === 0 ? (
                     <div className="favorites-empty">
                         <FaHeart className="empty-heart-icon" />
-                        <p>Немате омилени производи</p>
+                        <p>{t("favorites.empty")}</p>
                         <button className="browse-button" onClick={() => navigate('/products')}>
-                            Прегледај производи
+                            {t("favorites.browse")}
                         </button>
                     </div>
                 ) : (
@@ -49,7 +51,7 @@ export default function Favorites() {
                                                 className="favorite-image"
                                                 loading="lazy"/>
                                         ) : (
-                                            <div className="favorite-image-placeholder">Нема слика</div>
+                                            <div className="favorite-image-placeholder">{t("favorites.noImage")}</div>
                                         )}
                                     </div>
                                     <div className="favorite-info">
@@ -60,14 +62,14 @@ export default function Favorites() {
                                         </h3>
                                         {minPrice && (
                                             <p className="favorite-price">
-                                                {minPrice.toLocaleString()} ден
+                                                {price(minPrice)}
                                             </p>
                                         )}
                                         <button
                                             className="remove-favorite-btn"
                                             onClick={() => removeFavorite(product.id)}
-                                            title="Отстрани од омилени">
-                                            <FaTrash /> Отстрани
+                                            title={t("product.removeFavorite")}>
+                                            <FaTrash /> {t("common.remove")}
                                         </button>
                                     </div>
                                 </div>

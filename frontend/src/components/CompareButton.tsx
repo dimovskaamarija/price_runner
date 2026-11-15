@@ -1,6 +1,7 @@
 import { MdCompareArrows } from "react-icons/md";
 import { MAX_COMPARE, useCompare, type CompareItem } from "../context/compare";
 import "../styles/Compare.css";
+import { useI18n } from "../i18n";
 
 interface Props {
     product: CompareItem;
@@ -9,14 +10,11 @@ interface Props {
 
 export default function CompareButton({ product, variant = "detail" }: Props) {
     const { has, toggle, isFull } = useCompare();
+    const { t } = useI18n();
     const selected = has(product.id);
     const disabled = !selected && isFull;
 
-    const title = selected
-        ? "Отстрани од споредба"
-        : disabled
-          ? `Можете да споредите најмногу ${MAX_COMPARE} производи`
-          : "Додај во споредба";
+    const title = selected ? t("compare.removeFrom") : disabled ? t("compare.full", { max: MAX_COMPARE }) : t("compare.add");
 
     return (
         <button
@@ -30,7 +28,7 @@ export default function CompareButton({ product, variant = "detail" }: Props) {
                 toggle(product);
             }}>
             <MdCompareArrows aria-hidden="true" />
-            <span>{selected ? "Во споредба" : "Спореди"}</span>
+            <span>{selected ? t("compare.selected") : t("compare.button")}</span>
         </button>
     );
 }
