@@ -1,4 +1,6 @@
-* {
+/* Scoped to the panel: a global "* { color: black }" here used to override inherited text
+   colours on the whole site (e.g. white text inside dark buttons). */
+.filters-panel {
     color: black;
 }
 
