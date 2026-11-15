@@ -42,3 +42,9 @@ export function openStatus(hours: WeeklyHours | null, date = new Date()): OpenSt
 
 export const directionsUrl = (lat: number, lng: number) =>
     `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+
+/** "ул. X, Скопје" + "Скопје" -> "ул. X, Скопје" (don't repeat the city). */
+export function formatAddress(address: string | null, city: string | null): string {
+    if (address && city && address.toLowerCase().includes(city.toLowerCase())) return address;
+    return [address, city].filter(Boolean).join(", ");
+}

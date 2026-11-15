@@ -8,6 +8,7 @@ import { useUser } from '../hooks/useUser';
 import { useProduct } from '../hooks/useProducts';
 import { useStoreLookup } from '../hooks/useStoreLookup';
 import CompareButton from '../components/CompareButton';
+import StoreAvailability from '../components/StoreAvailability';
 import { useI18n } from '../i18n';
 import { useFavoriteStatus } from '../hooks/useFavorites';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -179,6 +180,8 @@ export default function ProductDetail() {
                             </table>
                         </div>
                     </div>
+
+                    <StoreAvailability productId={product.id} />
                 </div>
 
                 <div className="right-column">
