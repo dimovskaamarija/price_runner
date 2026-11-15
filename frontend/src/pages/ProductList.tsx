@@ -8,7 +8,6 @@ import { FaFilter } from "react-icons/fa";
 import { MdFirstPage, MdLastPage } from "react-icons/md";
 import { formatNumber } from "../utils/formatting";
 import Spinner from "../components/Spinner";
-import CompareButton from "../components/CompareButton";
 import { useProducts, useFilterOptions } from "../hooks/useProducts";
 import "../styles/ProductList.css";
 
@@ -257,7 +256,6 @@ export default function ProductList() {
 
                         return (
                             <div className="product-card" key={p.id}>
-                                <CompareButton product={{ id: p.id, name: p.name, image: p.image }} />
                                 <Link 
                                     to={`/product/${p.id}`} 
                                     state={{ from: location.pathname + location.search }}
