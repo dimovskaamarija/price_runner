@@ -136,6 +136,10 @@ export default function NavigationBar({ user }: Props) {
                             <StableLabel k="nav.brands" />
                         </Link>
                     </span>
+
+                    <Link to="/stores" onClick={clickClose} onMouseEnter={clickClose}>
+                        <StableLabel k="nav.stores" />
+                    </Link>
                 </div>
             </div>
 

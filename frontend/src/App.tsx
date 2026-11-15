@@ -11,6 +11,7 @@ const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const Brands = lazy(() => import("./pages/Brands"));
 const Favorites = lazy(() => import("./pages/Favorites"));
 const Compare = lazy(() => import("./pages/Compare"));
+const StoreMap = lazy(() => import("./pages/StoreMap"));
 
 function App() {
     const { user } = useUser();
@@ -26,6 +27,7 @@ function App() {
                     <Route path="/brands" element={<Brands />} />
                     <Route path="/favorites" element={<Favorites />} />
                     <Route path="/compare" element={<Compare />} />
+                    <Route path="/stores" element={<StoreMap />} />
                     <Route path="/callback" element={<AuthCallback />} />
                     <Route path="/product/:id" element={<ProductDetail />} />
                 </Routes>
