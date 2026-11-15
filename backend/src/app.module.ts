@@ -4,7 +4,6 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { ScraperModule } from './modules/scraper/scraper.module';
 import { PostgresModule } from './database/postgres.module';
 import { ProductModule } from './modules/product/product.module';
-import { PriceHistoryModule } from './modules/price-history/price-history.module';
 import { FavoritesModule } from './modules/favorites/favorites.module';
 import { AppController } from './app.controller';
 
@@ -18,7 +17,6 @@ import { AppController } from './app.controller';
         PostgresModule,
         ScraperModule,
         ProductModule,
-        PriceHistoryModule,
         FavoritesModule,
     ],
     controllers: [AppController],

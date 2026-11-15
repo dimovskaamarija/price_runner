@@ -21,3 +21,8 @@ export function capitalizeFirstLetter(str: string): string {
     if (!str) return str;
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
+
+/** 15566 -> "15 566" (non-breaking space as thousands separator, so it never wraps). */
+export function formatNumber(n: number): string {
+    return Math.round(n).toLocaleString('en-US').replace(/,/g, ' ');
+}

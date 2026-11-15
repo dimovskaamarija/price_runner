@@ -355,3 +355,12 @@
     background: #0055cc;
 }
 
+
+/* First / last page arrows */
+.page-btn.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 10px;
+    line-height: 1;
+}
