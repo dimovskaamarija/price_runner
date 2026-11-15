@@ -500,36 +500,93 @@
     }
 }
 
-/* Language switch (МК | EN) */
-.lang-switch {
-    display: inline-flex;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    overflow: hidden;
+/* Language menu: globe button + dropdown */
+.lang-menu {
+    position: relative;
     flex-shrink: 0;
 }
 
-.lang-switch__btn {
+.lang-menu__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     padding: 6px 10px;
     min-height: 0;
-    border: none;
-    border-radius: 0;
+    border: 1px solid #ddd;
+    border-radius: 10px;
     background: #fff;
-    color: #555;
-    font-size: 12px;
+    color: #222;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
 }
 
-.lang-switch__btn + .lang-switch__btn {
-    border-left: 1px solid #ddd;
-}
-
-.lang-switch__btn.is-active {
-    background: #0c0f1d;
-    color: #fff;
-}
-
-.lang-switch__btn:hover:not(.is-active) {
+.lang-menu__toggle:hover,
+.lang-menu__toggle[aria-expanded="true"] {
     background: #f2f2f2;
+    border-color: #ccc;
+}
+
+.lang-menu__globe {
+    font-size: 18px;
+}
+
+.lang-menu__chevron {
+    font-size: 12px;
+    transition: transform 0.2s;
+}
+
+.lang-menu__chevron.is-open {
+    transform: rotate(180deg);
+}
+
+.lang-menu__list {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 1000;
+    min-width: 170px;
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.lang-menu__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 8px 10px;
+    min-height: 0;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #222;
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.lang-menu__item:hover {
+    background: #f2f2f2;
+}
+
+.lang-menu__item.is-active {
+    font-weight: 600;
+    color: #2563eb;
+}
+
+@media (max-width: 600px) {
+    .lang-menu__code,
+    .lang-menu__chevron {
+        display: none;
+    }
+
+    .lang-menu__toggle {
+        padding: 6px 8px;
+    }
 }
