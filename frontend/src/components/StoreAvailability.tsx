@@ -10,6 +10,7 @@ import { useStoreLookup } from "../hooks/useStoreLookup";
 import { chainColor, type StoreLocation } from "../hooks/useStoreLocations";
 import { directionsUrl, distanceKm, formatAddress } from "../utils/geo";
 import OpenStatusBadge from "./OpenStatusBadge";
+import SizeGuide from "./SizeGuide";
 import "../styles/StoreMap.css";
 import "../styles/Availability.css";
 
@@ -130,7 +131,13 @@ export default function StoreAvailability({ productId }: { productId: string }) 
                 <>
                     {data && data.sizes.length === 0 && <p className="availability-intro">{t("availability.noSizes")}</p>}
 
-                    {groups.length > 0 && <div className="availability-label">{t("availability.pickSize")}</div>}
+                    {groups.length > 0 && (
+                        <div className="availability-label">
+                            {t("availability.pickSize")}
+                            {/* Only shoe sizes need converting between systems. */}
+                            {groups.some(([g]) => g === "groupEU" || g === "groupUS") && <SizeGuide selected={size} />}
+                        </div>
+                    )}
                     {groups.map(([group, sizes]) => (
                         <div key={group} className="availability-group">
                             {groups.length > 1 && <span className="availability-group__name">{t(`availability.${group}`)}</span>}

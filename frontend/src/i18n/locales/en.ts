@@ -145,6 +145,9 @@ export const en: Translation = {
         nearest: "Sort by distance",
         disclaimer: "Stock is checked directly with the stores and can change. Call before you go.",
         allStores: "All stores on the map",
+        sizeGuide: "Size chart",
+        footLength: "Foot (cm)",
+        sizeGuideNote: "Standard men's/unisex sneaker chart. Some brands differ by half a size, and women's US sizes are 1.5 higher (women's US 8 = men's US 6.5).",
     },
     compare: {
         add: "Add to compare",

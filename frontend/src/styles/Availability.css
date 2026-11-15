@@ -162,3 +162,90 @@
         max-height: none;
     }
 }
+
+/* Size guide: ⓘ with a US / UK / EU / cm table on hover or tap */
+.availability-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.size-guide {
+    position: relative;
+    display: inline-flex;
+}
+
+.size-guide__toggle {
+    display: inline-flex;
+    align-items: center;
+    padding: 0;
+    min-height: 0;
+    border: none;
+    background: none;
+    color: #2563eb;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.size-guide__panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: -10px;
+    z-index: 1100; /* above the Leaflet map */
+    width: 300px;
+    padding: 12px 14px;
+    background: #fff;
+    color: #222;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    font-weight: 400;
+}
+
+.size-guide__title {
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.size-guide__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    text-align: center;
+}
+
+.size-guide__table th {
+    padding: 4px 6px;
+    background: #f5f7fb;
+    color: #555;
+    font-weight: 600;
+}
+
+.size-guide__table td {
+    padding: 3px 6px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.size-guide__table tr.is-selected td {
+    background: #2563eb;
+    color: #fff;
+    font-weight: 600;
+}
+
+.size-guide__note {
+    margin: 8px 0 0;
+    font-size: 11px;
+    color: #777;
+    line-height: 1.4;
+}
+
+@media (max-width: 600px) {
+    .size-guide__panel {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: calc(100vw - 48px);
+        max-width: 340px;
+    }
+}
