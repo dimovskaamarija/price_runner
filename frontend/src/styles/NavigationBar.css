@@ -170,9 +170,9 @@
     font-size: 17px;
     font-weight: 500;
     box-sizing: border-box;
-    justify-content: flex-start;
-    /* Desktop offset (your original) */
-    padding-left: 300px;
+    /* Centred (instead of a fixed 300px offset) so 7 items fit and stay balanced. */
+    justify-content: center;
+    white-space: nowrap;
 }
 
     .nav-elements a,
@@ -324,9 +324,8 @@
 /* <= 1200px */
 @media (max-width: 1200px) {
     .nav-elements {
-        gap: 40px;
+        gap: 36px;
         font-size: 15px;
-        padding-left: 180px; /* soften the desktop offset */
     }
 
     .submenu-columns,
@@ -360,6 +359,7 @@
         padding: 12px 20px;
         overflow-x: auto;
         padding-left: 20px; /* IMPORTANT: remove 300px */
+        justify-content: flex-start; /* centring + horizontal scroll would hide the first items */
         -webkit-overflow-scrolling: touch;
         white-space: nowrap;
     }
@@ -603,4 +603,10 @@
 
 .stable-label__ghost {
     visibility: hidden;
+}
+
+/* `.nav-elements span` pads every span in the menu; the label's inner spans must not add height. */
+.nav-elements .stable-label,
+.nav-elements .stable-label > * {
+    padding: 0;
 }
