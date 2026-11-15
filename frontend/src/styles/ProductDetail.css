@@ -394,8 +394,10 @@
 
 .range-buttons {
     display: flex;
+    justify-content: center;
     gap: 8px;
     flex-wrap: wrap;
+    margin-top: 16px;
 }
 
 .range-toggle {
