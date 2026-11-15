@@ -7,6 +7,9 @@ import type { User } from "../types/user";
 import { useNavData } from "../hooks/useNavData";
 import { capitalizeBrand } from "../utils/formatting";
 import { AUTH_API_BASE_URL, tokenManager } from "../utils/api";
+import { useI18n } from "../i18n";
+import LanguageSwitch from "./LanguageSwitch";
+import StableLabel from "./StableLabel";
 
 interface Props {
     user: User | null;
@@ -18,6 +21,7 @@ export default function NavigationBar({ user }: Props) {
     const { data: navData } = useNavData();
     const timeoutRef = useRef<number | null>(null);
     const navigate = useNavigate();
+    const { t, tv } = useI18n();
 
     const submitSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -61,7 +65,7 @@ export default function NavigationBar({ user }: Props) {
 
                 <form className="nav-search-form" onSubmit={submitSearch}>
                     <FaSearch className="nav-search-icon" />
-                    <input type="text" placeholder="Пребарувај производи..." value={query}
+                    <input type="text" placeholder={t("nav.searchPlaceholder")} value={query}
                         onChange={(e) => {
                             const v = e.target.value;
                             setQuery(v);
@@ -70,18 +74,20 @@ export default function NavigationBar({ user }: Props) {
                 </form>
 
                 <div className="nav-right">
-                    <button className="nav-favorites" onClick={() => navigate('/favorites')} title="Омилени производи">
+                    <LanguageSwitch />
+
+                    <button className="nav-favorites" onClick={() => navigate('/favorites')} title={t("nav.favorites")}>
                         <FaHeart />
                     </button>
 
                     {!user && (
                         <>
                             <button className="nav-login" onClick={() => (window.location.href = LOGIN_URL)}>
-                                Најава
+                                <StableLabel k="nav.login" />
                             </button>
 
                             <button className="nav-register" onClick={() => (window.location.href = SIGNUP_URL)}>
-                                Регистрација
+                                <StableLabel k="nav.register" />
                             </button>
                         </>
                     )}
@@ -96,7 +102,7 @@ export default function NavigationBar({ user }: Props) {
                             tokenManager.remove();
                             // Reload page to clear user state
                             window.location.href = '/';
-                            }}>Одјава</button>
+                            }}><StableLabel k="nav.logout" /></button>
 
                         </>
                     )}
@@ -106,28 +112,28 @@ export default function NavigationBar({ user }: Props) {
             <div className="nav-wrapper-2">
                 <div className="nav-elements">
                     <Link to={go({ sort: "newest" })} onClick={clickClose}>
-                        НОВО
+                        <StableLabel k="nav.new" />
                     </Link>
 
                     <span onMouseEnter={() => openMenu("men")} onMouseLeave={closeMenu}>
-                        МАЖИ
+                        <StableLabel k="nav.men" />
                     </span>
 
                     <span onMouseEnter={() => openMenu("women")} onMouseLeave={closeMenu}>
-                        ЖЕНИ
+                        <StableLabel k="nav.women" />
                     </span>
 
                     <span onMouseEnter={() => openMenu("kids")} onMouseLeave={closeMenu}>
-                        ДЕЦА
+                        <StableLabel k="nav.kids" />
                     </span>
 
                     <span onMouseEnter={() => openMenu("equipment")} onMouseLeave={closeMenu}>
-                        ОПРЕМА
+                        <StableLabel k="nav.equipment" />
                     </span>
 
                     <span onMouseEnter={() => openMenu("brands")} onMouseLeave={closeMenu}>
                         <Link to="/brands" onClick={clickClose}>
-                            БРЕНДОВИ
+                            <StableLabel k="nav.brands" />
                         </Link>
                     </span>
                 </div>
@@ -162,7 +168,7 @@ export default function NavigationBar({ user }: Props) {
                                                             category: cat,
                                                         })}
                                                         onClick={clickClose}>
-                                                        {cat}
+                                                        {tv(cat)}
                                                     </Link>
                                                     {firstHalf.map((s) => (
                                                         <Link
@@ -175,13 +181,13 @@ export default function NavigationBar({ user }: Props) {
                                                                 subcategory: s,
                                                             })}
                                                             onClick={clickClose}>
-                                                            {s}
+                                                            {tv(s)}
                                                         </Link>
                                                     ))}
                                                 </div>
                                                 <div className="submenu-col" key={`${cat}-2`}>
                                                     <div className="submenu-title" style={{ visibility: 'hidden' }}>
-                                                        {cat}
+                                                        {tv(cat)}
                                                     </div>
                                                     {secondHalf.map((s) => (
                                                         <Link
@@ -194,7 +200,7 @@ export default function NavigationBar({ user }: Props) {
                                                                 subcategory: s,
                                                             })}
                                                             onClick={clickClose}>
-                                                            {s}
+                                                            {tv(s)}
                                                         </Link>
                                                     ))}
                                                 </div>
@@ -212,7 +218,7 @@ export default function NavigationBar({ user }: Props) {
                                                     category: cat,
                                                 })}
                                                 onClick={clickClose}>
-                                                {cat}
+                                                {tv(cat)}
                                             </Link>
 
                                             {sortedSubs.map((s) => (
@@ -226,7 +232,7 @@ export default function NavigationBar({ user }: Props) {
                                                         subcategory: s,
                                                     })}
                                                     onClick={clickClose}>
-                                                    {s}
+                                                    {tv(s)}
                                                 </Link>
                                             ))}
                                         </div>
@@ -243,7 +249,7 @@ export default function NavigationBar({ user }: Props) {
                                             category: "Опрема",
                                         })}
                                         onClick={clickClose}>
-                                        Додатоци
+                                        {t("nav.accessories")}
                                     </Link>
 
                                     {navData.equipment.dodatoci
@@ -263,7 +269,7 @@ export default function NavigationBar({ user }: Props) {
                                                     subcategory: s,
                                                 })}
                                                 onClick={clickClose}>
-                                                {s}
+                                                {tv(s)}
                                             </Link>
                                         ))}
                                 </div>
@@ -298,7 +304,7 @@ export default function NavigationBar({ user }: Props) {
                                                             category: cat,
                                                         })}
                                                         onClick={clickClose}>
-                                                        {cat}
+                                                        {tv(cat)}
                                                     </Link>
                                                     {firstHalf.map((s) => (
                                                         <Link
@@ -311,13 +317,13 @@ export default function NavigationBar({ user }: Props) {
                                                                 subcategory: s,
                                                             })}
                                                             onClick={clickClose}>
-                                                            {s}
+                                                            {tv(s)}
                                                         </Link>
                                                     ))}
                                                 </div>
                                                 <div className="submenu-col" key={`${cat}-2`}>
                                                     <div className="submenu-title" style={{ visibility: 'hidden' }}>
-                                                        {cat}
+                                                        {tv(cat)}
                                                     </div>
                                                     {secondHalf.map((s) => (
                                                         <Link
@@ -330,7 +336,7 @@ export default function NavigationBar({ user }: Props) {
                                                                 subcategory: s,
                                                             })}
                                                             onClick={clickClose}>
-                                                            {s}
+                                                            {tv(s)}
                                                         </Link>
                                                     ))}
                                                 </div>
@@ -348,7 +354,7 @@ export default function NavigationBar({ user }: Props) {
                                                     category: cat,
                                                 })}
                                                 onClick={clickClose}>
-                                                {cat}
+                                                {tv(cat)}
                                             </Link>
 
                                             {sortedSubs.map((s) => (
@@ -362,7 +368,7 @@ export default function NavigationBar({ user }: Props) {
                                                         subcategory: s,
                                                     })}
                                                     onClick={clickClose}>
-                                                    {s}
+                                                    {tv(s)}
                                                 </Link>
                                             ))}
                                         </div>
@@ -379,7 +385,7 @@ export default function NavigationBar({ user }: Props) {
                                             category: "Опрема",
                                         })}
                                         onClick={clickClose}>
-                                        Додатоци
+                                        {t("nav.accessories")}
                                     </Link>
 
                                     {navData.equipment.dodatoci
@@ -399,7 +405,7 @@ export default function NavigationBar({ user }: Props) {
                                                     subcategory: s,
                                                 })}
                                                 onClick={clickClose}>
-                                                {s}
+                                                {tv(s)}
                                             </Link>
                                         ))}
                                 </div>
@@ -430,7 +436,7 @@ export default function NavigationBar({ user }: Props) {
                                                         className="submenu-title"
                                                         to={go({ age: "За деца", category: cat })}
                                                         onClick={clickClose}>
-                                                        {cat}
+                                                        {tv(cat)}
                                                     </Link>
                                                     {firstHalf.map((s) => (
                                                         <Link
@@ -442,13 +448,13 @@ export default function NavigationBar({ user }: Props) {
                                                                 subcategory: s,
                                                             })}
                                                             onClick={clickClose}>
-                                                            {s}
+                                                            {tv(s)}
                                                         </Link>
                                                     ))}
                                                 </div>
                                                 <div className="submenu-col" key={`${cat}-2`}>
                                                     <div className="submenu-title" style={{ visibility: 'hidden' }}>
-                                                        {cat}
+                                                        {tv(cat)}
                                                     </div>
                                                     {secondHalf.map((s) => (
                                                         <Link
@@ -460,7 +466,7 @@ export default function NavigationBar({ user }: Props) {
                                                                 subcategory: s,
                                                             })}
                                                             onClick={clickClose}>
-                                                            {s}
+                                                            {tv(s)}
                                                         </Link>
                                                     ))}
                                                 </div>
@@ -474,7 +480,7 @@ export default function NavigationBar({ user }: Props) {
                                                 className="submenu-title"
                                                 to={go({ age: "За деца", category: cat })}
                                                 onClick={clickClose}>
-                                                {cat}
+                                                {tv(cat)}
                                             </Link>
 
                                             {sortedSubs.map((s) => (
@@ -487,7 +493,7 @@ export default function NavigationBar({ user }: Props) {
                                                         subcategory: s,
                                                     })}
                                                     onClick={clickClose}>
-                                                    {s}
+                                                    {tv(s)}
                                                 </Link>
                                             ))}
                                         </div>
@@ -500,7 +506,7 @@ export default function NavigationBar({ user }: Props) {
                                         className="submenu-title"
                                         to={go({ age: "За деца", category: "Опрема" })}
                                         onClick={clickClose}>
-                                        Додатоци
+                                        {t("nav.accessories")}
                                     </Link>
 
                                     {navData.equipment.dodatoci
@@ -519,7 +525,7 @@ export default function NavigationBar({ user }: Props) {
                                                     subcategory: s,
                                                 })}
                                                 onClick={clickClose}>
-                                                {s}
+                                                {tv(s)}
                                             </Link>
                                         ))}
                                 </div>
@@ -530,7 +536,7 @@ export default function NavigationBar({ user }: Props) {
                     {hover === "equipment" && (
                         <div className="submenu-columns">
                             <div className="submenu-col">
-                                <div className="submenu-title">Додатоци</div>
+                                <div className="submenu-title">{t("nav.accessories")}</div>
                                 {navData.equipment.dodatoci
                                     .sort((a, b) => {
                                         if (a === "Останато") return 1;
@@ -543,13 +549,13 @@ export default function NavigationBar({ user }: Props) {
                                             className="submenu-item"
                                             to={go({ category: "Опрема", subcategory: s })}
                                             onClick={clickClose}>
-                                            {s}
+                                            {tv(s)}
                                         </Link>
                                     ))}
                             </div>
 
                             <div className="submenu-col">
-                                <div className="submenu-title">Спортска опрема</div>
+                                <div className="submenu-title">{t("nav.sportsEquipment")}</div>
                                 {navData.equipment.sports
                                     .sort((a, b) => {
                                         if (a === "Останато") return 1;
@@ -562,7 +568,7 @@ export default function NavigationBar({ user }: Props) {
                                             className="submenu-item"
                                             to={go({ category: "Опрема", subcategory: s })}
                                             onClick={clickClose}>
-                                            {s}
+                                            {tv(s)}
                                         </Link>
                                     ))}
                             </div>
@@ -590,7 +596,7 @@ export default function NavigationBar({ user }: Props) {
                                         clickClose();
                                         navigate("/brands");
                                     }}>
-                                    Сите брендови →
+                                    {t("nav.allBrands")}
                                 </button>
                             </div>
                         </div>

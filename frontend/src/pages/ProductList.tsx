@@ -7,6 +7,7 @@ import type { SortOption } from "../components/SortBar";
 import { FaFilter } from "react-icons/fa";
 import { MdFirstPage, MdLastPage } from "react-icons/md";
 import { formatNumber } from "../utils/formatting";
+import { useI18n } from "../i18n";
 import Spinner from "../components/Spinner";
 import { useProducts, useFilterOptions } from "../hooks/useProducts";
 import "../styles/ProductList.css";
@@ -34,6 +35,7 @@ const PAGE_SIZE = 24;
 
 export default function ProductList() {
     const navigate = useNavigate();
+    const { t, price } = useI18n();
     const location = useLocation();
     const params = new URLSearchParams(location.search);
 
@@ -205,11 +207,11 @@ export default function ProductList() {
             <div className="product-controls">
                 <button className="filter-btn" onClick={() => setFiltersOpen(true)}>
                     <FaFilter className="icon" />
-                    Филтри
+                    {t("list.filters")}
                 </button>
 
                 <div className="controls-right">
-                    {!loading && <div className="results-count">{formatNumber(total)} производи</div>}
+                    {!loading && <div className="results-count">{t("list.count", { count: total, formatted: formatNumber(total) })}</div>}
                     <SortBar value={sort} onChange={setSort} />
                 </div>
             </div>
@@ -221,13 +223,13 @@ export default function ProductList() {
                     <div className="empty-state-icon">📦</div>
                     <h2 className="empty-state-title">
                         {hasActiveFilters
-                            ? "Нема продукти според избраните критериуми"
-                            : "Нема продукти на оваа страна"}
+                            ? t("list.emptyFilteredTitle")
+                            : t("list.emptyTitle")}
                     </h2>
                     <p className="empty-state-message">
                         {hasActiveFilters
-                            ? "Обидете се да ги промените филтрите или критериумите за пребарување."
-                            : "Во моментов нема достапни производи."}
+                            ? t("list.emptyFilteredText")
+                            : t("list.emptyText")}
                     </p>
                     {hasActiveFilters && (
                         <button
@@ -244,7 +246,7 @@ export default function ProductList() {
                                 });
                                 navigate("/products");
                             }}>
-                            Отстрани филтри
+                            {t("list.clearFilters")}
                         </button>
                     )}
                 </div>
@@ -273,9 +275,9 @@ export default function ProductList() {
                                     <div className="product-info">
                                         <h3>{p.name}</h3>
                                         <p className="price">
-                                            Од <span>{mp ? `${formatNumber(mp)} ден` : "Нема цена"}</span>
+                                            {t("list.from")} <span>{price(mp)}</span>
                                         </p>
-                                        <p className="stores">{sc} продавници</p>
+                                        <p className="stores">{t("list.stores", { count: sc })}</p>
                                     </div>
                                 </Link>
                             </div>
@@ -290,8 +292,8 @@ export default function ProductList() {
                         <button
                             className="page-btn nav-btn icon-btn"
                             onClick={() => setCurrentPage(1)}
-                            title="Прва страна"
-                            aria-label="Прва страна">
+                            title={t("list.firstPage")}
+                            aria-label={t("list.firstPage")}>
                             <MdFirstPage size={18} />
                         </button>
                     )}
@@ -300,7 +302,7 @@ export default function ProductList() {
                         <button
                             className="page-btn nav-btn"
                             onClick={() => setCurrentPage(currentPage - 1)}>
-                            Претходна
+                            {t("list.previous")}
                         </button>
                     )}
 
@@ -318,7 +320,7 @@ export default function ProductList() {
                             className="page-btn nav-btn"
                             onClick={() => setCurrentPage(currentPage + 1)}
                         >
-                            Следна
+                            {t("list.next")}
                         </button>
                     )}
 
@@ -326,8 +328,8 @@ export default function ProductList() {
                         <button
                             className="page-btn nav-btn icon-btn"
                             onClick={() => setCurrentPage(totalPages)}
-                            title={`Последна страна (${formatNumber(totalPages)})`}
-                            aria-label="Последна страна">
+                            title={t("list.lastPage", { page: formatNumber(totalPages) })}
+                            aria-label={t("list.lastPageShort")}>
                             <MdLastPage size={18} />
                         </button>
                     )}

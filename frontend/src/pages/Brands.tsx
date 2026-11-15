@@ -3,10 +3,12 @@ import { useNavigate } from "react-router-dom";
 import Spinner from "../components/Spinner";
 import { capitalizeBrand } from "../utils/formatting";
 import "../styles/BrandsPage.css";
+import { useI18n } from "../i18n";
 
 export default function BrandsPage() {
     const { data: navData, isLoading: loading } = useNavData();
     const navigate = useNavigate();
+    const { t } = useI18n();
 
     if (loading || !navData) return <Spinner />;
 
@@ -30,7 +32,7 @@ export default function BrandsPage() {
     return (
         <div className="brands-wrapper">
 
-           <div className="brands-title">Сите брендови</div>
+           <div className="brands-title">{t("brands.title")}</div>
             <div className="brands-az-bar">
                 {letters.map((l) => (
                     <a key={l} href={`#sec-${l}`} className="brands-az-letter">

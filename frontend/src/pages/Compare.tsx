@@ -10,8 +10,9 @@ import { useCompare } from "../context/compare";
 import { useStoreLookup } from "../hooks/useStoreLookup";
 import type { Product } from "../hooks/useProducts";
 import { api } from "../utils/api";
-import { capitalizeBrand, formatNumber } from "../utils/formatting";
+import { capitalizeBrand } from "../utils/formatting";
 import "../styles/Compare.css";
+import { useI18n } from "../i18n";
 
 ChartJS.register(CategoryScale, LinearScale, LineElement, PointElement, Tooltip, Legend);
 
@@ -22,13 +23,14 @@ interface CompareResponse {
 
 const COLORS = ["#2563eb", "#16a34a", "#d97706", "#7e22ce"];
 
-const SPECS: { key: keyof Product; label: string; format?: (v: string) => string }[] = [
-    { key: "brand", label: "Бренд", format: capitalizeBrand },
-    { key: "category", label: "Категорија" },
-    { key: "subcategory", label: "Поткатегорија" },
-    { key: "gender", label: "Пол" },
-    { key: "age", label: "Возраст" },
-    { key: "color", label: "Боја" },
+/** `translate`: catalog values shown through tv(); brand names are shown as-is. */
+const SPECS: { key: "brand" | "category" | "subcategory" | "gender" | "age" | "color"; translate: boolean }[] = [
+    { key: "brand", translate: false },
+    { key: "category", translate: true },
+    { key: "subcategory", translate: true },
+    { key: "gender", translate: true },
+    { key: "age", translate: true },
+    { key: "color", translate: true },
 ];
 
 const lowest = (p: Product) => {
@@ -36,13 +38,14 @@ const lowest = (p: Product) => {
     return prices.length ? Math.min(...prices) : null;
 };
 
-const price = (v: number | null | undefined) => (v != null ? `${formatNumber(v)} ден` : "—");
 
 export default function Compare() {
     const { items, ids, remove, clear, replace } = useCompare();
     const { getStore } = useStoreLookup();
     const [searchParams, setSearchParams] = useSearchParams();
     const [onlyDifferences, setOnlyDifferences] = useState(false);
+    const { t, tv, locale, price: formatPrice } = useI18n();
+    const price = (v: number | null | undefined) => (v != null ? formatPrice(v) : "—");
 
     // Shared links (/compare?ids=a,b) load into the compare list once.
     useEffect(() => {
@@ -87,7 +90,7 @@ export default function Compare() {
         const dates = [...new Set(history.map((h) => h.date))].sort();
         if (dates.length < 2) return null;
         return {
-            labels: dates.map((d) => new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })),
+            labels: dates.map((d) => new Date(d).toLocaleDateString(locale, { day: "2-digit", month: "short" })),
             datasets: products.map((p, i) => {
                 const byDate = new Map(history.filter((h) => h.productId === p.id).map((h) => [h.date, h.price]));
                 return {
@@ -102,17 +105,17 @@ export default function Compare() {
                 };
             }),
         };
-    }, [data, products]);
+    }, [data, products, locale]);
 
     if (!ids.length) {
         return (
             <div className="compare-page">
-                <h1>Споредба на производи</h1>
+                <h1>{t("compare.title")}</h1>
                 <div className="compare-empty">
-                    <p>Немате избрано производи за споредба.</p>
-                    <p>Кликнете „Спореди“ на производите што ве интересираат (до 4).</p>
+                    <p>{t("compare.emptyTitle")}</p>
+                    <p>{t("compare.emptyText")}</p>
                     <Link to="/products" className="compare-tray__go">
-                        Кон производите
+                        {t("compare.toProducts")}
                     </Link>
                 </div>
             </div>
@@ -120,7 +123,7 @@ export default function Compare() {
     }
 
     if (isLoading && !data) return <Spinner />;
-    if (isError) return <div className="compare-page compare-empty">Грешка при вчитување. Обидете се повторно.</div>;
+    if (isError) return <div className="compare-page compare-empty">{t("common.loadError")}</div>;
 
     const allSame = (values: string[]) => values.every((v) => v === values[0]);
     const specRows = SPECS.filter(({ key }) => !onlyDifferences || !allSame(products.map((p) => String(p[key] ?? ""))));
@@ -131,19 +134,19 @@ export default function Compare() {
     return (
         <div className="compare-page">
             <div className="compare-header">
-                <h1>Споредба на производи</h1>
+                <h1>{t("compare.title")}</h1>
                 <div className="compare-header__actions">
                     <label className="compare-diff-toggle">
                         <input type="checkbox" checked={onlyDifferences} onChange={(e) => setOnlyDifferences(e.target.checked)} />
-                        Прикажи само разлики
+                        {t("compare.onlyDifferences")}
                     </label>
                     <button type="button" className="compare-tray__clear" onClick={clear}>
-                        Исчисти сè
+                        {t("compare.clearAll")}
                     </button>
                 </div>
             </div>
 
-            {products.length < 2 && <p className="compare-hint">Додадете уште најмалку еден производ за споредба.</p>}
+            {products.length < 2 && <p className="compare-hint">{t("compare.addMore")}</p>}
 
             <div className="compare-table-wrapper">
                 <table className="compare-table" style={{ ["--cols" as string]: products.length }}>
@@ -155,7 +158,7 @@ export default function Compare() {
                                     <button
                                         type="button"
                                         className="compare-product__remove"
-                                        aria-label={`Отстрани ${p.name}`}
+                                        aria-label={t("compare.removeItem", { name: p.name })}
                                         onClick={() => remove(p.id)}>
                                         <IoClose />
                                     </button>
@@ -170,16 +173,16 @@ export default function Compare() {
 
                     <tbody>
                         <tr className="compare-row--highlight">
-                            <th className="compare-table__label">Најниска цена</th>
+                            <th className="compare-table__label">{t("compare.lowestPrice")}</th>
                             {products.map((p, i) => (
                                 <td key={p.id} className={lowestPrices[i] === cheapest && products.length > 1 ? "is-best" : ""}>
                                     <strong>{price(lowestPrices[i])}</strong>
-                                    {lowestPrices[i] === cheapest && products.length > 1 && <span className="compare-badge">Најевтино</span>}
+                                    {lowestPrices[i] === cheapest && products.length > 1 && <span className="compare-badge">{t("compare.cheapest")}</span>}
                                 </td>
                             ))}
                         </tr>
                         <tr>
-                            <th className="compare-table__label">Продавници</th>
+                            <th className="compare-table__label">{t("compare.stores")}</th>
                             {products.map((p) => (
                                 <td key={p.id}>{Object.keys(p.priceMap || {}).length}</td>
                             ))}
@@ -187,7 +190,7 @@ export default function Compare() {
 
                         {storeRows.length > 0 && (
                             <tr className="compare-section">
-                                <th colSpan={products.length + 1}>Цени по продавници</th>
+                                <th colSpan={products.length + 1}>{t("compare.pricesByStore")}</th>
                             </tr>
                         )}
                         {storeRows.map((store) => {
@@ -215,13 +218,13 @@ export default function Compare() {
                                                     <>
                                                         {price(v)}
                                                         {link && (
-                                                            <a href={link} target="_blank" rel="noreferrer" className="compare-visit" title="Посети">
+                                                            <a href={link} target="_blank" rel="noreferrer" className="compare-visit" title={t("common.visit")}>
                                                                 <FaExternalLinkAlt />
                                                             </a>
                                                         )}
                                                     </>
                                                 ) : (
-                                                    <span className="compare-missing">Нема</span>
+                                                    <span className="compare-missing">{t("compare.notSold")}</span>
                                                 )}
                                             </td>
                                         );
@@ -232,15 +235,15 @@ export default function Compare() {
 
                         {specRows.length > 0 && (
                             <tr className="compare-section">
-                                <th colSpan={products.length + 1}>Спецификации</th>
+                                <th colSpan={products.length + 1}>{t("specs.title")}</th>
                             </tr>
                         )}
-                        {specRows.map(({ key, label, format }) => (
+                        {specRows.map(({ key, translate }) => (
                             <tr key={key}>
-                                <th className="compare-table__label">{label}</th>
+                                <th className="compare-table__label">{t(`specs.${key}`)}</th>
                                 {products.map((p) => {
-                                    const v = p[key] as string | undefined;
-                                    return <td key={p.id}>{v ? (format ? format(v) : v) : "—"}</td>;
+                                    const v = p[key];
+                                    return <td key={p.id}>{v ? (translate ? tv(v) : capitalizeBrand(v)) : "—"}</td>;
                                 })}
                             </tr>
                         ))}
@@ -249,11 +252,11 @@ export default function Compare() {
             </div>
 
             {onlyDifferences && !specRows.length && !storeRows.length && (
-                <p className="compare-hint">Производите имаат исти спецификации и цени по продавници.</p>
+                <p className="compare-hint">{t("compare.sameEverything")}</p>
             )}
 
             <div className="compare-chart">
-                <h3>Најниска цена низ времето (последни 3 месеци)</h3>
+                <h3>{t("compare.chartTitle")}</h3>
                 {chart ? (
                     <Line
                         data={chart}
@@ -264,7 +267,7 @@ export default function Compare() {
                         }}
                     />
                 ) : (
-                    <p className="compare-hint">Графиконот ќе се прикаже кога ќе има цени од повеќе денови.</p>
+                    <p className="compare-hint">{t("compare.chartEmpty")}</p>
                 )}
             </div>
         </div>
