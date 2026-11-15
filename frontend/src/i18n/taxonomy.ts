@@ -1,0 +1,76 @@
+/**
+ * English names for catalog values. The database, URLs and API filters keep the Macedonian
+ * canonical values (from backend/src/modules/catalog/taxonomy.ts); only the display is translated.
+ * Unknown values fall back to the original text.
+ */
+export const TAXONOMY_EN: Record<string, string> = {
+    // Categories
+    Обувки: "Footwear",
+    Текстил: "Clothing",
+    Опрема: "Equipment",
+
+    // Gender / age
+    Машки: "Men",
+    Женски: "Women",
+    Унисекс: "Unisex",
+    "За возрасни": "Adults",
+    "За деца": "Kids",
+
+    // Subcategories
+    Патики: "Sneakers",
+    Копачки: "Football boots",
+    "Кондури и чизми": "Shoes & boots",
+    "Папучи и сандали": "Slides & sandals",
+    Дуксери: "Hoodies & sweatshirts",
+    Маици: "T-shirts",
+    "Маици со долги ракави": "Long-sleeve tops",
+    "Долен дел тренерки": "Track pants",
+    Тренерки: "Tracksuits",
+    "Јакни и елеци": "Jackets & vests",
+    Панталони: "Pants",
+    Шорцеви: "Shorts",
+    Хеланки: "Leggings",
+    Градник: "Sports bras",
+    "Фустани и сукњи": "Dresses & skirts",
+    "Костими за капење": "Swimwear",
+    Комбинезон: "Jumpsuits",
+    "Долна облека": "Underwear",
+    Комплети: "Sets",
+    "Активна облека": "Activewear",
+    Дресови: "Jerseys",
+    Чорапи: "Socks",
+    "Качкети и капи": "Caps & hats",
+    Ранец: "Backpacks",
+    "Торби и торбици": "Bags",
+    Бандани: "Bandanas",
+    Шалови: "Scarves",
+    Ракавици: "Gloves",
+    Врвки: "Laces",
+    Топки: "Balls",
+    "Опрема за пливање": "Swim gear",
+    "Опрема за тренинг": "Training gear",
+    Шишиња: "Bottles",
+    Ролери: "Inline skates",
+    Тротинет: "Scooters",
+    Скироли: "Skateboards",
+    Останато: "Other",
+
+    // Colors
+    Беж: "Beige",
+    Бела: "White",
+    Бордо: "Burgundy",
+    Жолта: "Yellow",
+    Зелена: "Green",
+    Златна: "Gold",
+    Кафеава: "Brown",
+    Виолетова: "Purple",
+    Мултиколор: "Multicolor",
+    Сина: "Blue",
+    Портокалова: "Orange",
+    Розева: "Pink",
+    Сива: "Grey",
+    Сребрена: "Silver",
+    Тегет: "Navy",
+    Црвена: "Red",
+    Црна: "Black",
+};

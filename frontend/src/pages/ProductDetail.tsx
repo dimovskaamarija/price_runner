@@ -8,6 +8,7 @@ import { useUser } from '../hooks/useUser';
 import { useProduct } from '../hooks/useProducts';
 import { useStoreLookup } from '../hooks/useStoreLookup';
 import CompareButton from '../components/CompareButton';
+import { useI18n } from '../i18n';
 import { useFavoriteStatus } from '../hooks/useFavorites';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, API_BASE_URL } from '../utils/api';
@@ -17,6 +18,7 @@ export default function ProductDetail() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const location = useLocation();
+    const { t, tv, price } = useI18n();
     const { user } = useUser();
     const queryClient = useQueryClient();
 
@@ -59,17 +61,17 @@ export default function ProductDetail() {
         },
         onError: (error: any) => {
             console.error('Failed to toggle favorite:', error);
-            let errorMessage = 'Неуспешно додавање/отстранување од омилени. Обидете се повторно.';
+            let errorMessage = t('product.favoriteError');
             
             if (error?.message) {
                 errorMessage = error.message;
                 // Translate common error messages
                 if (error.message.includes('User not authenticated') || error.message.includes('401')) {
-                    errorMessage = 'Не сте најавени. Ве молиме најавете се за да додадете во омилени.';
+                    errorMessage = t('product.favoriteLoginRequired');
                 } else if (error.message.includes('403') || error.message.includes('Forbidden')) {
-                    errorMessage = 'Немате дозвола за оваа акција.';
+                    errorMessage = t('product.favoriteForbidden');
                 } else if (error.message.includes('500') || error.message.includes('Internal Server Error')) {
-                    errorMessage = 'Серверска грешка. Ве молиме обидете се подоцна.';
+                    errorMessage = t('product.serverError');
                 }
             }
             
@@ -109,7 +111,7 @@ export default function ProductDetail() {
                             }
                         }}>
                         <IoArrowBackOutline />
-                        Назад
+                        {t('common.back')}
                     </button>
 
                     <div className="product-left">
@@ -123,20 +125,20 @@ export default function ProductDetail() {
                     </div>
 
                     <div className="seller-box">
-                        <h3>Цени по продавници</h3>
+                        <h3>{t("product.pricesByStore")}</h3>
 
                         <div className="seller-card">
                             <table className="store-table">
                                 <thead>
                                     <tr>
-                                        <th>Продавница</th>
-                                        <th>Цена</th>
-                                        <th>Акција</th>
+                                        <th>{t("product.store")}</th>
+                                        <th>{t("product.price")}</th>
+                                        <th>{t("product.action")}</th>
                                     </tr>
                                 </thead>
 
                                 <tbody>
-                                    {Object.entries(product.priceMap || {}).map(([store, price]) => {
+                                    {Object.entries(product.priceMap || {}).map(([store, storePrice]) => {
                                         const logoUrl = getStoreLogo(store);
                                         const storeLink = product.storeLinks?.[store];
                                         const storeData = storesMap[store];
@@ -153,7 +155,7 @@ export default function ProductDetail() {
                                                 </td>
 
                                                 <td className="store-price">
-                                                    {price ? `${price.toLocaleString()} ден` : 'N/A'}
+                                                    {price(storePrice)}
                                                 </td>
 
                                                 <td>
@@ -164,7 +166,7 @@ export default function ProductDetail() {
                                                             rel="noreferrer"
                                                             className="visit-btn white-btn"
                                                         >
-                                                            <FaExternalLinkAlt /> Посети
+                                                            <FaExternalLinkAlt /> {t("common.visit")}
                                                         </a>
                                                     ) : (
                                                         '-'
@@ -201,43 +203,43 @@ export default function ProductDetail() {
                                 transition: 'color 0.2s',
                                 opacity: toggleFavoriteMutation.isPending ? 0.6 : 1,
                             }}
-                            title={isFavorite ? 'Отстрани од омилени' : 'Додај во омилени'}>
+                            title={isFavorite ? t('product.removeFavorite') : t('product.addFavorite')}>
                             {isFavorite ? <FaHeart /> : <FaRegHeart />}
                         </button>
                     </div>
 
                     <div className="product-price-box">
                         <p className="product-price">
-                            {lowestPrice ? `${lowestPrice.toLocaleString()} ден` : '—'}
+                            {lowestPrice ? price(lowestPrice) : '—'}
                         </p>
-                        <span className="price-label">Најниска цена</span>
+                        <span className="price-label">{t("product.lowestPrice")}</span>
                     </div>
 
                     <div className="spec-box">
-                        <h2>Спецификации</h2>
+                        <h2>{t("specs.title")}</h2>
                         <div className="spec-row">
-                            <strong>Категорија</strong>
-                            <span>{product.category || '-'}</span>
+                            <strong>{t("specs.category")}</strong>
+                            <span>{tv(product.category) || '-'}</span>
                         </div>
                         <div className="spec-row">
-                            <strong>Поткатегорија</strong>
-                            <span>{product.subcategory || '-'}</span>
+                            <strong>{t("specs.subcategory")}</strong>
+                            <span>{tv(product.subcategory) || '-'}</span>
                         </div>
                         <div className="spec-row">
-                            <strong>Пол</strong>
-                            <span>{product.gender || '-'}</span>
+                            <strong>{t("specs.gender")}</strong>
+                            <span>{tv(product.gender) || '-'}</span>
                         </div>
                         <div className="spec-row">
-                            <strong>Возраст</strong>
-                            <span>{product.age || '-'}</span>
+                            <strong>{t("specs.age")}</strong>
+                            <span>{tv(product.age) || '-'}</span>
                         </div>
                         <div className="spec-row">
-                            <strong>Бренд</strong>
+                            <strong>{t("specs.brand")}</strong>
                             <span>{product.brand ? capitalizeBrand(product.brand) : '-'}</span>
                         </div>
                         <div className="spec-row">
-                            <strong>Боја</strong>
-                            <span>{product.color || '-'}</span>
+                            <strong>{t("specs.color")}</strong>
+                            <span>{tv(product.color) || '-'}</span>
                         </div>
                     </div>
 
