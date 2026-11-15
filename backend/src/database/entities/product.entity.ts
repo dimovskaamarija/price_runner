@@ -38,6 +38,10 @@ export class Product {
     @Column({ nullable: true })
     image?: string;
 
+    /** Result of the image URL check: null = not checked yet, false = broken (product hidden). */
+    @Column({ type: 'boolean', nullable: true })
+    imageOk?: boolean | null;
+
     /** Normalized manufacturer style code (e.g. "IB6651300"), used to match offers across stores. */
     @Index()
     @Column({ nullable: true })

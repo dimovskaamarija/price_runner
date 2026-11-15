@@ -71,7 +71,14 @@ export const owCatalogExtractor: Extractor = ({ $, url }) => {
         brand,
         code,
         price: parsePrice(priceText),
-        image: productId ? `${origin}/ProductImages/${productId}.jpg` : null,
+        // Use the image the page actually shows; the file extension changed (.jpg -> .webp) before,
+        // so never guess it unless the page has no product image at all.
+        image:
+            absoluteUrl(
+                $(`img[src*="/ProductImages/${productId}."]`).first().attr('src') ||
+                    $(`img[data-src*="/ProductImages/${productId}."]`).first().attr('data-src'),
+                url,
+            ) || (productId ? `${origin}/ProductImages/${productId}.webp` : null),
         labels,
     };
 };
