@@ -4,11 +4,10 @@ import "../styles/Compare.css";
 
 interface Props {
     product: CompareItem;
-    /** "card": small pill over a product card; "detail": button next to the title. */
-    variant?: "card" | "detail";
+    variant?: "detail";
 }
 
-export default function CompareButton({ product, variant = "card" }: Props) {
+export default function CompareButton({ product, variant = "detail" }: Props) {
     const { has, toggle, isFull } = useCompare();
     const selected = has(product.id);
     const disabled = !selected && isFull;
@@ -27,9 +26,7 @@ export default function CompareButton({ product, variant = "card" }: Props) {
             disabled={disabled}
             title={title}
             onClick={(e) => {
-                // Cards are wrapped in a link: don't navigate when toggling.
                 e.preventDefault();
-                e.stopPropagation();
                 toggle(product);
             }}>
             <MdCompareArrows aria-hidden="true" />
