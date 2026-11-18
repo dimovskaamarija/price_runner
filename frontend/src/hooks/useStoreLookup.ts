@@ -7,6 +7,11 @@ const CHAIN_LABELS: Record<string, string> = {
     "Intersport MK": "Sport M - Intersport",
 };
 
+/** Logos for chains that aren't in the stores table (files in /public/logos). */
+const CHAIN_LOGOS: Record<string, string> = {
+    "Intersport MK": "/logos/intersport.png",
+};
+
 /**
  * Offers use scraper store names ("Sport Vision MK") while the stores table may use
  * shorter ones ("Sport Vision"); this resolves either to the store record (name + logo).
@@ -37,6 +42,9 @@ export function useStoreLookup() {
         /** Name to show for a chain (offers' store name -> display name). */
         const chainName = (storeName: string): string => CHAIN_LABELS[storeName] || getStore(storeName)?.name || storeName;
 
-        return { storesMap, getStore, chainName };
+        /** Logo to show for a chain, or undefined. */
+        const chainLogo = (storeName: string): string | undefined => CHAIN_LOGOS[storeName] || getStore(storeName)?.logo_url;
+
+        return { storesMap, getStore, chainName, chainLogo };
     }, [stores]);
 }
