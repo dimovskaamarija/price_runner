@@ -35,9 +35,19 @@ const http = axios.create({
 const form = (data: Record<string, string>) => new URLSearchParams(data).toString();
 const clean = (s?: string | null) => (s || '').replace(/\s+/g, ' ').trim();
 
-/** "38,5" / " 38.5 " -> "38.5", "xl" -> "XL" so sizes from different chains line up. */
+/** "38,5" -> "38.5", "41-1/3" -> "41 1/3", "xl" -> "XL" so sizes from different chains line up. */
 export function normalizeSize(s: string): string {
-    return clean(s).replace(',', '.').toUpperCase();
+    return clean(s)
+        .replace(/\\\//g, '/')
+        .replace(',', '.')
+        .replace(/^(\d+)\s*-\s*(\d)\/(\d)$/, '$1 $2/$3')
+        .toUpperCase();
+}
+
+/** Numeric value of a shoe size, including thirds ("41 1/3" -> 41.33); NaN for letter sizes. */
+export function sizeValue(s: string): number {
+    const m = s.match(/^(\d+(?:\.\d+)?)(?:\s+(\d)\/(\d))?$/);
+    return m ? parseFloat(m[1]) + (m[2] ? Number(m[2]) / Number(m[3]) : 0) : NaN;
 }
 
 // ------------------------------------------------------------------ nbshop: Sport Vision, Sport Reality, Buzz
@@ -134,11 +144,48 @@ function owCatalog(store: string): AvailabilityProvider {
     };
 }
 
-/** Chains whose shops can be queried; others (D Sport) get a link to their site instead. */
+// ------------------------------------------------------------------ Magento (D Sport)
+
+/**
+ * The product page itself lists the shops per size: `.warehouse-list[data-size-id]` with links
+ * to /lokacije/<code>/, and the size labels are in the swatch config. Shops are returned as
+ * "url:<link>" and matched to store_locations by URL.
+ */
+function magento(): AvailabilityProvider {
+    return {
+        async sizes(offerUrl) {
+            const html: string = (await http.get(offerUrl)).data;
+            const $ = cheerio.load(html);
+
+            const labels = new Map<string, string>();
+            for (const m of html.matchAll(/"(\d+)":\{"type":"\d+","value":"[^"]*","label":"([^"]*)"/g)) {
+                const label = normalizeSize(m[2]);
+                if (/\d|^(\d?X{0,3}[SML]|\d?XL)$/.test(label)) labels.set(m[1], label);
+            }
+
+            const shopsBySize: Record<string, string[]> = {};
+            $('.warehouse-list[data-size-id]').each((_, el) => {
+                const size = labels.get(String($(el).attr('data-size-id')));
+                if (!size) return;
+                const refs = $(el)
+                    .find('a[href*="/lokacije/"]')
+                    .map((__, a) => `url:${($(a).attr('href') || '').trim()}`)
+                    .get();
+                if (refs.length) shopsBySize[size] = [...new Set(refs)];
+            });
+            // Every size the product has, so sizes without shops can be shown as unavailable.
+            const sizes = [...new Set(labels.values())].map((size) => ({ size }));
+            return { sizes, shopsBySize };
+        },
+    };
+}
+
+/** Chains whose shops can be queried. */
 export const AVAILABILITY_PROVIDERS: Record<string, AvailabilityProvider> = {
     'Sport Vision MK': nbshop('Sport Vision MK'),
     'Sport Reality MK': nbshop('Sport Reality MK'),
     'Buzz Sneakers MK': nbshop('Buzz Sneakers MK'),
     'Sizeer MK': owCatalog('Sizeer MK'),
     'Sport M': owCatalog('Sport M'),
+    'D Sport': magento(),
 };

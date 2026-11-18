@@ -17,6 +17,8 @@ import "../styles/Availability.css";
 interface AvailabilityResponse {
     size: string | null;
     sizes: string[];
+    /** Number of physical shops that have each size (0 = online only / sold out in shops). */
+    sizeShops: Record<string, number>;
     chains: Array<{
         store: string;
         status: "ok" | "error" | "unsupported";
@@ -31,8 +33,8 @@ type SizeGroup = "groupEU" | "groupUS" | "groupClothing" | "groupOther";
 
 /** Numeric sizes < 20 are US/UK shoe sizes, larger ones EU; letters are clothing sizes. */
 function sizeGroup(size: string): SizeGroup {
-    const n = Number(size);
-    if (!Number.isNaN(n)) return n >= 20 ? "groupEU" : "groupUS";
+    const m = size.match(/^(\d+(?:\.\d+)?)(?:\s+\d\/\d)?$/); // "42", "42.5", "41 1/3"
+    if (m) return Number(m[1]) >= 20 ? "groupEU" : "groupUS";
     if (/^(\d?X{0,3}[SML]|XL|\d?XL)$/.test(size)) return "groupClothing";
     return "groupOther";
 }
@@ -130,6 +132,9 @@ export default function StoreAvailability({ productId }: { productId: string }) 
             ) : (
                 <>
                     {data && data.sizes.length === 0 && <p className="availability-intro">{t("availability.noSizes")}</p>}
+                    {data && data.sizes.length > 0 && data.sizes.every((s) => !data.sizeShops?.[s]) && (
+                        <p className="availability-intro">{t("availability.noShopsAtAll")}</p>
+                    )}
 
                     {groups.length > 0 && (
                         <div className="availability-label">
@@ -142,17 +147,27 @@ export default function StoreAvailability({ productId }: { productId: string }) 
                         <div key={group} className="availability-group">
                             {groups.length > 1 && <span className="availability-group__name">{t(`availability.${group}`)}</span>}
                             <div className="availability-sizes" role="group">
-                                {sizes.map((s) => (
-                                    <button
-                                        key={s}
-                                        type="button"
-                                        title={sizeHint(s)}
-                                        aria-pressed={size === s}
-                                        className={`availability-size ${size === s ? "is-active" : ""}`}
-                                        onClick={() => setSize(size === s ? null : s)}>
-                                        {s}
-                                    </button>
-                                ))}
+                                {sizes.map((s) => {
+                                    const shopCount = data?.sizeShops?.[s] ?? 0;
+                                    // aria-disabled (not `disabled`) so the tooltip still shows on hover.
+                                    const unavailable = shopCount === 0;
+                                    return (
+                                        <button
+                                            key={s}
+                                            type="button"
+                                            title={
+                                                unavailable
+                                                    ? t("availability.notInStores")
+                                                    : `${t("availability.inShops", { count: shopCount })}\n${sizeHint(s)}`
+                                            }
+                                            aria-pressed={size === s}
+                                            aria-disabled={unavailable}
+                                            className={`availability-size ${size === s ? "is-active" : ""} ${unavailable ? "is-disabled" : ""}`}
+                                            onClick={() => !unavailable && setSize(size === s ? null : s)}>
+                                            {s}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
                     ))}
