@@ -66,7 +66,7 @@ function FitToShops({ points }: { points: [number, number][] }) {
  */
 export default function StoreAvailability({ productId }: { productId: string }) {
     const { t } = useI18n();
-    const { getStore } = useStoreLookup();
+    const { chainName } = useStoreLookup();
     const [enabled, setEnabled] = useState(false);
     const [size, setSize] = useState<string | null>(null);
     const [user, setUser] = useState<{ lat: number; lng: number } | null>(null);
@@ -100,7 +100,6 @@ export default function StoreAvailability({ productId }: { productId: string }) 
         return user ? list.sort((a, b) => a.distance! - b.distance!) : list;
     }, [data, size, user]);
 
-    const chainName = (store: string) => getStore(store)?.name || store;
     const sizeHint = (s: string) =>
         (data?.chains || [])
             .filter((c) => c.sizes.some((x) => x.size === s))

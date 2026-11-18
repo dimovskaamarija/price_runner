@@ -29,7 +29,7 @@ function FitToUser({ user, nearest }: { user: { lat: number; lng: number } | nul
 export default function StoreMap() {
     const { t, locale } = useI18n();
     const { data: locations = [], isLoading } = useStoreLocations();
-    const { getStore } = useStoreLookup();
+    const { chainName } = useStoreLookup();
     const [chain, setChain] = useState<string | null>(null);
     const [geo, setGeo] = useState<GeoState>({ status: "idle" });
     const mapRef = useRef<LeafletMap | null>(null);
@@ -83,7 +83,6 @@ export default function StoreMap() {
         if (window.innerWidth < 900) mapRef.current?.getContainer().scrollIntoView({ behavior: "smooth", block: "center" });
     };
 
-    const chainName = (store: string) => getStore(store)?.name || store;
     const today = skopjeNow().day;
 
 

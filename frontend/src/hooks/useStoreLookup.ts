@@ -1,6 +1,12 @@
 import { useMemo } from "react";
 import { useStores, type Store } from "./useStores";
 
+/** Chains that aren't in the stores table get a readable name here. */
+const CHAIN_LABELS: Record<string, string> = {
+    // Intersport shops come from Sport M's "find in store" (same company group).
+    "Intersport MK": "Sport M - Intersport",
+};
+
 /**
  * Offers use scraper store names ("Sport Vision MK") while the stores table may use
  * shorter ones ("Sport Vision"); this resolves either to the store record (name + logo).
@@ -28,6 +34,9 @@ export function useStoreLookup() {
             );
         };
 
-        return { storesMap, getStore };
+        /** Name to show for a chain (offers' store name -> display name). */
+        const chainName = (storeName: string): string => CHAIN_LABELS[storeName] || getStore(storeName)?.name || storeName;
+
+        return { storesMap, getStore, chainName };
     }, [stores]);
 }
