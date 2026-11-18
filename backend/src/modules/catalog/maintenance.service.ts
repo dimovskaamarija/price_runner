@@ -10,8 +10,17 @@ const IMAGE_CHECKS_PER_PASS = parseInt(process.env.IMAGE_CHECKS_PER_PASS || '400
 /** SQL fragment: a product is listed if a store sells it and its image isn't known to be broken. */
 export const VISIBLE_PRODUCT_SQL = `p."storeCount" > 0 AND p.image IS NOT NULL AND p."imageOk" IS NOT FALSE`;
 
-/** SQL fragment: an offer counts as "currently on sale" if it was seen recently and has a price. */
-export const ACTIVE_OFFER_SQL = `o.price IS NOT NULL AND o."lastSeenAt" >= now() - interval '${ACTIVE_WINDOW_HOURS} hours'`;
+const MAX_STALE_DAYS = parseInt(process.env.MAX_STALE_DAYS || '7', 10);
+
+/**
+ * SQL fragment (offer alias `o`): an offer counts as "currently on sale" if it has a price and was
+ * seen within ACTIVE_WINDOW_HOURS of that store's latest scrape — relative to the store's last run,
+ * not the clock, so a late or failed scrape keeps the last known prices instead of emptying the site.
+ * Prices older than MAX_STALE_DAYS are never shown as current.
+ */
+export const ACTIVE_OFFER_SQL = `o.price IS NOT NULL
+    AND o."lastSeenAt" >= now() - interval '${MAX_STALE_DAYS} days'
+    AND o."lastSeenAt" >= (SELECT max(x."lastSeenAt") FROM offers x WHERE x.store = o.store) - interval '${ACTIVE_WINDOW_HOURS} hours'`;
 
 /**
  * Post-scrape housekeeping. Everything here is set-based SQL (no per-row round trips).
