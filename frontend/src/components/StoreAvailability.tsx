@@ -189,6 +189,19 @@ export default function StoreAvailability({ productId }: { productId: string }) 
                             </div>
 
                             {shops.length > 0 && (
+                                // Legend: colour of each chain's pins on the map (like the chips on /stores).
+                                <div className="availability-legend" aria-label={t("stores.title")}>
+                                    {[...new Set(shops.map((l) => l.store))].map((store) => (
+                                        <span key={store} className="availability-legend__item">
+                                            <span className="store-dot" style={{ background: chainColor(store) }} aria-hidden="true" />
+                                            {chainName(store)}
+                                            <span className="availability-legend__count">{shops.filter((l) => l.store === store).length}</span>
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+
+                            {shops.length > 0 && (
                                 <div className="availability-layout">
                                     <ul className="availability-shops">
                                         {shops.map((l) => (
@@ -197,7 +210,10 @@ export default function StoreAvailability({ productId }: { productId: string }) 
                                                     <StoreLogo store={l.store} />
                                                     <div>
                                                         <div className="store-card__name">{l.name}</div>
-                                                        <div className="store-card__chain">{chainName(l.store)}</div>
+                                                        <div className="store-card__chain">
+                                                            <span className="store-dot" style={{ background: chainColor(l.store) }} aria-hidden="true" />
+                                                            {chainName(l.store)}
+                                                        </div>
                                                     </div>
                                                     {l.distance != null && (
                                                         <span className="store-card__distance">{t("stores.km", { km: l.distance.toFixed(1) })}</span>

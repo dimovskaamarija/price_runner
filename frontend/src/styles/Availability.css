@@ -282,3 +282,40 @@
 .availability-shops .store-card__actions {
     margin-left: 42px; /* align with the text next to the logo */
 }
+
+/* Chain colour legend (matches the map pins) */
+.availability-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.availability-legend__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border: 1px solid #ddd;
+    border-radius: 999px;
+    background: #fff;
+    font-size: 13px;
+    color: #333;
+}
+
+.availability-legend__count {
+    color: #888;
+    font-size: 12px;
+}
+
+/* Small dot before the chain name on each card */
+.availability-shops .store-card__chain {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.availability-shops .store-card__chain .store-dot {
+    width: 8px;
+    height: 8px;
+}
