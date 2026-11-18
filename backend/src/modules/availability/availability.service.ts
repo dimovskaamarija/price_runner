@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { StoreLocation } from '../../database/entities/store-location.entity';
-import { ACTIVE_OFFER_SQL } from '../catalog/maintenance.service';
 import { AVAILABILITY_PROVIDERS, ChainSize, normalizeSize } from './providers';
 
 const TTL_MS = 15 * 60 * 1000;
@@ -41,10 +40,13 @@ export class AvailabilityService {
     }
 
     async forProduct(productId: string, requestedSize?: string) {
+        // Stock is asked live from the store, so we only need each store's product link: use the most
+        // recent offer per store (not just "seen in the last 48h"), otherwise a late or failed scrape
+        // makes every product look unavailable.
         const offers: Array<{ store: string; url: string }> = await this.locations.query(
             `SELECT DISTINCT ON (o.store) o.store, o.url FROM offers o
-             WHERE o."productId" = $1 AND ${ACTIVE_OFFER_SQL}
-             ORDER BY o.store, o.price ASC`,
+             WHERE o."productId" = $1 AND o."lastSeenAt" >= now() - interval '30 days'
+             ORDER BY o.store, o."lastSeenAt" DESC, o.price ASC NULLS LAST`,
             [productId],
         );
         const size = requestedSize ? normalizeSize(requestedSize) : null;
