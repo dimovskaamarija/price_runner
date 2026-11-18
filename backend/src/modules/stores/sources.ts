@@ -260,7 +260,5 @@ export const LOCATION_SOURCES: LocationSource[] = [
     nbshop('Buzz Sneakers MK', 'https://www.buzzsneakers.mk'),
     owCatalog('Sizeer MK', 'https://www.sizeer.com.mk'),
     owCatalog('Sport M', 'https://www.sport-m.com.mk'),
-    // Same company group as Sport M / Sizeer: their "find in store" also lists Intersport shops.
-    owCatalog('Intersport MK', 'https://www.intersport.mk'),
     amasty('D Sport', 'https://www.dsport.mk'),
 ];

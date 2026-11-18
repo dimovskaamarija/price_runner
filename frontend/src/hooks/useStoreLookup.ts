@@ -1,16 +1,11 @@
 import { useMemo } from "react";
 import { useStores, type Store } from "./useStores";
 
-/** Chains that aren't in the stores table get a readable name here. */
-const CHAIN_LABELS: Record<string, string> = {
-    // Intersport shops come from Sport M's "find in store" (same company group).
-    "Intersport MK": "Sport M - Intersport",
-};
+/** Display names for chains that aren't in the stores table (none at the moment). */
+const CHAIN_LABELS: Record<string, string> = {};
 
-/** Logos for chains that aren't in the stores table (files in /public/logos). */
-const CHAIN_LOGOS: Record<string, string> = {
-    "Intersport MK": "/logos/intersport.png",
-};
+/** Logos for chains that aren't in the stores table, as files in /public/logos (none at the moment). */
+const CHAIN_LOGOS: Record<string, string> = {};
 
 /**
  * Offers use scraper store names ("Sport Vision MK") while the stores table may use

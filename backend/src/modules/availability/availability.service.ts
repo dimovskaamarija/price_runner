@@ -9,7 +9,7 @@ const TTL_MS = 15 * 60 * 1000;
 /** Parallel per-size requests to one store (for chains that need a request per size). */
 const PER_STORE_CONCURRENCY = 3;
 /** Chains on the OW platform that share one shop-id namespace. */
-const OW_GROUP = ['Sport M', 'Sizeer MK', 'Intersport MK'];
+const OW_GROUP = ['Sport M', 'Sizeer MK'];
 
 export type ChainStatus = 'ok' | 'error' | 'unsupported';
 
@@ -149,7 +149,7 @@ export class AvailabilityService {
         const byId = [...refs.keys()].filter((ref) => !ref.startsWith('url:') && !ref.startsWith('ow:'));
 
         if (byOw.length) {
-            // "ow:42" -> e.g. "Intersport MK:42"; prefer the asking chain's own shop when ids overlap.
+            // "ow:52" -> e.g. "Sizeer MK:52"; prefer the asking chain's own shop when ids overlap.
             const found = await this.locations.find({ where: { store: In(OW_GROUP) }, select: { id: true, store: true } });
             const bySuffix = new Map<string, Array<{ id: string; store: string }>>();
             for (const l of found) {
@@ -160,7 +160,8 @@ export class AvailabilityService {
                 const candidates = bySuffix.get(ref.slice(3)) || [];
                 const match = candidates.find((c) => c.store === store) || candidates[0];
                 if (match) out.set(ref, match.id);
-                else this.log.warn(`Unknown shop ${ref} for ${store} (store locations may need a sync)`);
+                // Shops of other brands in the group (e.g. Intersport) are intentionally not on our map.
+                else this.log.debug(`Shop ${ref} for ${store} is not in store_locations; skipped`);
             }
         }
 
