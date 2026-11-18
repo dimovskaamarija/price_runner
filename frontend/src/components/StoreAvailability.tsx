@@ -11,6 +11,7 @@ import { chainColor, type StoreLocation } from "../hooks/useStoreLocations";
 import { directionsUrl, distanceKm, formatAddress } from "../utils/geo";
 import OpenStatusBadge from "./OpenStatusBadge";
 import SizeGuide from "./SizeGuide";
+import StoreLogo from "./StoreLogo";
 import "../styles/StoreMap.css";
 import "../styles/Availability.css";
 
@@ -193,7 +194,7 @@ export default function StoreAvailability({ productId }: { productId: string }) 
                                         {shops.map((l) => (
                                             <li key={l.id} className="store-card">
                                                 <div className="store-card__head">
-                                                    <span className="store-dot" style={{ background: chainColor(l.store) }} aria-hidden="true" />
+                                                    <StoreLogo store={l.store} />
                                                     <div>
                                                         <div className="store-card__name">{l.name}</div>
                                                         <div className="store-card__chain">{chainName(l.store)}</div>

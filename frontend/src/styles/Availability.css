@@ -259,3 +259,26 @@
     text-decoration: line-through;
     cursor: not-allowed;
 }
+
+/* Chain logo on shop cards (replaces the coloured dot) */
+.store-logo-badge {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    object-fit: contain;
+    background: #fff;
+    border: 1px solid #eee;
+}
+
+.availability-shops .store-card__head .store-dot {
+    width: 32px;
+    height: 32px;
+    margin-top: 0;
+}
+
+.availability-shops .store-card__address,
+.availability-shops .store-status,
+.availability-shops .store-card__actions {
+    margin-left: 42px; /* align with the text next to the logo */
+}
