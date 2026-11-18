@@ -130,13 +130,15 @@ function owCatalog(store: string): AvailabilityProvider {
             const rows: any[] = Array.isArray(res.data) ? res.data : [];
             const shopsBySize: Record<string, string[]> = {};
             for (const row of rows) {
-                // Shop id comes from its image, e.g. "/StoreImages/52.jpg" -> "Sizeer MK:52".
+                // Shop id comes from its image ("/StoreImages/52.jpg"). Ids are shared by the whole
+                // group (Sport M, Sizeer, Intersport, Adidas Shop...), so return "ow:52" and let the
+                // service find the shop in whichever chain's locations it belongs to.
                 const shopId = String(row.SlikaIme || '').match(/StoreImages\/([^./]+)\./)?.[1];
                 if (!shopId || /е\s*продавница|online/i.test(String(row.Magacin))) continue; // web shop, not physical
                 for (const raw of String(row.Velicini || '').split(',')) {
                     const size = normalizeSize(raw);
                     if (!size) continue;
-                    (shopsBySize[size] ||= []).push(`${store}:${shopId}`);
+                    (shopsBySize[size] ||= []).push(`ow:${shopId}`);
                 }
             }
             return { sizes: Object.keys(shopsBySize).map((size) => ({ size })), shopsBySize };

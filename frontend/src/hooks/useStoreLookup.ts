@@ -22,7 +22,9 @@ export function useStoreLookup() {
             return (
                 storesMap[storeName] ||
                 storesMap[lower] ||
-                stores.find((s) => s.name.toLowerCase().includes(lower) || lower.includes(s.name.toLowerCase()))
+                // Prefix match only ("Sport Vision MK" -> "Sport Vision"); a substring match would wrongly
+                // turn "Intersport MK" into "Sport M".
+                stores.find((s) => s.name.toLowerCase().startsWith(lower) || lower.startsWith(s.name.toLowerCase()))
             );
         };
 

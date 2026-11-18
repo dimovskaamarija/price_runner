@@ -33,5 +33,6 @@ export const CHAIN_COLORS: Record<string, string> = {
     "Sizeer MK": "#16a34a",
     "Sport M": "#f59e0b",
     "D Sport": "#7c3aed",
+    "Intersport MK": "#0e7490",
 };
 export const chainColor = (store: string) => CHAIN_COLORS[store] || "#6b7280";

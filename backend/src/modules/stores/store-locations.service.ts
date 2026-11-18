@@ -115,6 +115,11 @@ export class StoreLocationsService implements OnApplicationBootstrap {
             queries.push(`${mall}, ${city}`);
             if (!/mall|мол/i.test(mall)) queries.push(`${mall} Mall, ${city}`, `${mall} Мол, ${city}`);
         }
+        // Place in the shop name ("Интерспорт - Визбегово" -> "Визбегово, Скопје"), unless it's just the city.
+        const place = name.split(/\s+-\s+/).pop()?.trim();
+        if (!mall && place && place !== name && city && place.toLowerCase() !== city.toLowerCase()) {
+            queries.push(`${place}, ${city}`, place);
+        }
         if (address) {
             const street = address
                 .split(',')[0]

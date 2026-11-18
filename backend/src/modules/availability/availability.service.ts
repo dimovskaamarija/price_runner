@@ -8,6 +8,8 @@ import { AVAILABILITY_PROVIDERS, AvailabilityProvider, ChainSize, normalizeSize,
 const TTL_MS = 15 * 60 * 1000;
 /** Parallel per-size requests to one store (for chains that need a request per size). */
 const PER_STORE_CONCURRENCY = 3;
+/** Chains on the OW platform that share one shop-id namespace. */
+const OW_GROUP = ['Sport M', 'Sizeer MK', 'Intersport MK'];
 
 export type ChainStatus = 'ok' | 'error' | 'unsupported';
 
@@ -143,7 +145,24 @@ export class AvailabilityService {
         }
         const out = new Map<string, string>();
         const byUrl = [...refs.entries()].filter(([ref]) => ref.startsWith('url:'));
-        const byId = [...refs.keys()].filter((ref) => !ref.startsWith('url:'));
+        const byOw = [...refs.entries()].filter(([ref]) => ref.startsWith('ow:'));
+        const byId = [...refs.keys()].filter((ref) => !ref.startsWith('url:') && !ref.startsWith('ow:'));
+
+        if (byOw.length) {
+            // "ow:42" -> e.g. "Intersport MK:42"; prefer the asking chain's own shop when ids overlap.
+            const found = await this.locations.find({ where: { store: In(OW_GROUP) }, select: { id: true, store: true } });
+            const bySuffix = new Map<string, Array<{ id: string; store: string }>>();
+            for (const l of found) {
+                const suffix = l.id.slice(l.id.lastIndexOf(':') + 1);
+                bySuffix.set(suffix, [...(bySuffix.get(suffix) || []), l]);
+            }
+            for (const [ref, store] of byOw) {
+                const candidates = bySuffix.get(ref.slice(3)) || [];
+                const match = candidates.find((c) => c.store === store) || candidates[0];
+                if (match) out.set(ref, match.id);
+                else this.log.warn(`Unknown shop ${ref} for ${store} (store locations may need a sync)`);
+            }
+        }
 
         if (byId.length) {
             const found = await this.locations.find({ where: { id: In(byId) }, select: { id: true } });
