@@ -4,10 +4,11 @@ import type { CircleMarker as LeafletCircleMarker, Map as LeafletMap } from "lea
 import "leaflet/dist/leaflet.css";
 import { FaDirections, FaExternalLinkAlt, FaLocationArrow, FaPhoneAlt } from "react-icons/fa";
 import Spinner from "../components/Spinner";
+import OpenStatusBadge from "../components/OpenStatusBadge";
 import { chainColor, useStoreLocations, type StoreLocation } from "../hooks/useStoreLocations";
 import { useStoreLookup } from "../hooks/useStoreLookup";
 import { useI18n } from "../i18n";
-import { directionsUrl, distanceKm, openStatus, skopjeNow, WEEKDAYS } from "../utils/geo";
+import { directionsUrl, distanceKm, formatAddress, skopjeNow, WEEKDAYS } from "../utils/geo";
 import "../styles/StoreMap.css";
 
 const MK_CENTER: [number, number] = [41.6, 21.7];
@@ -28,7 +29,7 @@ function FitToUser({ user, nearest }: { user: { lat: number; lng: number } | nul
 export default function StoreMap() {
     const { t, locale } = useI18n();
     const { data: locations = [], isLoading } = useStoreLocations();
-    const { getStore } = useStoreLookup();
+    const { chainName } = useStoreLookup();
     const [chain, setChain] = useState<string | null>(null);
     const [geo, setGeo] = useState<GeoState>({ status: "idle" });
     const mapRef = useRef<LeafletMap | null>(null);
@@ -82,21 +83,8 @@ export default function StoreMap() {
         if (window.innerWidth < 900) mapRef.current?.getContainer().scrollIntoView({ behavior: "smooth", block: "center" });
     };
 
-    const chainName = (store: string) => getStore(store)?.name || store;
     const today = skopjeNow().day;
 
-    const statusBadge = (l: StoreLocation) => {
-        const s = openStatus(l.hours);
-        if (s.kind === "open") return <span className="store-status is-open">{t("stores.openNow")} · {t("stores.closesAt", { time: s.closesAt })}</span>;
-        if (s.kind === "closed")
-            return (
-                <span className="store-status is-closed">
-                    {t("stores.closedNow")}
-                    {s.opensAt && ` · ${t("stores.opensAt", { time: s.opensAt })}`}
-                </span>
-            );
-        return <span className="store-status is-unknown">{t("stores.hoursUnknown")}</span>;
-    };
 
     const details = (l: StoreLocation & { distance: number | null }) => (
         <>
@@ -110,13 +98,11 @@ export default function StoreMap() {
             </div>
             {(l.address || l.city) && (
                 <div className="store-card__address">
-                    {l.address && l.city && l.address.toLowerCase().includes(l.city.toLowerCase())
-                        ? l.address
-                        : [l.address, l.city].filter(Boolean).join(", ")}
+                    {formatAddress(l.address, l.city)}
                     {l.approximate && <span className="store-card__approx"> · {t("stores.approximate")}</span>}
                 </div>
             )}
-            {statusBadge(l)}
+            <OpenStatusBadge hours={l.hours} />
         </>
     );
 

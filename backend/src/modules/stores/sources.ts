@@ -63,10 +63,20 @@ function toCyrillic(latin: string): string {
 /** One spelling per city ("Skopje", "Скопје-Чаир", "Центар" -> "Скопје"), so lists group and sort properly. */
 export function normalizeCity(raw: string | null, address: string | null): string | null {
     const candidates = [raw, address].filter(Boolean).map((v) => (/[a-z]/i.test(v!) ? toCyrillic(v!) : v!));
-    const haystack = candidates.join(' ').toLowerCase();
-    const city = CITIES.find((c) => haystack.includes(c.toLowerCase()));
+    const haystack = ` ${candidates.join(' ').toLowerCase()} `;
+    // Whole words only ("Климент Охридски" is a street, not Охрид), and the city mentioned last wins
+    // because addresses end with the city ("ул. Климент Охридски 91А, Струмица").
+    const at = (name: string) => {
+        const re = new RegExp(`[\\s,.(\\-]${name.toLowerCase()}(?=[\\s,.)\\-])`, 'g');
+        let last = -1;
+        for (const m of haystack.matchAll(re)) last = m.index!;
+        return last;
+    };
+    const city = CITIES.map((c) => ({ c, i: at(c) }))
+        .filter((x) => x.i >= 0)
+        .sort((a, b) => b.i - a.i)[0]?.c;
     if (city) return city;
-    if (SKOPJE_AREAS.some((a) => haystack.includes(a.toLowerCase()))) return 'Скопје';
+    if (SKOPJE_AREAS.some((a) => at(a) >= 0)) return 'Скопје';
     const first = candidates[0];
     return first && !/\d/.test(first) ? first : null;
 }

@@ -20,7 +20,7 @@ Daily at 03:00 (or `GET /scraper/run-now`). Scrapers only extract data, and ever
 | `price_history` | Price **change log** per offer (a row only when the price changes). |
 | `category_mappings` | Learned "raw label → taxonomy value" cache (Gemini answers + manual overrides). |
 
-An offer counts as active if it was seen in the last `ACTIVE_WINDOW_HOURS` (48). Offers are deleted after `OFFER_RETENTION_DAYS` (30) unseen. Products are deleted once they have no offers and aren't favorited.
+An offer counts as active if it has a price and was seen within `ACTIVE_WINDOW_HOURS` (48) of **that store's latest scrape** (not the clock), and within `MAX_STALE_DAYS` (7). So a late or failed scrape keeps the last known prices instead of emptying the site. Offers are deleted after `OFFER_RETENTION_DAYS` (30) unseen. Products are deleted once they have no offers and aren't favorited.
 
 ## Adding a new website
 
@@ -136,7 +136,7 @@ Products that later turn out to share a model code are merged. Favorites and off
 | `SCRAPER_SITE_CONCURRENCY` | `3` | Sites crawled in parallel (each site uses 4 parallel requests) |
 | `SCRAPER_MAX_PAGES` | `100` | Listing pages per start URL (lower it for testing) |
 | `ENABLE_SCRAPER_CRON` | – | `false` disables the nightly run |
-| `ACTIVE_WINDOW_HOURS` / `OFFER_RETENTION_DAYS` | `48` / `30` | |
+| `ACTIVE_WINDOW_HOURS` / `MAX_STALE_DAYS` / `OFFER_RETENTION_DAYS` | `48` / `7` / `30` | Active = seen within 48 h of the store's last scrape and within 7 days; deleted after 30 days unseen |
 | `ML_SERVICE_URL` | – | ML service URL. Unset means ML is disabled. |
 | `ML_SERVICE_TOKEN` | – | Shared secret between the backend and the ML service |
 | `ML_MIN_CONFIDENCE` | `0.8` | Minimum model probability to accept a label (set it on both services) |

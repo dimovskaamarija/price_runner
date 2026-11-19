@@ -1,6 +1,12 @@
 import { useMemo } from "react";
 import { useStores, type Store } from "./useStores";
 
+/** Display names for chains that aren't in the stores table (none at the moment). */
+const CHAIN_LABELS: Record<string, string> = {};
+
+/** Logos for chains that aren't in the stores table, as files in /public/logos (none at the moment). */
+const CHAIN_LOGOS: Record<string, string> = {};
+
 /**
  * Offers use scraper store names ("Sport Vision MK") while the stores table may use
  * shorter ones ("Sport Vision"); this resolves either to the store record (name + logo).
@@ -22,10 +28,18 @@ export function useStoreLookup() {
             return (
                 storesMap[storeName] ||
                 storesMap[lower] ||
-                stores.find((s) => s.name.toLowerCase().includes(lower) || lower.includes(s.name.toLowerCase()))
+                // Prefix match only ("Sport Vision MK" -> "Sport Vision"); a substring match would wrongly
+                // turn "Intersport MK" into "Sport M".
+                stores.find((s) => s.name.toLowerCase().startsWith(lower) || lower.startsWith(s.name.toLowerCase()))
             );
         };
 
-        return { storesMap, getStore };
+        /** Name to show for a chain (offers' store name -> display name). */
+        const chainName = (storeName: string): string => CHAIN_LABELS[storeName] || getStore(storeName)?.name || storeName;
+
+        /** Logo to show for a chain, or undefined. */
+        const chainLogo = (storeName: string): string | undefined => CHAIN_LOGOS[storeName] || getStore(storeName)?.logo_url;
+
+        return { storesMap, getStore, chainName, chainLogo };
     }, [stores]);
 }

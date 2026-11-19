@@ -6,6 +6,7 @@ import { PostgresModule } from './database/postgres.module';
 import { ProductModule } from './modules/product/product.module';
 import { FavoritesModule } from './modules/favorites/favorites.module';
 import { StoresModule } from './modules/stores/stores.module';
+import { AvailabilityModule } from './modules/availability/availability.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -20,6 +21,7 @@ import { AppController } from './app.controller';
         ProductModule,
         FavoritesModule,
         StoresModule,
+        AvailabilityModule,
     ],
     controllers: [AppController],
 })

@@ -1,0 +1,321 @@
+.availability-box {
+    border: 1px solid #ddd;
+    background: #fff;
+    padding: 20px;
+    border-radius: 16px;
+    margin-top: 24px;
+}
+
+.availability-box h3 {
+    margin: 0 0 8px;
+}
+
+.availability-intro {
+    color: #555;
+    margin: 0 0 12px;
+}
+
+.availability-check {
+    padding: 10px 18px;
+    min-height: 0;
+    border: none;
+    border-radius: 999px;
+    background: #2563eb;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.availability-label {
+    font-weight: 600;
+    margin: 4px 0 8px;
+}
+
+.availability-group {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.availability-group__name {
+    min-width: 64px;
+    padding-top: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #777;
+}
+
+.availability-sizes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.availability-size {
+    min-width: 44px;
+    padding: 6px 10px;
+    min-height: 0;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background: #fff;
+    color: #222;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.availability-size:hover {
+    border-color: #2563eb;
+}
+
+.availability-size.is-active {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #fff;
+    font-weight: 600;
+}
+
+.availability-result {
+    margin-top: 16px;
+}
+
+.availability-result__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.availability-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    min-height: 0;
+    border: none;
+    background: none;
+    color: #2563eb;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.availability-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px;
+}
+
+.availability-shops {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 340px;
+    overflow-y: auto;
+}
+
+.availability-map {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e5e5e5;
+    min-height: 260px;
+}
+
+.availability-map__leaflet {
+    height: 100%;
+    min-height: 260px;
+    width: 100%;
+}
+
+.availability-notes {
+    margin: 12px 0 0;
+    padding-left: 18px;
+    color: #666;
+    font-size: 13px;
+}
+
+.availability-notes a {
+    color: #2563eb;
+}
+
+.availability-disclaimer {
+    margin: 12px 0 0;
+    font-size: 12px;
+    color: #888;
+}
+
+.availability-disclaimer a {
+    color: #2563eb;
+}
+
+@media (max-width: 900px) {
+    .availability-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .availability-shops {
+        max-height: none;
+    }
+}
+
+/* Size guide: ⓘ with a US / UK / EU / cm table on hover or tap */
+.availability-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.size-guide {
+    position: relative;
+    display: inline-flex;
+}
+
+.size-guide__toggle {
+    display: inline-flex;
+    align-items: center;
+    padding: 0;
+    min-height: 0;
+    border: none;
+    background: none;
+    color: #2563eb;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.size-guide__panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: -10px;
+    z-index: 1100; /* above the Leaflet map */
+    width: 300px;
+    padding: 12px 14px;
+    background: #fff;
+    color: #222;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    font-weight: 400;
+}
+
+.size-guide__title {
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.size-guide__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    text-align: center;
+}
+
+.size-guide__table th {
+    padding: 4px 6px;
+    background: #f5f7fb;
+    color: #555;
+    font-weight: 600;
+}
+
+.size-guide__table td {
+    padding: 3px 6px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.size-guide__table tr.is-selected td {
+    background: #2563eb;
+    color: #fff;
+    font-weight: 600;
+}
+
+.size-guide__note {
+    margin: 8px 0 0;
+    font-size: 11px;
+    color: #777;
+    line-height: 1.4;
+}
+
+@media (max-width: 600px) {
+    .size-guide__panel {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: calc(100vw - 48px);
+        max-width: 340px;
+    }
+}
+
+/* Size that no physical shop has: greyed out, not selectable (tooltip explains why). */
+.availability-size.is-disabled,
+.availability-size.is-disabled:hover {
+    background: #f5f5f5;
+    border-color: #e5e5e5;
+    color: #b0b0b0;
+    text-decoration: line-through;
+    cursor: not-allowed;
+}
+
+/* Chain logo on shop cards (replaces the coloured dot) */
+.store-logo-badge {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    object-fit: contain;
+    background: #fff;
+    border: 1px solid #eee;
+}
+
+.availability-shops .store-card__head .store-dot {
+    width: 32px;
+    height: 32px;
+    margin-top: 0;
+}
+
+.availability-shops .store-card__address,
+.availability-shops .store-status,
+.availability-shops .store-card__actions {
+    margin-left: 42px; /* align with the text next to the logo */
+}
+
+/* Chain colour legend (matches the map pins) */
+.availability-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.availability-legend__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border: 1px solid #ddd;
+    border-radius: 999px;
+    background: #fff;
+    font-size: 13px;
+    color: #333;
+}
+
+.availability-legend__count {
+    color: #888;
+    font-size: 12px;
+}
+
+/* Small dot before the chain name on each card */
+.availability-shops .store-card__chain {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.availability-shops .store-card__chain .store-dot {
+    width: 8px;
+    height: 8px;
+}
