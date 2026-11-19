@@ -141,6 +141,9 @@ Products that later turn out to share a model code are merged. Favorites and off
 | `ML_SERVICE_TOKEN` | – | Shared secret between the backend and the ML service |
 | `ML_MIN_CONFIDENCE` | `0.8` | Minimum model probability to accept a label (set it on both services) |
 | `ML_MIN_PRECISION` | `0.9` | ML service: quality gate for enabling a field's model |
+| `RESEND_API_KEY` | – | Price alert emails via Resend. Unset = emails are saved as HTML files in `backend/dev-emails/` (local testing) |
+| `EMAIL_FROM` | `Спореди и купи <onboarding@resend.dev>` | Sender; use an address on a domain verified in Resend |
+| `FRONTEND_URL` | `http://localhost:5173` (emails) | Site URL used in email links (also used for CORS) |
 
 ## Admin endpoints
 
@@ -152,3 +155,13 @@ Products that later turn out to share a model code are merged. Favorites and off
 | `GET /scraper/preview?store=X&limit=5` | Dry-run one site |
 | `GET /scraper/ml/metrics` | ML evaluation: holdout, leave-one-store-out, per-class scores, gate status |
 | `GET /scraper/clusters?k=` | Clustering report: groups, suggested new categories, outliers |
+
+## Price alerts
+
+On a product page, **Известување за цена** lets a visitor choose:
+- **Target price**: one email when the product's lowest price is at or below the target. It re-arms if the price rises above the target again.
+- **Any change**: an email whenever the lowest price changes, up or down (old → new).
+
+Logged-in users' alerts are active immediately and listed at `/alerts`. Guests enter an email and must click the confirmation link first, so nobody can sign up someone else's address. Every email has a one-click unsubscribe link, and emails use the site language the alert was created in.
+
+Alerts are checked once after each **full** scrape (not on the interim passes during a run), and on `POST /scraper/process`.

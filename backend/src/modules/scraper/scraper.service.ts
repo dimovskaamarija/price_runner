@@ -7,6 +7,7 @@ import { CatalogMaintenanceService } from '../catalog/maintenance.service';
 import { CatalogReadService } from '../catalog/catalog-read.service';
 import { GeminiService } from '../ai/gemini.service';
 import { MlClient } from '../ai/ml.client';
+import { AlertsService } from '../alerts/alerts.service';
 import { CrawlStats, SiteScraper } from './core/site-scraper';
 import { IngestService } from './ingest.service';
 import { SITES } from './sites/sites.config';
@@ -42,6 +43,7 @@ export class ScraperService {
         private readonly read: CatalogReadService,
         private readonly gemini: GeminiService,
         private readonly ml: MlClient,
+        private readonly alerts: AlertsService,
     ) {}
 
     get isRunning() {
@@ -100,7 +102,8 @@ export class ScraperService {
 
         clearInterval(timer);
         try {
-            summary.processing = await this.processCatalog();
+            // Price alerts only after the full run, so a partial run can't send several emails.
+            summary.processing = await this.processCatalog({ checkAlerts: true });
         } catch (e) {
             summary.error = (e as Error).message;
             this.log.error(`Catalog processing failed: ${summary.error}`, (e as Error).stack);
@@ -123,13 +126,13 @@ export class ScraperService {
     }
 
     /** Classification + clustering + maintenance. Also callable on its own (e.g. after adding a Gemini key). */
-    processCatalog(opts: { reclassify?: boolean } = {}) {
+    processCatalog(opts: { reclassify?: boolean; checkAlerts?: boolean } = {}) {
         const next = this.processingChain.then(() => this.processCatalogNow(opts));
         this.processingChain = next.catch(() => undefined);
         return next;
     }
 
-    private async processCatalogNow(opts: { reclassify?: boolean }) {
+    private async processCatalogNow(opts: { reclassify?: boolean; checkAlerts?: boolean }) {
         if (opts.reclassify) await this.classifier.resetAll();
         const classification = await this.classifier.classifyPending();
         const clustering = await this.clustering.clusterPending();
@@ -137,7 +140,8 @@ export class ScraperService {
         this.read.invalidateCache();
         // Retrain on the newly labelled data (runs in the ML service's background; next run uses it).
         const mlTraining = this.ml.enabled ? ((await this.ml.train())?.status ?? 'unavailable') : 'disabled';
-        return { classification, clustering, maintenance, gemini: this.gemini.stats, mlTraining };
+        const alerts = opts.checkAlerts ? await this.alerts.evaluate() : 'skipped';
+        return { classification, clustering, maintenance, gemini: this.gemini.stats, mlTraining, alerts };
     }
 
     /**

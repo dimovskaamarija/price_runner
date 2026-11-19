@@ -9,6 +9,7 @@ import { useProduct } from '../hooks/useProducts';
 import { useStoreLookup } from '../hooks/useStoreLookup';
 import CompareButton from '../components/CompareButton';
 import StoreAvailability from '../components/StoreAvailability';
+import PriceAlertButton from '../components/PriceAlertButton';
 import { useI18n } from '../i18n';
 import { useFavoriteStatus } from '../hooks/useFavorites';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -188,6 +189,7 @@ export default function ProductDetail() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '10px' }}>
                         <h1 className="product-title" style={{ margin: 0, flex: 1 }}>{product.name}</h1>
                         <CompareButton product={{ id: product.id, name: product.name, image: product.image }} variant="detail" />
+                        <PriceAlertButton productId={product.id} lowestPrice={lowestPrice} />
                         <button
                             onClick={toggleFavorite}
                             disabled={toggleFavoriteMutation.isPending}
