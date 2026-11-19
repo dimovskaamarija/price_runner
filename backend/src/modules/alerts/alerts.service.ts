@@ -4,7 +4,8 @@ import { randomBytes } from 'crypto';
 import { DataSource, Repository } from 'typeorm';
 import { AlertType, PriceAlert } from '../../database/entities/price-alert.entity';
 import { MailService } from './mail.service';
-import { AlertMailContext, confirmMail, priceMail } from './templates';
+import { AlertMailContext, confirmMail, priceMail, StoreOffer } from './templates';
+import { ACTIVE_OFFER_SQL } from '../catalog/maintenance.service';
 
 const MAX_ACTIVE_PER_EMAIL = 50;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -174,7 +175,9 @@ export class AlertsService {
             if (a.lastPrice !== price) update.lastPrice = price;
 
             if (notify) {
-                const ok = await this.mail.send(priceMail(this.mailContext(a, { id: a.productId, name: a.name, image: a.image, minPrice: price }), a.lastPrice, price));
+                const ctx = this.mailContext(a, { id: a.productId, name: a.name, image: a.image, minPrice: price });
+                const offers = await this.currentOffers(a.productId);
+                const ok = await this.mail.send(priceMail(ctx, a.lastPrice, price, offers, new Date()));
                 if (ok) {
                     sent++;
                     update.lastNotifiedAt = new Date();
@@ -195,6 +198,17 @@ export class AlertsService {
     private async product(id: string): Promise<ProductInfo | null> {
         const [p] = await this.dataSource.query(`SELECT id, name, image, "minPrice" FROM products WHERE id = $1`, [id]);
         return p || null;
+    }
+
+    /** Stores currently selling the product, cheapest first, one row per store. */
+    private async currentOffers(productId: string): Promise<StoreOffer[]> {
+        return this.dataSource.query(
+            `SELECT DISTINCT ON (o.store) o.store, o.price, o.url
+             FROM offers o
+             WHERE o."productId" = $1 AND ${ACTIVE_OFFER_SQL}
+             ORDER BY o.store, o.price ASC`,
+            [productId],
+        ).then((rows: StoreOffer[]) => rows.sort((a, b) => a.price - b.price));
     }
 
     private mailContext(a: PriceAlert, p: ProductInfo): AlertMailContext {
