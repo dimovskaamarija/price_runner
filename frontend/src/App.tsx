@@ -4,6 +4,7 @@ import NavigationBar from "./components/NavigationBar";
 import { useUser } from "./hooks/useUser";
 import AuthCallback from "./components/AuthCallback";
 import Spinner from "./components/Spinner";
+import ShoppingAssistant from "./components/ShoppingAssistant";
 import CompareTray from "./components/CompareTray";
 
 const ProductList = lazy(() => import("./pages/ProductList"));
@@ -39,6 +40,7 @@ function App() {
             </Suspense>
 
             <CompareTray />
+            <ShoppingAssistant user={user} />
         </div>
     );
 }

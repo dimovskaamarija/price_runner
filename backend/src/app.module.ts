@@ -8,6 +8,7 @@ import { FavoritesModule } from './modules/favorites/favorites.module';
 import { StoresModule } from './modules/stores/stores.module';
 import { AvailabilityModule } from './modules/availability/availability.module';
 import { AlertsModule } from './modules/alerts/alerts.module';
+import { AssistantModule } from './modules/assistant/assistant.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -24,6 +25,7 @@ import { AppController } from './app.controller';
         StoresModule,
         AvailabilityModule,
         AlertsModule,
+        AssistantModule,
     ],
     controllers: [AppController],
 })

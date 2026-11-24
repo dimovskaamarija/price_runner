@@ -33,6 +33,8 @@ type FilterOptions = {
 
 const PAGE_SIZE = 24;
 
+const toList = (v: string) => v.split(",").filter(Boolean);
+
 export default function ProductList() {
     const navigate = useNavigate();
     const { t, price } = useI18n();
@@ -48,17 +50,19 @@ export default function ProductList() {
     const genderFromUrl = params.get("gender") || "";
     const brandFromUrl = params.get("brand") || "";
 
+    const colorFromUrl = params.get("color") || "";
+
     const [currentPage, setCurrentPage] = useState(pageFromUrl);
     const [sort, setSort] = useState<SortOption>(sortFromUrl);
     const [filtersOpen, setFiltersOpen] = useState(false);
 
     const [filters, setFilters] = useState<Filters>({
-        category: categoryFromUrl ? [categoryFromUrl] : [],
-        subcategory: subcategoryFromUrl ? [subcategoryFromUrl] : [],
-        age: ageFromUrl ? [ageFromUrl] : [],
-        gender: genderFromUrl ? [genderFromUrl] : [],
-        brand: brandFromUrl ? [brandFromUrl] : [],
-        color: [],
+        category: toList(categoryFromUrl),
+        subcategory: toList(subcategoryFromUrl),
+        age: toList(ageFromUrl),
+        gender: toList(genderFromUrl),
+        brand: toList(brandFromUrl),
+        color: toList(colorFromUrl),
         price: [
             Number(params.get("minPrice") || 0),
             Number(params.get("maxPrice") || 20000),
@@ -76,6 +80,8 @@ export default function ProductList() {
     };
 
     const isUpdatingUrlRef = useRef(false);
+    /** Set while a URL from outside (menu, assistant) is being copied into state, so stale state is not written over it. */
+    const readingUrlRef = useRef(false);
     const prevUrlSearchRef = useRef(location.search);
 
     useEffect(() => {
@@ -86,6 +92,7 @@ export default function ProductList() {
         }
 
         if (prevUrlSearchRef.current !== location.search) {
+            readingUrlRef.current = true;
             if (pageFromUrl !== currentPage) {
                 setCurrentPage(pageFromUrl);
             }
@@ -94,11 +101,12 @@ export default function ProductList() {
             }
             setFilters(prev => ({
                 ...prev,
-                category: categoryFromUrl ? [categoryFromUrl] : [],
-                subcategory: subcategoryFromUrl ? [subcategoryFromUrl] : [],
-                age: ageFromUrl ? [ageFromUrl] : [],
-                gender: genderFromUrl ? [genderFromUrl] : [],
-                brand: brandFromUrl ? [brandFromUrl] : [],
+                category: toList(categoryFromUrl),
+                subcategory: toList(subcategoryFromUrl),
+                age: toList(ageFromUrl),
+                gender: toList(genderFromUrl),
+                brand: toList(brandFromUrl),
+                color: toList(colorFromUrl),
                 price: [
                     Number(params.get("minPrice") || 0),
                     Number(params.get("maxPrice") || 20000),
@@ -106,7 +114,7 @@ export default function ProductList() {
             }));
             prevUrlSearchRef.current = location.search;
         }
-    }, [location.search, pageFromUrl, sortFromUrl, currentPage, sort, categoryFromUrl, subcategoryFromUrl, ageFromUrl, genderFromUrl, brandFromUrl, params]);
+    }, [location.search, pageFromUrl, sortFromUrl, currentPage, sort, categoryFromUrl, subcategoryFromUrl, ageFromUrl, genderFromUrl, brandFromUrl, colorFromUrl, params]);
 
     const prevFiltersSearchRef = useRef(JSON.stringify({ filters, searchFromUrl }));
     useEffect(() => {
@@ -124,6 +132,10 @@ export default function ProductList() {
     }, [filters, searchFromUrl, currentPage]);
 
     useEffect(() => {
+        if (readingUrlRef.current) {
+            readingUrlRef.current = false;
+            return;
+        }
         const q = new URLSearchParams();
         q.set("page", String(currentPage));
         q.set("sort", sort);

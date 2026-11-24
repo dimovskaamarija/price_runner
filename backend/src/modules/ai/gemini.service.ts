@@ -22,6 +22,8 @@ export interface GeminiSchema {
  *   GEMINI_MODEL               default "gemini-2.5-flash"
  *   GEMINI_EMBEDDING_MODEL     default "gemini-embedding-001"
  *   GEMINI_MAX_CALLS_PER_RUN   safety budget per scraper run, default 300
+ *   GEMINI_CHAT_MODELS         shopping chat, comma-separated, tried in order; default fast "lite" models
+ *   GEMINI_CHAT_MAX_PER_DAY    separate daily budget for the shopping chat, default 500
  */
 @Injectable()
 export class GeminiService {
@@ -32,6 +34,15 @@ export class GeminiService {
     private readonly maxCalls = parseInt(process.env.GEMINI_MAX_CALLS_PER_RUN || '300', 10);
     private readonly limit = pLimit(2);
     private callsThisRun = 0;
+    private readonly chatModels = (process.env.GEMINI_CHAT_MODELS || 'gemini-3.5-flash-lite,gemini-3.1-flash-lite')
+        .split(',')
+        .map((m) => m.trim())
+        .filter(Boolean)
+        .slice(0, 2);
+    private readonly chatMaxPerDay = parseInt(process.env.GEMINI_CHAT_MAX_PER_DAY || '500', 10);
+    private chatDay = '';
+    private chatCalls = 0;
+    private chatPausedUntil = 0;
     private disabledReason: string | null = null;
 
     get enabled(): boolean {
@@ -68,6 +79,48 @@ export class GeminiService {
             this.log.warn(`Gemini returned non-JSON output: ${text.slice(0, 200)}`);
             return null;
         }
+    }
+
+    /**
+     * Structured generation for someone waiting on screen: one quick try per chat model, own daily budget.
+     * Never touches the scraper's budget or its disabled flag; null means "use the fallback".
+     */
+    async chatJson<T>(prompt: string, schema: GeminiSchema, systemInstruction: string): Promise<T | null> {
+        if (!this.apiKey || Date.now() < this.chatPausedUntil) return null;
+        const today = new Date().toISOString().slice(0, 10);
+        if (this.chatDay !== today) {
+            this.chatDay = today;
+            this.chatCalls = 0;
+        }
+        for (const model of this.chatModels) {
+            if (this.chatCalls >= this.chatMaxPerDay) return null;
+            this.chatCalls++;
+            try {
+                const res = await fetch(`${API_BASE}/models/${model}:generateContent`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': this.apiKey },
+                    body: JSON.stringify({
+                        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+                        systemInstruction: { parts: [{ text: systemInstruction }] },
+                        generationConfig: { temperature: 0, responseMimeType: 'application/json', responseSchema: schema },
+                    }),
+                    signal: AbortSignal.timeout(6_000),
+                });
+                if (res.ok) {
+                    const data: any = await res.json();
+                    const text = data?.candidates?.[0]?.content?.parts?.map((p: any) => p.text || '').join('');
+                    if (text) return JSON.parse(text) as T;
+                    this.log.warn(`Gemini chat ${model}: empty answer`);
+                } else {
+                    this.log.warn(`Gemini chat ${model} ${res.status}: ${(await res.text()).slice(0, 300)}`);
+                }
+            } catch (e) {
+                this.log.warn(`Gemini chat ${model} failed: ${(e as Error).message}`);
+            }
+        }
+        // Every model failed: answer from the rules for a moment instead of making each visitor wait.
+        this.chatPausedUntil = Date.now() + 15_000;
+        return null;
     }
 
     /** Embeddings for semantic similarity (batched, 100 per request). Returns null if disabled. */
