@@ -1,0 +1,306 @@
+/* ---------- Bell button on the product page ---------- */
+.alert-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    min-height: 0;
+    border: 1px solid #ccc;
+    border-radius: 999px;
+    background: #fff;
+    color: #333;
+    font-size: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.alert-btn:hover {
+    border-color: #2563eb;
+    color: #2563eb;
+}
+
+/* ---------- Dialog ---------- */
+.alert-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: rgba(15, 23, 42, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.alert-dialog {
+    width: 100%;
+    max-width: 440px;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    background: #fff;
+    color: #1f2937;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.alert-dialog__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.alert-dialog__head h2 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.alert-dialog__close {
+    display: inline-flex;
+    padding: 4px;
+    min-height: 0;
+    border: none;
+    background: none;
+    color: #555;
+    font-size: 22px;
+    cursor: pointer;
+}
+
+.alert-current {
+    margin: 0 0 12px;
+    color: #555;
+}
+
+.alert-option {
+    display: flex;
+    gap: 10px;
+    padding: 12px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.alert-option.is-selected {
+    border-color: #2563eb;
+    background: #f5f8ff;
+}
+
+.alert-option input[type="radio"] {
+    margin-top: 3px;
+    accent-color: #2563eb;
+}
+
+.alert-option__body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.alert-option__title {
+    font-weight: 600;
+}
+
+.alert-option__hint {
+    font-size: 12px;
+    color: #666;
+}
+
+.alert-target {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.alert-target input {
+    width: 130px;
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 15px;
+}
+
+.alert-email {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 6px 0 4px;
+    font-weight: 600;
+}
+
+.alert-email input {
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 400;
+}
+
+.alert-sendto {
+    margin: 6px 0;
+    color: #444;
+}
+
+.alert-error {
+    margin: 8px 0 0;
+    color: #b91c1c;
+    font-size: 14px;
+}
+
+.alert-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.alert-primary,
+.alert-secondary {
+    padding: 10px 18px;
+    min-height: 0;
+    border-radius: 999px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.alert-primary {
+    border: none;
+    background: #2563eb;
+    color: #fff;
+}
+
+.alert-primary:disabled {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+.alert-secondary {
+    border: 1px solid #ccc;
+    background: #fff;
+    color: #333;
+}
+
+.alert-privacy {
+    margin: 12px 0 0;
+    font-size: 12px;
+    color: #888;
+}
+
+.alert-dialog__done p {
+    font-size: 16px;
+    margin: 8px 0 16px;
+}
+
+/* ---------- Confirm / unsubscribe landing page ---------- */
+.alert-page {
+    display: flex;
+    justify-content: center;
+    padding: 48px 16px;
+}
+
+.alert-page__card {
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+    border: 1px solid #e5e5e5;
+    border-radius: 16px;
+    padding: 28px 24px;
+    background: #fff;
+}
+
+.alert-page__card h1 {
+    font-size: 26px;
+    margin: 0 0 8px;
+}
+
+.alert-page__product {
+    font-weight: 600;
+}
+
+.alert-page__card.is-error p {
+    color: #b91c1c;
+}
+
+/* ---------- My alerts ---------- */
+.my-alerts {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px 16px 48px;
+}
+
+.my-alerts h1 {
+    font-size: 30px;
+}
+
+.my-alerts__empty {
+    color: #666;
+}
+
+.my-alerts__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.my-alerts__item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 14px;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.my-alerts__product {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: inherit;
+    text-decoration: none;
+    font-weight: 600;
+    min-width: 0;
+}
+
+.my-alerts__product img {
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.my-alerts__rule {
+    color: #2563eb;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.my-alerts__now {
+    color: #555;
+    white-space: nowrap;
+}
+
+.my-alerts__delete {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    min-height: 0;
+    border: 1px solid #f1c4c4;
+    border-radius: 999px;
+    background: #fff;
+    color: #b91c1c;
+    cursor: pointer;
+}
+
+@media (max-width: 700px) {
+    .my-alerts__item {
+        grid-template-columns: 1fr auto;
+    }
+}

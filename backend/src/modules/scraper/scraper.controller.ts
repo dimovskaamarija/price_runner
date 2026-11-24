@@ -46,7 +46,7 @@ export class ScraperController {
     @Post('process')
     async process(@Headers('authorization') auth?: string, @Query('token') token?: string, @Query('reclassify') reclassify?: string) {
         this.authorize(auth, token);
-        return this.scraper.processCatalog({ reclassify: reclassify === 'true' });
+        return this.scraper.processCatalog({ reclassify: reclassify === 'true', checkAlerts: true });
     }
 
     /** ML model quality: holdout + leave-one-store-out metrics per field. */

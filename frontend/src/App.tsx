@@ -12,6 +12,8 @@ const Brands = lazy(() => import("./pages/Brands"));
 const Favorites = lazy(() => import("./pages/Favorites"));
 const Compare = lazy(() => import("./pages/Compare"));
 const StoreMap = lazy(() => import("./pages/StoreMap"));
+const AlertAction = lazy(() => import("./pages/AlertAction"));
+const MyAlerts = lazy(() => import("./pages/MyAlerts"));
 
 function App() {
     const { user } = useUser();
@@ -28,6 +30,9 @@ function App() {
                     <Route path="/favorites" element={<Favorites />} />
                     <Route path="/compare" element={<Compare />} />
                     <Route path="/stores" element={<StoreMap />} />
+                    <Route path="/alerts" element={<MyAlerts />} />
+                    <Route path="/alerts/confirm/:token" element={<AlertAction action="confirm" />} />
+                    <Route path="/alerts/unsubscribe/:token" element={<AlertAction action="unsubscribe" />} />
                     <Route path="/callback" element={<AuthCallback />} />
                     <Route path="/product/:id" element={<ProductDetail />} />
                 </Routes>

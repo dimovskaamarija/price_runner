@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "../styles/NavigationBar.css";
 import logo from "../assets/logo.svg";
-import { FaSearch, FaHeart } from "react-icons/fa";
+import { FaSearch, FaHeart, FaBell } from "react-icons/fa";
 import type { User } from "../types/user";
 import { useNavData } from "../hooks/useNavData";
 import { capitalizeBrand } from "../utils/formatting";
@@ -75,6 +75,12 @@ export default function NavigationBar({ user }: Props) {
 
                 <div className="nav-right">
                     <LanguageSwitch />
+
+                    {user && (
+                        <button className="nav-favorites" onClick={() => navigate('/alerts')} title={t("nav.alerts")} aria-label={t("nav.alerts")}>
+                            <FaBell />
+                        </button>
+                    )}
 
                     <button className="nav-favorites" onClick={() => navigate('/favorites')} title={t("nav.favorites")}>
                         <FaHeart />

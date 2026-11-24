@@ -46,3 +46,6 @@ ml-service/models/
 __pycache__/
 .pytest_cache/
 .venv/
+
+# Local dev emails (price alerts)
+backend/dev-emails/
